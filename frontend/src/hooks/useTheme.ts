@@ -1,15 +1,13 @@
 import { useWeb3ModalTheme } from '@web3modal/wagmi/react';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 
-type ThemeStore = {
+const useThemeStore = create<{
   isDarkTheme: boolean;
   toggleTheme: () => void;
-};
-
-const useThemeStore = create<ThemeStore>()(persist((set) => ({
+}>()(devtools(persist((set) => ({
   isDarkTheme: document.body.classList.contains('dark'),
-  toggleTheme: () => set({ isDarkTheme: document.body.classList.toggle('dark') }),
+  toggleTheme: () => set({ isDarkTheme: document.body.classList.toggle('dark') }, false, 'toggleTheme'),
 }), {
   name: 'theme-storage',
   onRehydrateStorage: (initial) => (persisted) => {
@@ -17,19 +15,19 @@ const useThemeStore = create<ThemeStore>()(persist((set) => ({
       document.body.classList.toggle('dark');
     }
   },
-}));
+}), { name: 'app', store: 'theme' }));
 
 export const useTheme = () => {
-  const { isDarkTheme, toggleTheme: rawToggleTheme } = useThemeStore();
-  const { setThemeMode } = useWeb3ModalTheme();
+  const store = useThemeStore();
+  const web3ModalTheme = useWeb3ModalTheme();
 
   const toggleTheme = () => {
-    setThemeMode(isDarkTheme ? 'light' : 'dark');
-    rawToggleTheme();
+    web3ModalTheme.setThemeMode(store.isDarkTheme ? 'light' : 'dark');
+    store.toggleTheme();
   };
 
   return {
-    isDarkTheme,
+    isDarkTheme: store.isDarkTheme,
     toggleTheme,
   };
 };

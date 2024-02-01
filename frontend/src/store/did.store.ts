@@ -4,21 +4,20 @@ import KeyResolver from 'key-did-resolver';
 import { hash as sha256 } from '@stablelib/sha256';
 import { DID } from 'dids';
 import { fromString } from 'uint8arrays';
+import { devtools } from 'zustand/middleware';
 
-export interface DidState {
+export const useDidStore = create<{
   did: DID | null;
   authenticate: (seed: string) => Promise<void>;
   reset: () => void;
-}
-
-export const useDidStorage = create<DidState>((set) => ({
+}>()(devtools((set) => ({
   did: null as DID | null,
   authenticate: async (seed: string) => {
     const hash = sha256(fromString(seed.slice(2)));
     const provider = new Ed25519Provider(hash);
     const did = new DID({ provider, resolver: KeyResolver.getResolver() });
     await did.authenticate();
-    set({ did });
+    set({ did }, false, 'authenticate');
   },
-  reset: () => set({ did: null }),
-}));
+  reset: () => set({ did: null }, false, 'reset'),
+}), { name: 'app', store: 'did' }));

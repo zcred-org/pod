@@ -3,8 +3,9 @@ import { useWeb3Modal } from '@web3modal/wagmi/react';
 import { Button } from '@nextui-org/react';
 import { z } from 'zod';
 import { DidModal } from './-DidModal.tsx';
-import { useAuth } from '../../hooks/useAuth.ts';
-import { useMinaAccount } from '../../common/mina/useMinaAccount.ts';
+import { useAuth } from '../../hooks/web3/useAuth.ts';
+import { useAuroAccount } from '../../hooks/web3/auro/useAuroAccount.ts';
+import { IconEth, IconMina } from '../../components/icons.tsx';
 
 export const Route = createFileRoute('/sign-in')({
   component: SignInComponent,
@@ -14,29 +15,33 @@ export const Route = createFileRoute('/sign-in')({
 });
 
 function SignInComponent() {
-  const { redirect } = Route.useSearch();
+  const search = Route.useSearch();
   const auth = useAuth();
-  const mina = useMinaAccount();
+  const auro = useAuroAccount();
   const ethWeb3Modal = useWeb3Modal();
   const openEthConnectModal = () => ethWeb3Modal.open();
 
   if (!auth.address) return (
     <div className="max-w-[300px] mx-auto grow flex flex-col justify-center gap-3">
-      <Button onClick={openEthConnectModal} size="lg">Sign In With Ethereum</Button>
-      <Button isDisabled={!window.mina} onClick={mina.connect} size="lg">Sign In With Mina</Button>
+      <Button
+        onClick={openEthConnectModal}
+        size="lg"
+        isDisabled={auro.isConnecting}
+        startContent={<IconEth className='w-7 h-7 fill-blue-500 -mr-1'/>}
+      >Sign In With Ethereum</Button>
+      <Button
+        isLoading={auro.isConnecting}
+        isDisabled={!window.mina}
+        onClick={auro.connect}
+        startContent={<IconMina className='w-7 h-7 fill-indigo-500 stroke-indigo-500 stroke-1'/>}
+        size="lg"
+      >Sign In With Mina</Button>
     </div>
   );
 
   if (!auth.did.did) {
-    return (
-      <>
-        <div className="max-w-[300px] mx-auto grow flex flex-col justify-center gap-3">
-          <Button onClick={DidModal.open}>Prove you own this wallet</Button>
-        </div>
-        <DidModal/>
-      </>
-    );
+    return <DidModal/>;
   }
 
-  return <Navigate to={redirect ?? '/credentials'}/>;
+  return <Navigate to={search.redirect ?? '/credentials'}/>;
 }

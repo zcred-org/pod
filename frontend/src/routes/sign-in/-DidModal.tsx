@@ -1,38 +1,36 @@
 import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@nextui-org/react';
-import { makeVar, useReactiveVar } from '@apollo/client';
-import { merge } from 'lodash';
-import { useDisconnect } from 'wagmi';
-import { useDidStorage } from '../../store/did.store.ts';
+import { useDidStore } from '../../store/did.store.ts';
 import { toast } from 'sonner';
-import { useSignMessage } from '../../hooks/useSignMessage.ts';
-
-const IsDidModalOpen = makeVar(false);
+import { useSignMessage } from '../../hooks/web3/useSignMessage.ts';
+import { AuroErrorCodeEnum } from '../../common/api/wallet-adapter-auro.ts';
+import { useAuth } from '../../hooks/web3/useAuth.ts';
+import { FC } from 'react';
 
 const messageText = 'WARNING! Make sure you are on zcred.org domain. If not, you are being phished!';
 
-export const DidModal = merge(() => {
-  const isOpen = useReactiveVar(IsDidModalOpen);
-  const { authenticate } = useDidStorage();
-  const { disconnect } = useDisconnect();
-  const onCancel = () => {
-    disconnect();
-    IsDidModalOpen(false);
-  };
+export const DidModal: FC = () => {
+  const { authenticate } = useDidStore();
+  const auth = useAuth()
+
+  const onConfirm = () => signMessage(messageText);
+  const onCancel = () => auth.signOut();
+
   const { signMessage, isPending } = useSignMessage({
     onSuccess: data => authenticate(data),
-    onError: (error) => {
-      if (error.name === 'UserRejectedRequestError') {
+    onError: async (error) => {
+      const isUserRejected = error.name === 'UserRejectedRequestError'
+        || 'code' in error && error.code === AuroErrorCodeEnum.UserRejectedRequest;
+      if (isUserRejected) {
         toast.warning('Sign in canceled. You need to sign the message to continue.');
       } else {
-        toast.error(`Unexpected error: ${error instanceof Error ? error.message : error}`);
+        toast.error(`Unexpected error "${error}": ${error instanceof Error ? error.message : error}`);
       }
-      onCancel();
+      await onCancel();
     },
   });
-  const onConfirm = () => signMessage(messageText);
 
   return (
-    <Modal isOpen={isOpen} backdrop="blur" onClose={onCancel} placement="center">
+    <Modal isOpen={true} backdrop="blur" onClose={onCancel} placement="center">
       <ModalContent>
         <ModalHeader>
           Sign In
@@ -58,6 +56,4 @@ export const DidModal = merge(() => {
       </ModalContent>
     </Modal>
   );
-}, {
-  open: () => IsDidModalOpen(true),
-});
+};

@@ -1,4 +1,4 @@
-import { CredentialsMocked } from '../../interfaces/ICredential.ts';
+import { CredentialsMocked } from '../../types/ICredential.ts';
 import { Card, CardBody, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from '@nextui-org/react';
 import { createFileRoute } from '@tanstack/react-router';
 import { PageContainer } from '../../components/PageContainer.tsx';

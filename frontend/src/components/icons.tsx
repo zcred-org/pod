@@ -4,3 +4,9 @@
 //
 // export const IconAdd = IconAddSvg;
 // export const IconSettings = IconSettingsSvg;
+
+import IconMinaWord from '../assets/mina-word.svg?react';
+import IconEthereum from '../assets/icons8_ethereum.svg?react';
+
+export const IconMina = IconMinaWord;
+export const IconEth = IconEthereum;

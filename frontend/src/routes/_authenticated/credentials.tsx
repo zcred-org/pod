@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { PageContainer } from '../../components/PageContainer.tsx';
-import { CredentialsMocked } from '../../interfaces/ICredential.ts';
+import { CredentialsMocked } from '../../types/ICredential.ts';
 import { CredentialCard } from '../../components/CredentialCard.tsx';
 
 export const Route = createFileRoute('/_authenticated/credentials')({

@@ -1,7 +1,7 @@
 import { Card, CardFooter, CardHeader } from '@nextui-org/react';
 import { FC } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { ICredential } from '../interfaces/ICredential.ts';
+import { ICredential } from '../types/ICredential.ts';
 
 export const CredentialCard: FC<ICredential> = (props1) => {
   const { No, id, issuedAt, title } = props1;
