@@ -7,6 +7,15 @@ const DevTools: FC = React.lazy(() =>
   })),
 );
 
-export const TanStackRouterDevtools = import.meta.env.PROD
-  ? () => null
-  : () => <Suspense><DevTools/></Suspense>;
+const ReactQueryDevtools = React.lazy(() =>
+  import('@tanstack/react-query-devtools/build/modern/production.js').then((res) => ({
+    default: res.ReactQueryDevtools,
+  })),
+);
+
+export const TanStackRouterDevtools = import.meta.env.PROD ? () => null : () => (
+  <Suspense>
+    <DevTools/>
+    <ReactQueryDevtools buttonPosition="bottom-left"/>
+  </Suspense>
+);

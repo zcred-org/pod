@@ -11,7 +11,7 @@ const useThemeStore = create<{
 }), {
   name: 'theme-storage',
   onRehydrateStorage: (initial) => (persisted) => {
-    if (document.body.classList.contains('dark') !== persisted?.isDarkTheme ?? initial.isDarkTheme) {
+    if (document.body.classList.contains('dark') !== (persisted?.isDarkTheme ?? initial.isDarkTheme)) {
       document.body.classList.toggle('dark');
     }
   },

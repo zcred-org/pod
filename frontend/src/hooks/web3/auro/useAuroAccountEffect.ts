@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useAuroAccount } from './useAuroAccount.ts';
+import { useAuroStore } from './useAuro.store.ts';
 import { usePrevious } from '../../usePrevious.ts';
 import { toast } from 'sonner';
 
@@ -7,7 +7,7 @@ export const useAuroAccountEffect = (options: {
   onConnect?: (account: string) => void;
   onDisconnect?: () => void;
 }): void => {
-  const { address } = useAuroAccount();
+  const { address } = useAuroStore();
   const prevAddress = usePrevious(address, address);
   const { onConnect, onDisconnect } = options;
 

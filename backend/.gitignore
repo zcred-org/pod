@@ -1,0 +1,4 @@
+.idea
+dev/db-dev-data
+node_modules
+.env*local

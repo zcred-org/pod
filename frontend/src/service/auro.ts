@@ -1,6 +1,4 @@
-import { AuroWalletAdapter, IAuroEventHandlers } from '@zcredjs/mina';
-
-export const auroWalletAdapter = window.mina ? new AuroWalletAdapter(window.mina) : null;
+import { IAuroEventHandlers } from '@zcredjs/mina';
 
 export enum AuroErrorCodeEnum {
   // User disconnect, need connect first.
@@ -33,6 +31,9 @@ type ChainInfoArgs = {
   name: string;
 };
 
+/**
+ * Additional implementation of 'removeEventListener' for mina.window.
+ */
 const listeners = {
   'accountsChanged': new Set<(accounts: Accounts) => void>(),
   'chainChanged': new Set<(chainInfo: ChainInfoArgs) => void>(),

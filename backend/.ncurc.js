@@ -10,7 +10,5 @@ module.exports = {
   /** Groups packages by major, minor, patch, and major version zero updates */
   format: 'group',
   /** Exclude packages matching the given string, wildcard, glob, comma-or-space-delimited list, /regex/, or predicate function */
-  reject: [
-    'o1js', // fixed to 0.15.0
-  ],
+  reject: [],
 };

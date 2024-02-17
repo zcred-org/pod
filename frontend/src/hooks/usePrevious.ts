@@ -6,4 +6,4 @@ export const usePrevious = <T>(value: T, initial?: T): T | undefined => {
     ref.current = value;
   }, [value]);
   return ref.current;
-}
+};

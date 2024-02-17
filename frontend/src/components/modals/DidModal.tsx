@@ -1,22 +1,25 @@
 import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@nextui-org/react';
-import { useDidStore } from '../../store/did.store.ts';
+import { useDidStore } from '../../hooks/useDid.store.ts';
 import { toast } from 'sonner';
 import { useSignMessage } from '../../hooks/web3/useSignMessage.ts';
-import { AuroErrorCodeEnum } from '../../common/api/wallet-adapter-auro.ts';
+import { AuroErrorCodeEnum } from '../../service/auro.ts';
 import { useAuth } from '../../hooks/web3/useAuth.ts';
 import { FC } from 'react';
+import { useGetSubjectId } from '../../hooks/web3/useGetSubjectId.ts';
 
+// TODO: Need to think about signMessageText, and pass it to WalletAdapter.sign entirely
 const messageText = 'WARNING! Make sure you are on zcred.org domain. If not, you are being phished!';
 
 export const DidModal: FC = () => {
   const { authenticate } = useDidStore();
-  const auth = useAuth()
+  const auth = useAuth();
+  const { data: subjectId, isFetching: isSubjectIdFetching } = useGetSubjectId();
 
-  const onConfirm = () => signMessage(messageText);
+  const onConfirm = () => signMessage({ message: messageText });
   const onCancel = () => auth.signOut();
 
   const { signMessage, isPending } = useSignMessage({
-    onSuccess: data => authenticate(data),
+    onSuccess: signature => authenticate(signature, subjectId!),
     onError: async (error) => {
       const isUserRejected = error.name === 'UserRejectedRequestError'
         || 'code' in error && error.code === AuroErrorCodeEnum.UserRejectedRequest;
@@ -30,7 +33,7 @@ export const DidModal: FC = () => {
   });
 
   return (
-    <Modal isOpen={true} backdrop="blur" onClose={onCancel} placement="center">
+    <Modal isOpen backdrop="blur" onClose={onCancel} placement="center">
       <ModalContent>
         <ModalHeader>
           Sign In
@@ -50,7 +53,7 @@ export const DidModal: FC = () => {
           <Button
             onClick={onConfirm}
             color="success"
-            isLoading={isPending}
+            isLoading={isPending || isSubjectIdFetching}
           >Continue</Button>
         </ModalFooter>
       </ModalContent>
