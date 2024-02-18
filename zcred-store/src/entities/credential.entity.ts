@@ -10,5 +10,5 @@ export const CredentialEntity = pgTable('credential', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
-export type TCredentialEntity = typeof CredentialEntity.$inferSelect;
-export type TCredentialEntityNew = typeof CredentialEntity.$inferInsert;
+export type CredentialEntity = typeof CredentialEntity.$inferSelect;
+export type CredentialEntityNew = typeof CredentialEntity.$inferInsert;

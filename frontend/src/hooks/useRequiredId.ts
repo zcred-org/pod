@@ -1,4 +1,4 @@
-import { base64Decode } from '../util/helpers.ts';
+import { base64UrlDecode } from '../util/helpers.ts';
 import { useSearch } from '@tanstack/react-router';
 import type { Identifier } from '@zcredjs/core';
 
@@ -9,7 +9,7 @@ export const useRequiredId = () => {
     return null;
   }
 
-  const proposalURL = new URL(base64Decode(proposalEncodedURL));
+  const proposalURL = new URL(base64UrlDecode(proposalEncodedURL));
 
   const requiredId: Identifier = {
     type: proposalURL.searchParams.get('subject.id.type')!,

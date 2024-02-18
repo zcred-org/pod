@@ -1,8 +1,8 @@
-import { TRoute } from '../../types/TRoute.js';
-import { TCredentialEntityNew } from '../../entities/schema.js';
+import { Route } from '../../types/route.js';
+import { CredentialEntityNew } from '../../entities/schema.js';
 
 export type TCredentialUpsertRoute = {
-  Body: TCredentialEntityNew,
+  Body: CredentialEntityNew,
 }
 
 export const CredentialUpsertRoute = {
@@ -18,4 +18,4 @@ export const CredentialUpsertRoute = {
       },
     },
   },
-} as const satisfies TRoute;
+} as const satisfies Route;

@@ -1,13 +1,13 @@
 import { FC, PropsWithChildren } from 'react';
-import { useRequiredId } from '../hooks/useRequiredId.ts';
-import { useGetSubjectId } from '../hooks/web3/useGetSubjectId.ts';
-import { PageContainer } from '../components/PageContainer.tsx';
+import { useRequiredId } from '../../hooks/useRequiredId.ts';
+import { useGetSubjectId } from '../../hooks/web3/useGetSubjectId.ts';
+import { PageContainer } from '../PageContainer.tsx';
 import { Card, CardBody, CardFooter, CardHeader, Divider, Modal, ModalBody, ModalContent, ModalHeader, Spinner } from '@nextui-org/react';
 import { isEqual } from 'lodash';
 import { CircleUserRound, ShieldAlert } from 'lucide-react';
 import { Navigate, useNavigate } from '@tanstack/react-router';
 import { RequireWalletHoc } from './RequireWalletHoc.tsx';
-import { useAuth } from '../hooks/web3/useAuth.ts';
+import { useAuth } from '../../hooks/web3/useAuth.ts';
 
 export const RequireRequiredSubjectId: FC<PropsWithChildren> = ({ children }) => {
   const auth = useAuth();

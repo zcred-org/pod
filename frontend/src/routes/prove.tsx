@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { RequireRequiredSubjectId } from '../HOC/RequireRequiredSubjectId.tsx';
+import { RequireRequiredSubjectId } from '../components/HOC/RequireRequiredSubjectId.tsx';
 import { PageContainer } from '../components/PageContainer.tsx';
 
 export const Route = createFileRoute('/prove')({

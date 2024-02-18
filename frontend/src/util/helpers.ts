@@ -12,6 +12,6 @@ export const addressShort = (address: string) => {
   return `${address.slice(from, from + 4)}...${address.slice(-4)}`;
 };
 
-export const base64Decode = (base64string: string) => {
+export const base64UrlDecode = (base64string: string) => {
   return u8a.toString(u8a.fromString(base64string, 'base64url'), 'utf-8');
 };
