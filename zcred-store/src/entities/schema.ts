@@ -1,1 +1,1 @@
-export * from './credential.entity.js';
+export { CredentialEntity } from './credential.entity.js';

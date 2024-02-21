@@ -9,7 +9,7 @@
     "dev:watch": "nodemon",
     "dev:db:up": "docker compose -f dev/docker-compose.db-dev.yml up -d",
     "dev:db:down": "docker compose -f dev/docker-compose.db-dev.yml down",
-    "drizzle": "pnpm dlx tsx ./node_modules/drizzle-kit/bin.cjs"
+    "drizzle": "tsx ./node_modules/drizzle-kit/bin.cjs"
   },
   "keywords": [],
   "type": "module",
@@ -17,7 +17,11 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.11.19",
+    "@zcredjs/core": "^1.0.0",
     "drizzle-kit": "^0.20.14",
+    "nodemon": "^3.0.3",
+    "tsm": "^2.3.0",
+    "tsx": "^4.7.1",
     "typescript": "^5.3.3"
   },
   "dependencies": {
@@ -27,9 +31,7 @@
     "dotenv": "^16.4.4",
     "drizzle-orm": "^0.29.3",
     "fastify": "^4.26.1",
-    "nodemon": "^3.0.3",
-    "postgres": "^3.4.3",
-    "tsm": "^2.3.0"
+    "postgres": "^3.4.3"
   },
   "nodemonConfig": {
     "exec": "tsm ./src/main.ts",
