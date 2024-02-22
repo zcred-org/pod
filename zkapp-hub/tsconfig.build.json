@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "./test",
+    "./drizzle.config.ts",
+    "./migrations",
+    "./scripts/migrate.ts"
+  ]
+}
