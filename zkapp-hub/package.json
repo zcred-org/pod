@@ -1,0 +1,66 @@
+{
+  "name": "zkapp-hub",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "npx tsm ./src/main.ts",
+    "test": "NODE_ENV=test npx --experimental-loader tsm ./node_modules/uvu/bin.js ./test",
+    "test:watch": "./node_modules/.bin/watchlist src test --eager -- npm run test",
+    "test-on-win": "set NODE_ENV=test && npx tsm ./node_modules/uvu/bin.js ./test",
+    "migration:push": "drizzle-kit push:pg --config=./drizzle.config.ts",
+    "migration:pull": "drizzle-kit introspect:pg --config=./drizzle.config.ts",
+    "migration:generate": "drizzle-kit generate:pg --config=./drizzle.config.ts",
+    "migration:run": "npx tsm ./scripts/migrate.ts"
+  },
+  "keywords": [],
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/sinon": "^10.0.13",
+    "prettier": "^2.8.3",
+    "sinon": "^15.0.1",
+    "tsm": "2.3.0",
+    "typescript": "^5.3.3",
+    "uvu": "0.5.6",
+    "watchlist": "^0.3.1",
+    "drizzle-kit": "^0.20.14"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@fastify/static": "^6.9.0",
+    "@fastify/swagger": "^8.14.0",
+    "@fastify/swagger-ui": "^3.0.0",
+    "@jaljs/core": "1.0.2",
+    "@jaljs/o1js": "1.0.3",
+    "@stablelib/sha256": "^1.0.1",
+    "dotenv": "^16.4.4",
+    "drizzle-orm": "^0.29.3",
+    "fastify": "^4.26.1",
+    "o1js": "0.15.0",
+    "pino": "^8.10.0",
+    "pino-pretty": "^9.3.0",
+    "postgres": "^3.4.3",
+    "sort-keys": "^5.0.0",
+    "typed-inject": "^4.0.0",
+    "uint8arrays": "^4.0.3"
+  },
+  "files": [
+    "./dist"
+  ],
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/p"
+  },
+  "bugs": {
+    "url": "https://github.com/Pave1Pal/vc-provider/issues"
+  },
+  "homepage": "https://github.com/Pave1Pal/vc-provider#readme",
+  "description": ""
+}

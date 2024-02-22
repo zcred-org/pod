@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
     /* Language and Environment */
-    "target": "ESNext",
+    "target": "esnext",
     /* Modules */
-    "module": "Node16",
-    "moduleResolution": "Node16",
+    "module": "node16",
+    "moduleResolution": "node16",
     "rootDirs": [
       "./src"
     ],
     "typeRoots": [
-      ",./types/global.d.ts",
-      ",./node_modules/@types"
+      "./types/global.d.ts",
+      "./node_modules/@types"
     ],
     "resolveJsonModule": true,
     /* Emit */
