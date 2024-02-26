@@ -1,3 +1,3 @@
 import { RouteOptions } from 'fastify';
 
-export type Route = Omit<RouteOptions, 'handler'>;
+export type Route = Omit<RouteOptions, 'handler' | 'method' | 'url'>;

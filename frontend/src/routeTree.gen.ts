@@ -11,15 +11,18 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as ProveImport } from './routes/prove'
+import { Route as ProveRouteImport } from './routes/prove/route'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated/route'
 import { Route as IndexImport } from './routes/index'
+import { Route as ProveSelectCredentialImport } from './routes/prove/select-credential'
+import { Route as ProveMismatchImport } from './routes/prove/mismatch'
 import { Route as AuthenticatedCredentialsImport } from './routes/_authenticated/credentials'
+import { Route as AuthenticatedCredentialIssueImport } from './routes/_authenticated/credential-issue'
 import { Route as AuthenticatedCredentialIdImport } from './routes/_authenticated/credential.$id'
 
 // Create/Update Routes
 
-const ProveRoute = ProveImport.update({
+const ProveRouteRoute = ProveRouteImport.update({
   path: '/prove',
   getParentRoute: () => rootRoute,
 } as any)
@@ -34,10 +37,26 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const ProveSelectCredentialRoute = ProveSelectCredentialImport.update({
+  path: '/select-credential',
+  getParentRoute: () => ProveRouteRoute,
+} as any)
+
+const ProveMismatchRoute = ProveMismatchImport.update({
+  path: '/mismatch',
+  getParentRoute: () => ProveRouteRoute,
+} as any)
+
 const AuthenticatedCredentialsRoute = AuthenticatedCredentialsImport.update({
   path: '/credentials',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+
+const AuthenticatedCredentialIssueRoute =
+  AuthenticatedCredentialIssueImport.update({
+    path: '/credential-issue',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 const AuthenticatedCredentialIdRoute = AuthenticatedCredentialIdImport.update({
   path: '/credential/$id',
@@ -57,12 +76,24 @@ declare module '@tanstack/react-router' {
       parentRoute: typeof rootRoute
     }
     '/prove': {
-      preLoaderRoute: typeof ProveImport
+      preLoaderRoute: typeof ProveRouteImport
       parentRoute: typeof rootRoute
+    }
+    '/_authenticated/credential-issue': {
+      preLoaderRoute: typeof AuthenticatedCredentialIssueImport
+      parentRoute: typeof AuthenticatedRouteImport
     }
     '/_authenticated/credentials': {
       preLoaderRoute: typeof AuthenticatedCredentialsImport
       parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/prove/mismatch': {
+      preLoaderRoute: typeof ProveMismatchImport
+      parentRoute: typeof ProveRouteImport
+    }
+    '/prove/select-credential': {
+      preLoaderRoute: typeof ProveSelectCredentialImport
+      parentRoute: typeof ProveRouteImport
     }
     '/_authenticated/credential/$id': {
       preLoaderRoute: typeof AuthenticatedCredentialIdImport
@@ -76,10 +107,11 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren([
   IndexRoute,
   AuthenticatedRouteRoute.addChildren([
+    AuthenticatedCredentialIssueRoute,
     AuthenticatedCredentialsRoute,
     AuthenticatedCredentialIdRoute,
   ]),
-  ProveRoute,
+  ProveRouteRoute.addChildren([ProveMismatchRoute, ProveSelectCredentialRoute]),
 ])
 
 /* prettier-ignore-end */

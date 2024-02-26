@@ -1,5 +1,3 @@
-import { IAuroEventHandlers } from '@zcredjs/mina';
-
 export enum AuroErrorCodeEnum {
   // User disconnect, need connect first.
   NeedConnectWallet = 1001,
@@ -23,30 +21,4 @@ export enum AuroErrorCodeEnum {
   UnspecifiedErrorMessage = 22001,
   // Origin dismatch.
   OriginDismatch = 23001,
-}
-
-type Accounts = string[];
-type ChainInfoArgs = {
-  chainId: string;
-  name: string;
-};
-
-/**
- * Additional implementation of 'removeEventListener' for mina.window.
- */
-const listeners = {
-  'accountsChanged': new Set<(accounts: Accounts) => void>(),
-  'chainChanged': new Set<(chainInfo: ChainInfoArgs) => void>(),
-} satisfies Record<keyof IAuroEventHandlers, Set<IAuroEventHandlers[keyof IAuroEventHandlers]>>;
-
-if (window.mina) {
-  for (const event of Object.keys(listeners) as (keyof IAuroEventHandlers)[]) {
-    window.mina.on(event, (data: any) => Promise.all([...listeners[event]].map((handler) => handler(data))));
-  }
-  window.mina.on = (event, handler) => {
-    listeners[event].add(handler as never);
-  };
-  window.mina.removeEventListener = (event, handler) => {
-    listeners[event].delete(handler as never);
-  };
 }

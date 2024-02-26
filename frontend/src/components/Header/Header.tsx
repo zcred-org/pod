@@ -1,11 +1,11 @@
 import { Button } from '@nextui-org/react';
 import { Moon, Sun } from 'lucide-react';
-import { useAuth } from '../../hooks/web3/useAuth.ts';
+import { useCheckAuth } from '../../hooks/web3/useCheckAuth.ts';
 import { useTheme } from '../../hooks/useTheme.ts';
 import { HeaderUserPanel } from './HeaderUserPanel.tsx';
 
 export const Header = () => {
-  const auth = useAuth();
+  const auth = useCheckAuth();
   const { isDarkTheme, toggleTheme } = useTheme();
 
   return (

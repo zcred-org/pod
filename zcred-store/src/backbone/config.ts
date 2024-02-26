@@ -21,6 +21,8 @@ export class Config {
     password: string,
     database: string,
   };
+  /** Secret string, for example, for JWT */
+  readonly secretString: string;
 
   constructor(envFilePath?: URL) {
     if (envFilePath) configENV({ path: envFilePath, override: true });
@@ -37,6 +39,8 @@ export class Config {
       password: ENV.getStringOrThrow('DB_PASSWORD'),
       database: ENV.getStringOrThrow('DB_NAME'),
     };
+
+    this.secretString = ENV.getStringOrThrow('SECRET_STRING');
   }
 }
 
