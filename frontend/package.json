@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@jaljs/core": "1.0.2",
+    "@jaljs/core": "1.0.4",
     "@jaljs/o1js": "1.0.3",
     "@marko19907/string-to-color": "^1.0.0",
     "@nextui-org/react": "^2.2.9",
@@ -33,6 +33,7 @@
     "lodash": "^4.17.21",
     "lucide-react": "^0.331.0",
     "o1js": "0.15.0",
+    "o1js-trgraph": "^2.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sonner": "^1.4.0",

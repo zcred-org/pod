@@ -11,8 +11,11 @@ importers:
   frontend:
     dependencies:
       '@jaljs/core':
-        specifier: 1.0.2
-        version: 1.0.2
+        specifier: 1.0.4
+        version: 1.0.4
+      '@jaljs/o1js':
+        specifier: 1.0.3
+        version: 1.0.3
       '@marko19907/string-to-color':
         specifier: ^1.0.0
         version: 1.0.0
@@ -76,6 +79,9 @@ importers:
       o1js:
         specifier: 0.15.0
         version: 0.15.0
+      o1js-trgraph:
+        specifier: ^2.1.0
+        version: 2.1.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -2630,6 +2636,12 @@ packages:
 
   /@jaljs/core@1.0.2:
     resolution: {integrity: sha512-Kx239FaPJRZAlhZ1DeLSkE4TanjMxbLncY8uktJdWlcT30DQeX/U46g6Ubn28unbF4rKS5aPvd2ic7D+HuRZNA==}
+    dependencies:
+      sort-keys: 5.0.0
+    dev: false
+
+  /@jaljs/core@1.0.4:
+    resolution: {integrity: sha512-nuM8pIj+JWmRGaVwS0qHcUoDW7c1Tcdeyjc0hoA0JUd8beLpdXttyMLFbTN6oKYuBNI+k9iT+AIntIkTCci5pw==}
     dependencies:
       sort-keys: 5.0.0
     dev: false
