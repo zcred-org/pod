@@ -1,4 +1,4 @@
-import { JalProgram } from "../verifier/types.ts";
+import { JalProgram } from "@jaljs/core";
 
 export type CreateProgramReq = {
   program: JalProgram;
