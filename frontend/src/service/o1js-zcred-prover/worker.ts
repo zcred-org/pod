@@ -16,7 +16,8 @@ import { O1TrGraph } from "o1js-trgraph";
 import { codeToURL, JalSetup, toJalSetup } from "@/util/index.ts";
 
 const programInputTransformer = new ZkProgramInputTransformer(o1js);
-const translator = new ZkProgramTranslator(o1js, "module");
+const mjsTranslator = new ZkProgramTranslator(o1js, "module");
+const cjsTranslator = new ZkProgramTranslator(o1js, "commonjs");
 const trGraph = new O1TrGraph(o1js);
 
 
@@ -26,6 +27,7 @@ async function createZkProof({
   jalProgram
 }: WorkerProofReq): Promise<WorkerProofResp | WorkerError> {
   try {
+    const translator = jalProgram.target.endsWith(".cjs") ? cjsTranslator : mjsTranslator;
     const code = translator.translate(jalProgram);
     const url = codeToURL(code);
     const module: O1JSZkProgramModule = await import(/* @vite-ignore */ url);
