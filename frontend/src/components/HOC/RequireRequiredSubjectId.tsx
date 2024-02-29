@@ -7,10 +7,10 @@ import { isEqual } from 'lodash';
 import { CircleUserRound, ShieldAlert } from 'lucide-react';
 import { Navigate, useNavigate } from '@tanstack/react-router';
 import { RequireWalletHoc } from './RequireWalletHoc.tsx';
-import { useAuth } from '../../hooks/web3/useAuth.ts';
+import { useDisconnect } from '../../hooks/web3/useDisconnect.ts';
 
 export const RequireRequiredSubjectId: FC<PropsWithChildren> = ({ children }) => {
-  const auth = useAuth();
+  const disconnect = useDisconnect();
   const navigate = useNavigate();
   const { requiredId } = useRequiredId() || {};
   const { data: subjectId, isFetching: isSubjectIdFetching } = useGetSubjectId();
@@ -49,7 +49,7 @@ export const RequireRequiredSubjectId: FC<PropsWithChildren> = ({ children }) =>
                 <pre>{subjectId.key}</pre>
               </CardBody>
             </Card>
-            <Card isPressable onClick={auth.signOutBase}>
+            <Card isPressable onClick={disconnect.signOutBase}>
               <CardHeader className="text-success font-bold flex gap-1">
                 <CircleUserRound/>Required:
               </CardHeader>

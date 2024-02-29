@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import checker from "vite-plugin-checker";
@@ -9,8 +10,8 @@ import { TanStackRouterVite } from "@tanstack/router-vite-plugin";
 export default defineConfig({
   plugins: [
     react(),
-    TanStackRouterVite({ routeFileIgnorePrefix: "-" }),
-    checker({ typescript: true, overlay: { initialIsOpen: false, position: "br" } }),
+    TanStackRouterVite({ routeFileIgnorePrefix: '-' }),
+    checker({ typescript: true, overlay: { initialIsOpen: false, position: 'br' } }),
     topLevelAwait(),
     svgr(),
   ],
@@ -19,5 +20,10 @@ export default defineConfig({
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp"
     }
-  }
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
 });

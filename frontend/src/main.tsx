@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { NextUIProvider } from '@nextui-org/react';
-import { queryClient } from './service/query-client.ts';
+import { queryClient } from './config/query-client.ts';
 import { wagmiConfig } from './config/wagmi-config.ts';
 import { WagmiProvider } from 'wagmi';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen.ts';
 import './service/auro.ts';
 import './index.css';
+import './service/events/index.ts';
 
 declare module '@tanstack/react-router' {
   interface Register {

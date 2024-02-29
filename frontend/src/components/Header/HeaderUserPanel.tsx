@@ -1,17 +1,19 @@
-import { addressShort } from '../../util/helpers.ts';
+import { addressShort } from '@/util/helpers.ts';
 import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownMenuProps, DropdownTrigger } from '@nextui-org/react';
 import { Plus, Settings } from 'lucide-react';
-import { useColored } from '../../hooks/useColored.ts';
-import { useAuth } from '../../hooks/web3/useAuth.ts';
-import { useGetSubjectId } from '../../hooks/web3/useGetSubjectId.ts';
-import { useDidStore } from '../../hooks/useDid.store.ts';
+import { useColored } from '@/hooks/useColored.ts';
+import { useGetSubjectId } from '@/hooks/web3/useGetSubjectId.ts';
+import { useDidStore } from '@/hooks/useDid.store.ts';
+import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
+import { useNavigate } from '@tanstack/react-router';
 
 export const HeaderUserPanel = () => {
-  const auth = useAuth();
+  const navigate = useNavigate();
+  const { signOut } = useDisconnect();
   const { data: subject } = useGetSubjectId();
   const did = useDidStore(state => state.did);
   const settingsAction: DropdownMenuProps['onAction'] = async (key) => {
-    if (key === 'logout') await auth.signOut();
+    if (key === 'logout') await signOut();
   };
   const [keyColor] = useColored(subject?.key);
   const [didColor] = useColored(did?.id);
@@ -22,7 +24,9 @@ export const HeaderUserPanel = () => {
         <p style={{ color: keyColor }}>{subject?.type}{': '}{addressShort(subject?.key || '')}</p>
         <p style={{ color: didColor }}>{'DID: '}{addressShort(did?.id || '')}</p>
       </div>
-      <Button variant="light" radius="full" isIconOnly><Plus className="text-foreground"/></Button>
+      <Button onClick={() => navigate({ to: '/credential-issue' })} variant="light" radius="full" isIconOnly>
+        <Plus className="text-foreground"/>
+      </Button>
       <Dropdown>
         <DropdownTrigger>
           <Button variant="light" radius="full" isIconOnly><Settings className="text-foreground"/></Button>

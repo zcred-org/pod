@@ -7,12 +7,11 @@ import type { IEIP1193Provider } from '@zcredjs/ethereum';
 declare module '@zcredjs/mina' {
   interface IAuroEventHandlers {
     accountsChanged: (accounts: string[]) => void;
-    chainChanged: (chainInfo: ChainInfoArgs) => void;
+    chainChanged: (chainInfo: { chainId: string, name: string }) => void;
   }
 
   interface IAuroWallet {
     on: <K extends keyof IAuroEventHandlers>(event: K, handler: IAuroEventHandlers[K]) => void;
-    removeEventListener: <K extends keyof IAuroEventHandlers>(event: K, handler: IAuroEventHandlers[K]) => void;
   }
 }
 

@@ -9,13 +9,13 @@ const useThemeStore = create<{
   isDarkTheme: document.body.classList.contains('dark'),
   toggleTheme: () => set({ isDarkTheme: document.body.classList.toggle('dark') }, false, 'toggleTheme'),
 }), {
-  name: 'theme-storage',
+  name: 'theme-store',
   onRehydrateStorage: (initial) => (persisted) => {
     if (document.body.classList.contains('dark') !== (persisted?.isDarkTheme ?? initial.isDarkTheme)) {
       document.body.classList.toggle('dark');
     }
   },
-}), { name: 'app', store: 'theme' }));
+}), { name: 'app', store: 'theme-store' }));
 
 export const useTheme = () => {
   const store = useThemeStore();
