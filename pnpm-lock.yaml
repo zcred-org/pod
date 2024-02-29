@@ -283,8 +283,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2
       '@jaljs/o1js':
-        specifier: 1.0.3
-        version: 1.0.3
+        specifier: 1.0.4
+        version: 1.0.4
       '@stablelib/sha256':
         specifier: ^1.0.1
         version: 1.0.1
@@ -2732,6 +2732,17 @@ packages:
       mustache: 4.2.0
       o1js-trgraph: 2.1.0
       sort-keys: 5.0.0
+    dev: false
+
+  /@jaljs/o1js@1.0.4:
+    resolution: {integrity: sha512-hdtK/vVwTHNDs9mBrTcaz5ZexFKdRDtOI+iASZCp9cyA3tLAyAYrLdA1DogtYjTdW+t6Wez4j5EcRADtW4H18A==}
+    dependencies:
+      '@jaljs/core': 1.0.4
+      '@stablelib/sha256': 1.0.1
+      mustache: 4.2.0
+      o1js-trgraph: 2.1.0
+      sort-keys: 5.0.0
+      uint8arrays: 5.0.2
     dev: false
 
   /@jest/create-cache-key-function@29.7.0:

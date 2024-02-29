@@ -21,13 +21,13 @@
   "devDependencies": {
     "@types/node": "^20.11.19",
     "@types/sinon": "^10.0.13",
+    "drizzle-kit": "^0.20.14",
     "prettier": "^2.8.3",
     "sinon": "^15.0.1",
     "tsm": "2.3.0",
     "typescript": "^5.3.3",
     "uvu": "0.5.6",
-    "watchlist": "^0.3.1",
-    "drizzle-kit": "^0.20.14"
+    "watchlist": "^0.3.1"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
@@ -35,7 +35,7 @@
     "@fastify/swagger": "^8.14.0",
     "@fastify/swagger-ui": "^3.0.0",
     "@jaljs/core": "1.0.2",
-    "@jaljs/o1js": "1.0.3",
+    "@jaljs/o1js": "1.0.4",
     "@stablelib/sha256": "^1.0.1",
     "dotenv": "^16.4.4",
     "drizzle-orm": "^0.29.3",
