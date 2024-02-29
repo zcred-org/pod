@@ -1,3 +1,5 @@
+import { JalProgram } from "@jaljs/core";
+
 export type Selector = {
   meta: {
     issuer: {
@@ -15,10 +17,10 @@ export type Selector = {
   }
 }
 
-export type JalProgram = any;
 
 export type Proposal = {
   verifierURL: string;
+  challenge: { message: string; }
   program: JalProgram;
   selector: Selector;
   verificationKey?: string;
@@ -26,10 +28,13 @@ export type Proposal = {
   accessToken?: string;
 }
 
+type Json = boolean | number | string | {[key: string]: Json};
+
 export type ProvingResult = {
   proof: string;
-  publicInput?: { [key: string]: string | boolean | number }
-  publicOutput?: { [key: string]: string | boolean | number }
+  signature: string;
+  publicInput?: Json
+  publicOutput?: Json
   verificationKey?: string;
   provingKey?: string;
 }

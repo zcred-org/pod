@@ -1,7 +1,7 @@
 import { type DataSource } from '../backbone/db-client.js';
 import { tokens } from '../util/tokens.js';
 import { CredentialEntity, type CredentialEntityNew } from '../entities/credential.entity.js';
-import { and, eq, type Placeholder, type SQL, sql } from 'drizzle-orm';
+import { and, eq, type Placeholder, sql } from 'drizzle-orm';
 import { type IssuerDto } from '../dtos/issuer.dto.js';
 import { type Identifier } from '../dtos/identifier.dto.js';
 import { issuerConcat, subjectIdConcat } from '../util/index.js';
