@@ -10,7 +10,10 @@ export class ZkappHub {
     const method = "POST";
     const resp = await fetch(endpoint, {
       method: method,
-      body: JSON.stringify(input)
+      body: JSON.stringify(input),
+      headers: {
+        "Content-Type": "application/json"
+      }
     });
     if (resp.ok) return await resp.json();
     const message = await resp.text();
