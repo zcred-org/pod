@@ -23,7 +23,7 @@ export class HttpServer implements Disposable {
   }
 
   async register() {
-    this.fastify.register(cors, {
+    await this.fastify.register(cors, {
       origin: [this.config.zcredFrontedOrigin]
     });
 

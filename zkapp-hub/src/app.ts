@@ -44,6 +44,8 @@ export class App {
       .provideClass("programStore", ProgramStore)
       .provideClass("programService", ProgramService);
 
+    await app.context.resolve("httpServer").register();
+
     ProgramController(app.context);
     return app;
   }
