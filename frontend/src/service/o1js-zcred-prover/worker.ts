@@ -9,15 +9,16 @@ import {
   WorkerProofResp,
   WorkerReq
 } from "./types.ts";
-import { ZkappHub } from "../external/zkapp-hub/index.ts";
 import * as o1js from "o1js";
-import { ZkCredential } from "@zcredjs/core";
-import { ZkProgramInputTransformer } from "@jaljs/o1js";
+import { ZkProgramInputTransformer, ZkProgramTranslator } from "@jaljs/o1js";
 import { InputTransformer, JalProgram } from "@jaljs/core";
 import { O1TrGraph } from "o1js-trgraph";
+import { codeToURL, JalSetup, toJalSetup } from "@/util/index.ts";
 
 const programInputTransformer = new ZkProgramInputTransformer(o1js);
+const translator = new ZkProgramTranslator(o1js, "module");
 const trGraph = new O1TrGraph(o1js);
+
 
 async function createZkProof({
   id: reqId,
@@ -25,11 +26,12 @@ async function createZkProof({
   jalProgram
 }: WorkerProofReq): Promise<WorkerProofResp | WorkerError> {
   try {
-    const { url } = await ZkappHub.createProgram({ program: jalProgram });
+    const code = translator.translate(jalProgram);
+    const url = codeToURL(code);
     const module: O1JSZkProgramModule = await import(/* @vite-ignore */ url);
     const { zkProgram, PublicInput } = module.initialize(o1js);
     const { verificationKey } = await zkProgram.compile();
-    const setup = createSetup(credential);
+    const setup = toJalSetup(credential);
     const programInput = toProgramInput(setup, jalProgram);
     const proof = await zkProgram.execute(
       new PublicInput(programInput.public),
@@ -55,35 +57,11 @@ async function createZkProof({
   }
 }
 
-type Setup = {
-  private: {
-    credential: ZkCredential;
-  }
-  public: {
-    context: {
-      now: string;
-    }
-  }
-}
-
-function createSetup(credential: ZkCredential): Setup {
-  return {
-    private: {
-      credential: credential
-    },
-    public: {
-      context: {
-        now: new Date().toISOString()
-      }
-    }
-  };
-}
-
-function toProgramInput(setup: Setup, program: JalProgram) {
+function toProgramInput(setup: JalSetup, program: JalProgram) {
   return programInputTransformer.transform(setup, program.inputSchema);
 }
 
-function toOriginIniput(setup: Setup, program: JalProgram): { public: any } {
+function toOriginIniput(setup: JalSetup, program: JalProgram): { public: any } {
   return new InputTransformer(program.inputSchema, trGraph).toInput(setup) as { public: any };
 }
 
