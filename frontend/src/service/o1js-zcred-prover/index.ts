@@ -4,7 +4,8 @@ import {
   isWorkerResp,
   type WorkerError,
   type WorkerInitReq,
-  type WorkerProofReq, WorkerProofResp,
+  type WorkerProofReq,
+  type WorkerProofResp,
   type WorkerResp
 } from "./types.ts";
 import { type ZkCredential } from "@zcredjs/core";
@@ -34,7 +35,6 @@ export class O1JSZCredProver {
     this.worker = new Worker(new URL(`./worker.ts`, import.meta.url), { type: "module" });
     this.worker.onmessage = ({ data }: MessageEvent<WorkerResp>) => {
       if (isWorkerResp(data)) {
-        console.log(data);
         this.promises[data.id].resolve(data);
         delete this.promises[data.id];
       }

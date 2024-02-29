@@ -89,7 +89,6 @@ function toOriginIniput(setup: Setup, program: JalProgram): { public: any } {
 
 addEventListener("message", async ({ data }: MessageEvent<WorkerReq>) => {
   if (isWorkerInitReq(data)) {
-    console.log("worker init req", data);
     const resp: WorkerInitResp = {
       id: data.id,
       type: "init-resp",
@@ -98,9 +97,7 @@ addEventListener("message", async ({ data }: MessageEvent<WorkerReq>) => {
     postMessage(resp);
   }
   if (isWorkerProofReq(data)) {
-    console.log("worker create proof req", data);
     const resp = await createZkProof(data);
-    console.log("worker create proof resp", resp);
     postMessage(resp);
   } else if (isWorkerMessage(data)) {
     postMessage({
