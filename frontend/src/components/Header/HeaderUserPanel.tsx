@@ -1,40 +1,69 @@
 import { addressShort } from '@/util/helpers.ts';
-import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownMenuProps, DropdownTrigger } from '@nextui-org/react';
-import { Plus, Settings } from 'lucide-react';
-import { useColored } from '@/hooks/useColored.ts';
-import { useGetSubjectId } from '@/hooks/web3/useGetSubjectId.ts';
+import { Dropdown, DropdownItem, DropdownMenu, DropdownSection, DropdownTrigger, Switch, User } from '@nextui-org/react';
+import { Box, CirclePlus, LogOut, Moon, Sun } from 'lucide-react';
 import { useDidStore } from '@/hooks/useDid.store.ts';
 import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
-import { useNavigate } from '@tanstack/react-router';
+import { useWalletStore } from '@/hooks/web3/useWallet.store.ts';
+import { useThemeStore } from '@/hooks/useTheme.store.ts';
+import { link } from '@/components/factories/link.tsx';
+import { compact } from 'lodash-es';
 
 export const HeaderUserPanel = () => {
-  const navigate = useNavigate();
   const { signOut } = useDisconnect();
-  const { data: subject } = useGetSubjectId();
+  const theme = useThemeStore();
+  const subject = useWalletStore(state => state.subjectId);
+  const walletType = useWalletStore(state => state.type);
   const did = useDidStore(state => state.did);
-  const settingsAction: DropdownMenuProps['onAction'] = async (key) => {
-    if (key === 'logout') await signOut();
-  };
-  const [keyColor] = useColored(subject?.key);
-  const [didColor] = useColored(did?.id);
 
   return (
-    <>
-      <div className="flex flex-col">
-        <p style={{ color: keyColor }}>{subject?.type}{': '}{addressShort(subject?.key || '')}</p>
-        <p style={{ color: didColor }}>{'DID: '}{addressShort(did?.id || '')}</p>
-      </div>
-      <Button onClick={() => navigate({ to: '/credential-issue' })} variant="light" radius="full" isIconOnly>
-        <Plus className="text-foreground"/>
-      </Button>
-      <Dropdown>
-        <DropdownTrigger>
-          <Button variant="light" radius="full" isIconOnly><Settings className="text-foreground"/></Button>
-        </DropdownTrigger>
-        <DropdownMenu onAction={settingsAction}>
-          <DropdownItem className="text-danger" color="danger" key="logout">Logout</DropdownItem>
-        </DropdownMenu>
-      </Dropdown>
-    </>
+    <Dropdown backdrop="blur">
+      <DropdownTrigger>
+        <User
+          name={(`${addressShort(subject?.key || '')}`)}
+          description={`did: ${addressShort(did?.id || '')}`}
+          isFocusable
+          as="button"
+          avatarProps={{
+            isBordered: true,
+            name: walletType || undefined,
+          }}
+        />
+      </DropdownTrigger>
+      <DropdownMenu>
+        <DropdownSection showDivider children={compact([
+          <DropdownItem
+            as={link({ to: '/credentials' })}
+            endContent={<Box size={14}/>}
+            key='1'
+          >Credentials</DropdownItem>,
+          import.meta.env.DEV ? <DropdownItem
+            as={link({ to: '/credential-issue' })}
+            endContent={<CirclePlus size={14}/>}
+            key='2'
+          >Credential issue</DropdownItem> : null,
+        ])}/>
+        <DropdownSection showDivider>
+          <DropdownItem
+            isReadOnly
+            onClick={theme.toggle}
+            endContent={<Switch
+              isSelected={theme.isDark}
+              size="sm"
+              color="default"
+              startContent={<Sun/>}
+              endContent={<Moon/>}
+              onValueChange={theme.toggle}
+              classNames={{ wrapper: 'm-0' }}
+            />}
+          >Dark mode</DropdownItem>
+        </DropdownSection>
+        <DropdownItem
+          onClick={signOut}
+          // className="text-warning"
+          color="danger"
+          endContent={<LogOut size={14} />}
+        >Logout</DropdownItem>
+      </DropdownMenu>
+    </Dropdown>
   );
 };

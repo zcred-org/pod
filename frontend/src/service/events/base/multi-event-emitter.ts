@@ -1,4 +1,4 @@
-import { compact, isEqual } from 'lodash';
+import { compact, isEqual } from 'lodash-es';
 
 type Listener<Args extends Array<unknown>> = (...args: Args) => void;
 
@@ -57,10 +57,12 @@ export class MultiEventEmitter<
     this.prevArgs[eventName] = args;
     const isContinue = !this.isIgnoreEqualArgs || !isEqual(args, prevArgs);
     if (isContinue && MultiEventEmitter.logging) {
-      console.log(compact([
+      const text = compact([
         `emit(${this.emitterName}.${eventName}, ${compact(args).join(', ')})`,
         ` to ${listeners?.map(({ name }) => name || 'anonymous').join(', ')}`,
-      ]).join(''));
+      ]).join('');
+      // toast.info(text);
+      console.log(text);
     }
     return isContinue;
   }

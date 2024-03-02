@@ -1,28 +1,28 @@
 import { type DataSource } from '../backbone/db-client.js';
 import { tokens } from '../util/tokens.js';
-import { CredentialEntity, type CredentialEntityNew } from '../entities/credential.entity.js';
+import { CredentialEntity, type CredentialEntityNew } from '../models/entities/credential.entity.js';
 import { and, eq, type Placeholder, sql } from 'drizzle-orm';
-import { type IssuerDto } from '../dtos/issuer.dto.js';
-import { type Identifier } from '../dtos/identifier.dto.js';
+import { type IssuerDto } from '../models/dtos/issuer.dto.js';
+import { type Identifier } from '../models/dtos/identifier.dto.js';
 import { issuerConcat, subjectIdConcat } from '../util/index.js';
-import { type CredentialDto } from '../controllers/credential/dtos/credential.dto.js';
 import { type Schema } from 'type-fest';
-import { type CredentialIdDto } from '../controllers/credential/dtos/credential-id.dto.js';
 import { inArray } from 'drizzle-orm/sql/expressions/conditions';
+import crypto from 'node:crypto';
 
 export class CredentialStore {
-  private readonly credentialsQuery;
-  private readonly credentialUpsertQuery;
+  private readonly findManyQuery;
+  private readonly findOneByIdQuery;
+  private readonly upsertOneQuery;
 
   public static readonly inject = tokens('dataSource');
 
   constructor({ db }: DataSource) {
-    this.credentialsQuery = db.select({
-      id: CredentialEntity.id,
-      data: CredentialEntity.data,
-      createdAt: CredentialEntity.createdAt,
-      updatedAt: CredentialEntity.updatedAt,
-    }).from(CredentialEntity).where(and(
+    this.findOneByIdQuery = db.select().from(CredentialEntity).where(and(
+      eq(CredentialEntity.id, sql.placeholder('id')),
+      eq(CredentialEntity.controlledBy, sql.placeholder('controlledBy')),
+    )).prepare('credential_of_user_find_by_id');
+
+    this.findManyQuery = db.select().from(CredentialEntity).where(and(
       eq(CredentialEntity.controlledBy, sql.placeholder('controlledBy')),
       inArray(sql.placeholder('subjectId'), [CredentialEntity.subjectId, sql`''`]),
       inArray(sql.placeholder('issuer'), [CredentialEntity.issuer, sql`''`]),
@@ -34,11 +34,9 @@ export class CredentialStore {
       subjectId: sql.placeholder('subjectId'),
       issuer: sql.placeholder('issuer'),
       data: sql.placeholder('data'),
-    } satisfies Schema<CredentialEntityNew, Placeholder>;
+    } as const satisfies Schema<CredentialEntityNew, Placeholder>;
 
-    this.credentialUpsertQuery = db.insert(CredentialEntity).values(credentialForSave).returning({
-      id: CredentialEntity.id,
-    }).onConflictDoUpdate({
+    this.upsertOneQuery = db.insert(CredentialEntity).values(credentialForSave).onConflictDoUpdate({
       target: [CredentialEntity.id],
       set: {
         ...credentialForSave,
@@ -46,23 +44,29 @@ export class CredentialStore {
       },
       // Check owner (controlledBy) on conflicted row
       where: eq(CredentialEntity.controlledBy, sql.placeholder('controlledBy')),
-    }).prepare('upsert_credential_of_user');
+    }).returning().prepare('credential_of_user_upsert');
   }
 
-  public async credentialUpsert(
+  public async findOneById(
+    args: { id: string, controlledBy: string },
+  ): Promise<CredentialEntity | null> {
+    const { 0: credential = null } = await this.findOneByIdQuery.execute(args);
+    return credential;
+  }
+
+  public async upsertOne(
     credentialForSave: CredentialEntityNew,
-  ): Promise<CredentialIdDto | null> {
+  ): Promise<CredentialEntity | null> {
     credentialForSave.id ??= crypto.randomUUID();
-    const { 0: credentialSaved = null } = await this.credentialUpsertQuery.execute(credentialForSave);
-    // If owner (controlledBy) mismatched on update, then nothing updated and return null
+    const { 0: credentialSaved = null } = await this.upsertOneQuery.execute(credentialForSave);
+    // If owner (controlledBy) mismatched on update, then nothing was updated and return null
     return credentialSaved;
   }
 
-  public async credentialsSearch(
+  public async findMany(
     filter: { controlledBy: string, issuer?: IssuerDto, subjectId?: Identifier },
-  ): Promise<CredentialDto[]> {
-    console.log('filter', filter);
-    return this.credentialsQuery.execute({
+  ): Promise<CredentialEntity[]> {
+    return this.findManyQuery.execute({
       controlledBy: filter.controlledBy,
       subjectId: filter.subjectId ? subjectIdConcat(filter.subjectId) : '',
       issuer: filter.issuer ? issuerConcat(filter.issuer) : '',

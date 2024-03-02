@@ -10,13 +10,16 @@ const cjsProgramTranslator = new JsProgramTranslator(o1js, "commonjs");
 const inputTransformer = new JsProgramInputTransformer(o1js);
 
 export class O1JSCredentialFilter {
-
-  constructor(
+  private constructor(
     readonly jalProgram: JalProgram,
     private readonly program: ReturnType<FilterModule["initialize"]>
   ) {}
 
   static async create(jalProgram: JalProgram): Promise<O1JSCredentialFilter> {
+    const args = import.meta.env.DEV
+      ? [/\.cjs$/, '.mjs'] as const
+      : [/\.mjs$/, '.cjs'] as const;
+    jalProgram.target = jalProgram.target.replace(args[0], args[1]);
     const translator = jalProgram.target.endsWith(".cjs")
       ? cjsProgramTranslator
       : mjsProgramTranslator;

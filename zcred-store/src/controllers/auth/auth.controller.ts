@@ -17,7 +17,7 @@ export function AuthController(context: Injector<AppContext>) {
       },
     },
     handler: async (req, reply) => {
-      const nonce = await authService.getNonce(req.body.did);
+      const nonce = authService.getNonce(req.body.did);
       return reply.status(200).send(nonce);
     },
   });
@@ -35,7 +35,7 @@ export function AuthController(context: Injector<AppContext>) {
         }, { description: 'JWSSignature from JWS', additionalProperties: false }),
       }, { additionalProperties: false }),
       response: {
-        200: Type.String({ description: 'JWT'}),
+        200: Type.String({ description: 'JWT' }),
         401: Type.String({ description: 'Error message' }),
       },
     },

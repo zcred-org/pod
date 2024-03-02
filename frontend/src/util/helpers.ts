@@ -12,6 +12,10 @@ export const addressShort = (address: string) => {
   return `${address.slice(from, from + 4)}...${address.slice(-4)}`;
 };
 
+export function toJWTPayload(obj: object): string {
+  return u8a.toString(u8a.fromString(JSON.stringify(obj)), 'base64url');
+}
+
 export const base64UrlDecode = (base64string: string) => {
   return u8a.toString(u8a.fromString(base64string, 'base64url'), 'utf-8');
 };

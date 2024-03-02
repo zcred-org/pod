@@ -11,24 +11,26 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as ProveRouteImport } from './routes/prove/route'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated/route'
+import { Route as ProveImport } from './routes/prove'
+import { Route as CredentialsImport } from './routes/credentials'
+import { Route as CredentialIssueImport } from './routes/credential-issue'
 import { Route as IndexImport } from './routes/index'
-import { Route as ProveSelectCredentialImport } from './routes/prove/select-credential'
-import { Route as ProveMismatchImport } from './routes/prove/mismatch'
-import { Route as AuthenticatedCredentialsImport } from './routes/_authenticated/credentials'
-import { Route as AuthenticatedCredentialIssueImport } from './routes/_authenticated/credential-issue'
-import { Route as AuthenticatedCredentialIdImport } from './routes/_authenticated/credential.$id'
+import { Route as CredentialIdImport } from './routes/credential.$id'
 
 // Create/Update Routes
 
-const ProveRouteRoute = ProveRouteImport.update({
+const ProveRoute = ProveImport.update({
   path: '/prove',
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthenticatedRouteRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const CredentialsRoute = CredentialsImport.update({
+  path: '/credentials',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const CredentialIssueRoute = CredentialIssueImport.update({
+  path: '/credential-issue',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -37,30 +39,9 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const ProveSelectCredentialRoute = ProveSelectCredentialImport.update({
-  path: '/select-credential',
-  getParentRoute: () => ProveRouteRoute,
-} as any)
-
-const ProveMismatchRoute = ProveMismatchImport.update({
-  path: '/mismatch',
-  getParentRoute: () => ProveRouteRoute,
-} as any)
-
-const AuthenticatedCredentialsRoute = AuthenticatedCredentialsImport.update({
-  path: '/credentials',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-
-const AuthenticatedCredentialIssueRoute =
-  AuthenticatedCredentialIssueImport.update({
-    path: '/credential-issue',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-
-const AuthenticatedCredentialIdRoute = AuthenticatedCredentialIdImport.update({
+const CredentialIdRoute = CredentialIdImport.update({
   path: '/credential/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  getParentRoute: () => rootRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -71,33 +52,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/_authenticated': {
-      preLoaderRoute: typeof AuthenticatedRouteImport
+    '/credential-issue': {
+      preLoaderRoute: typeof CredentialIssueImport
+      parentRoute: typeof rootRoute
+    }
+    '/credentials': {
+      preLoaderRoute: typeof CredentialsImport
       parentRoute: typeof rootRoute
     }
     '/prove': {
-      preLoaderRoute: typeof ProveRouteImport
+      preLoaderRoute: typeof ProveImport
       parentRoute: typeof rootRoute
     }
-    '/_authenticated/credential-issue': {
-      preLoaderRoute: typeof AuthenticatedCredentialIssueImport
-      parentRoute: typeof AuthenticatedRouteImport
-    }
-    '/_authenticated/credentials': {
-      preLoaderRoute: typeof AuthenticatedCredentialsImport
-      parentRoute: typeof AuthenticatedRouteImport
-    }
-    '/prove/mismatch': {
-      preLoaderRoute: typeof ProveMismatchImport
-      parentRoute: typeof ProveRouteImport
-    }
-    '/prove/select-credential': {
-      preLoaderRoute: typeof ProveSelectCredentialImport
-      parentRoute: typeof ProveRouteImport
-    }
-    '/_authenticated/credential/$id': {
-      preLoaderRoute: typeof AuthenticatedCredentialIdImport
-      parentRoute: typeof AuthenticatedRouteImport
+    '/credential/$id': {
+      preLoaderRoute: typeof CredentialIdImport
+      parentRoute: typeof rootRoute
     }
   }
 }
@@ -106,12 +75,10 @@ declare module '@tanstack/react-router' {
 
 export const routeTree = rootRoute.addChildren([
   IndexRoute,
-  AuthenticatedRouteRoute.addChildren([
-    AuthenticatedCredentialIssueRoute,
-    AuthenticatedCredentialsRoute,
-    AuthenticatedCredentialIdRoute,
-  ]),
-  ProveRouteRoute.addChildren([ProveMismatchRoute, ProveSelectCredentialRoute]),
+  CredentialIssueRoute,
+  CredentialsRoute,
+  ProveRoute,
+  CredentialIdRoute,
 ])
 
 /* prettier-ignore-end */

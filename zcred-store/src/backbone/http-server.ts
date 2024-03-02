@@ -6,12 +6,13 @@ import { type Config } from './config.js';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { CredentialDto } from '../controllers/credential/dtos/credential.dto.js';
 import { CredentialUpsertDto } from '../controllers/credential/dtos/credential-upsert.dto.js';
-import { IdentifierDto } from '../dtos/identifier.dto.js';
-import { IssuerDto } from '../dtos/issuer.dto.js';
+import { IdentifierDto } from '../models/dtos/identifier.dto.js';
+import { IssuerDto } from '../models/dtos/issuer.dto.js';
 import { Disposable } from 'typed-inject';
 import { tokens } from '../util/tokens.js';
 import { CredentialIdDto } from '../controllers/credential/dtos/credential-id.dto.js';
 import jwt from '@fastify/jwt';
+import { JwtPayloadDto } from '../models/dtos/jwt-payload.dto.js';
 
 export class HttpServer implements Disposable {
 
@@ -72,6 +73,7 @@ export class HttpServer implements Disposable {
     this.fastify.addSchema(CredentialUpsertDto);
     this.fastify.addSchema(IdentifierDto);
     this.fastify.addSchema(IssuerDto);
+    this.fastify.addSchema(JwtPayloadDto);
   }
 
   async listen(): Promise<void> {

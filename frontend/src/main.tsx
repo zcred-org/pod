@@ -7,9 +7,8 @@ import { WagmiProvider } from 'wagmi';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen.ts';
-import './service/auro.ts';
+import { HelmetProvider } from 'react-helmet-async';
 import './index.css';
-import './service/events/index.ts';
 
 declare module '@tanstack/react-router' {
   interface Register {
@@ -20,6 +19,9 @@ declare module '@tanstack/react-router' {
 export const router = createRouter({
   routeTree,
   defaultPreload: 'intent',
+  context: {
+    title: 'ZCred App',
+  },
 });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -27,7 +29,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <NextUIProvider className="flex flex-col min-h-screen">
-          <RouterProvider router={router}/>
+          <HelmetProvider>
+            <RouterProvider router={router}/>
+          </HelmetProvider>
         </NextUIProvider>
       </QueryClientProvider>
     </WagmiProvider>

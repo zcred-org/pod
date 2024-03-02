@@ -4,22 +4,24 @@ import * as u8a from 'uint8arrays';
 import KeyResolver from 'key-did-resolver';
 import { DID } from 'dids';
 import { Ed25519Provider } from 'key-did-provider-ed25519';
-import { InvalidSignatureError } from '../errors/invalid-signature.error.js';
+import { InvalidSignatureError } from '../backbone/errors/invalid-signature.error.js';
 import { tokens } from '../util/tokens.js';
-import { type AuthStore } from '../stores/auth.store.js';
 import { type HttpServer } from '../backbone/http-server.js';
-import { type JwtPayloadCrete } from '../types/jwt-payload.js';
+import { type JwtPayloadCrete } from '../models/dtos/jwt-payload.dto.js';
 import { Config } from '../backbone/config.js';
+import { CacheClock } from 'cache-clock';
+import crypto from 'node:crypto';
 
 export class AuthService {
   private did: DID = null as never;
 
+  private readonly nonce = new CacheClock();
+
   private readonly jwt;
 
-  public static readonly inject = tokens('authStore', 'httpServer', 'config');
+  public static readonly inject = tokens('httpServer', 'config');
 
   constructor(
-    private readonly authStore: AuthStore,
     httpServer: HttpServer,
     private readonly config: Config,
   ) {
@@ -33,12 +35,13 @@ export class AuthService {
     await this.did.authenticate();
   }
 
-  public async getNonce(did: string): Promise<string> {
-    return this.authStore.getNonce(did).nonce;
+  public getNonce(did: string): string {
+    const { v: value } = this.nonce.get(did) || this.nonce.set(did, crypto.randomUUID());
+    return value;
   }
 
   public async generateJwt(did: string, signature: JWSSignature): Promise<string> {
-    const { nonce, validUntil } = this.authStore.getNonce(did);
+    const nonce = this.getNonce(did);
     const [verifyResult, verifyError] = await this.did.verifyJWS({ payload: nonce, signatures: [signature] })
       .then((result) => [result, undefined] as const)
       .catch((error: Error) => [undefined, error] as const);
@@ -48,7 +51,8 @@ export class AuthService {
     return this.jwt.sign({
       nonce,
       did,
-      exp: Math.floor(validUntil / 1000),
-    } satisfies JwtPayloadCrete);
+    } satisfies JwtPayloadCrete, {
+      expiresIn: '5m',
+    });
   }
 }

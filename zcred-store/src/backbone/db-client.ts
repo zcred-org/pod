@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import type { Config } from './config.js';
-import * as schema from '../entities/schema.js';
+import * as schema from '../models/entities/schema.js';
 import { Disposable } from 'typed-inject';
 import { tokens } from '../util/tokens.js';
 

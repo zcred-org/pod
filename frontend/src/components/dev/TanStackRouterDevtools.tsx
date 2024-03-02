@@ -1,4 +1,4 @@
-import React, { FC, Suspense } from 'react';
+import React, { type FC, Suspense } from 'react';
 
 const DevTools: FC = React.lazy(() =>
   import('@tanstack/router-devtools').then((res) => ({

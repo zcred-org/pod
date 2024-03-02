@@ -17,7 +17,7 @@ export interface paths {
         /** @description Default Response */
         200: {
           content: {
-            "application/json": components["schemas"]["CredentialIdDto"];
+            "application/json": components["schemas"]["CredentialDto"];
           };
         };
         /** @description Credential update rejected with provided id */
@@ -56,6 +56,30 @@ export interface paths {
       };
     };
   };
+  "/api/v1/credential/{id}": {
+    /** @description Get an encrypted credential by id */
+    get: {
+      parameters: {
+        path: {
+          id: string;
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          content: {
+            "application/json": components["schemas"]["CredentialDto"];
+          };
+        };
+        /** @description Credential not found */
+        404: {
+          content: {
+            "application/json": string;
+          };
+        };
+      };
+    };
+  };
   "/api/v1/want-auth": {
     /** @description Request a nonce for signing for continue authentication */
     post: {
@@ -77,7 +101,7 @@ export interface paths {
     };
   };
   "/api/v1/auth": {
-    /** @description Authenticate user and return JWT */
+    /** @description Receives signature and returns JWT */
     post: {
       requestBody: {
         content: {
@@ -143,6 +167,12 @@ export interface components {
       type: string;
       /** Format: uri */
       uri: string;
+    };
+    JwtPayloadDto: {
+      nonce: string;
+      did: string;
+      exp: number;
+      iat: number;
     };
   };
   responses: never;

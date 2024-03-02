@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 type Handler<T> = (...args: [T] extends [never] ? [] : [T]) => Promise<void> | void;
 type EmitParams<T> = [T] extends [never] ? [] : [T];

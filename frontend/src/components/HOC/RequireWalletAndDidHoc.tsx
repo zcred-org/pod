@@ -1,20 +1,19 @@
-import { FC, PropsWithChildren, useEffect } from 'react';
-import { useDidStore } from '../../hooks/useDid.store.ts';
-import { DidModal } from '../modals/DidModal.tsx';
-import { isEqual } from 'lodash';
-import { useAddress } from '../../hooks/web3/useAddress.ts';
+import { type FC, PropsWithChildren, useEffect } from 'react';
+import { useDidStore } from '@/hooks/useDid.store.ts';
+import { DidModal } from '@/components/modals/DidModal.tsx';
 import { RequireWalletHoc } from './RequireWalletHoc.tsx';
+import { useWalletStore } from '@/hooks/web3/useWallet.store.ts';
 
 export const RequireWalletAndDidHoc: FC<PropsWithChildren> = ({ children }) => {
-  const { address, isConnecting } = useAddress();
+  const address = useWalletStore(state => state.address);
   const { addressOfOwner, reset, did } = useDidStore();
 
   useEffect(() => {
-    if (!isConnecting && addressOfOwner && !isEqual(address, addressOfOwner)) {
+    if (addressOfOwner && address !== addressOfOwner) {
       // console.log(`Resetting DID store: subject(${subjectId?.key}) !== addrFrom(${addressOfOwner})`);
       reset();
     }
-  }, [address, isConnecting, addressOfOwner, reset]);
+  }, [address, addressOfOwner, reset]);
 
-  return <RequireWalletHoc>{did ? children : <DidModal/>}</RequireWalletHoc>;
+  return <RequireWalletHoc>{did ? children : <DidModal />}</RequireWalletHoc>;
 };

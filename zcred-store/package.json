@@ -5,7 +5,7 @@
   "main": "./dist/main.js",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "dev": "tsm ./src/main.ts",
+    "dev": "tsx ./src/main.ts",
     "dev:watch": "nodemon",
     "dev:db:up": "docker compose -f dev/docker-compose.db-dev.yml up -d",
     "dev:db:down": "docker compose -f dev/docker-compose.db-dev.yml down",
@@ -18,14 +18,13 @@
   "devDependencies": {
     "@didtools/codecs": "^3.0.0",
     "@types/ms": "^0.7.34",
-    "@types/node": "^20.11.20",
-    "@zcredjs/core": "^1.0.0",
+    "@types/node": "^20.11.28",
+    "@zcredjs/core": "^1.0.2",
     "drizzle-kit": "^0.20.14",
     "nodemon": "^3.1.0",
-    "tsm": "^2.3.0",
     "tsx": "^4.7.1",
-    "type-fest": "^4.10.3",
-    "typescript": "^5.3.3"
+    "type-fest": "^4.12.0",
+    "typescript": "^5.4.2"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
@@ -33,23 +32,22 @@
     "@fastify/swagger": "^8.14.0",
     "@fastify/swagger-ui": "^3.0.0",
     "@fastify/type-provider-typebox": "^4.0.0",
-    "@sinclair/typebox": "^0.32.14",
+    "@sinclair/typebox": "^0.32.15",
     "@stablelib/sha256": "^1.0.1",
+    "cache-clock": "^1.6.0",
     "dids": "^5.0.2",
     "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.29.4",
-    "fastify": "^4.26.1",
+    "drizzle-orm": "^0.30.2",
+    "fastify": "^4.26.2",
     "key-did-provider-ed25519": "^4.0.2",
     "key-did-resolver": "^4.0.0",
     "ms": "^2.1.3",
-    "pino": "^8.10.0",
-    "pino-pretty": "^9.3.0",
     "postgres": "^3.4.3",
     "typed-inject": "^4.0.0",
-    "uint8arrays": "^5.0.2"
+    "uint8arrays": "^5.0.3"
   },
   "nodemonConfig": {
-    "exec": "tsm ./src/main.ts",
+    "exec": "tsx ./src/main.ts",
     "watch": [
       "src/**/*"
     ],

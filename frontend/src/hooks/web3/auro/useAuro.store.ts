@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { AuroWalletAdapter } from '@zcredjs/mina';
-import { WalletAddressEventEmitter, WalletAddressEventsEnum } from '../../../service/events/wallet-address-event.emitter.ts';
-import { WalletTypeEnum } from '../useWalletType.store.ts';
+import { WalletAddressEventEmitter, WalletAddressEventsEnum } from '@/service/events/wallet-address-event.emitter.ts';
+import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
 
 abstract class AuroAutoConnect {
   private static readonly autoConnectKey = 'mina:isDisconnected';
@@ -12,7 +11,6 @@ abstract class AuroAutoConnect {
 }
 
 type State = {
-  auroWalletAdapter: AuroWalletAdapter | null;
   address: string | null;
   isConnecting: boolean;
 }
@@ -23,7 +21,6 @@ type Actions = {
 }
 
 export const useAuroStore = create<State & Actions>()(devtools((set) => ({
-  auroWalletAdapter: null,
   isConnecting: false,
   address: null,
   connect: async () => {
@@ -41,7 +38,7 @@ export const useAuroStore = create<State & Actions>()(devtools((set) => ({
     AuroAutoConnect.lock();
     setAuroAddress(null);
   },
-}), { name: 'app', store: 'auro-account' }));
+}), { name: 'app', store: 'auro-store' }));
 
 /**
  * Private action for setting the auro address.
@@ -52,7 +49,6 @@ const setAuroAddress = (address: string | null, other?: Partial<State>) => {
   useAuroStore.setState({
     ...other,
     address: address || null,
-    auroWalletAdapter: address && window.mina ? new AuroWalletAdapter(window.mina) : null,
   }, false, `setAuroAddress:${address || 'null'}`);
   WalletAddressEventEmitter.emit(WalletAddressEventsEnum.WalletChanged, WalletTypeEnum.Auro, address || null);
 };

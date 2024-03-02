@@ -1,11 +1,12 @@
 /* eslint-disable no-prototype-builtins */
-import { useWalletTypeStore, WalletTypeEnum } from './useWalletType.store.ts';
+import { useWalletStore } from './useWallet.store.ts';
+import type { Exact } from 'type-fest';
+import type { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
 
-// TODO: Need to ensure "Exact" type for args, because ts doesn't validate keys not in WalletTypeEnum
 export const useByWalletType = <
-  T extends Record<WalletTypeEnum, unknown>,
+  T extends Exact<Record<WalletTypeEnum, unknown>, T>,
 >(args: T) => {
-  const walletType = useWalletTypeStore(state => state.walletType);
+  const walletType = useWalletStore(state => state.type);
   return walletType && args.hasOwnProperty(walletType)
     ? args[walletType] as T[WalletTypeEnum]
     : null;

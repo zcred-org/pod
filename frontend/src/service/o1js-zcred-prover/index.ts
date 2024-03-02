@@ -64,3 +64,5 @@ export class O1JSZCredProver {
     throw new Error(`Invalid worker response`);
   }
 }
+
+export const zCredProver = new O1JSZCredProver();

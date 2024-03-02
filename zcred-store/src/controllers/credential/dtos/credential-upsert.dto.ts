@@ -1,6 +1,6 @@
 import { type Static, Type } from '@sinclair/typebox';
-import { IssuerDtoRef } from '../../../dtos/issuer.dto.js';
-import { IdentifierDtoRef } from '../../../dtos/identifier.dto.js';
+import { IssuerDtoRef } from '../../../models/dtos/issuer.dto.js';
+import { IdentifierDtoRef } from '../../../models/dtos/identifier.dto.js';
 
 export type CredentialUpsertDto = Static<typeof CredentialUpsertDto>
 

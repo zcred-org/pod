@@ -7,15 +7,21 @@ export class CredentialService {
 
   constructor(private readonly credentialStore: CredentialStore) {}
 
-  public async credentialUpsert(
-    ...args: Parameters<CredentialStore['credentialUpsert']>
-  ): ReturnType<CredentialStore['credentialUpsert']> {
-    return this.credentialStore.credentialUpsert(...args);
+  public async findOneById(
+    ...args: Parameters<CredentialStore['findOneById']>
+  ): ReturnType<CredentialStore['findOneById']> {
+    return this.credentialStore.findOneById(...args);
   }
 
-  public async credentialsSearch(
-    ...args: Parameters<CredentialStore['credentialsSearch']>
-  ): ReturnType<CredentialStore['credentialsSearch']> {
-    return this.credentialStore.credentialsSearch(...args);
+  public async findMany(
+    ...args: Parameters<CredentialStore['findMany']>
+  ): ReturnType<CredentialStore['findMany']> {
+    return this.credentialStore.findMany(...args);
+  }
+
+  public async upsertOne(
+    ...args: Parameters<CredentialStore['upsertOne']>
+  ): ReturnType<CredentialStore['upsertOne']> {
+    return this.credentialStore.upsertOne(...args);
   }
 }

@@ -26,6 +26,7 @@ export type Proposal = {
   verificationKey?: string;
   provingKey?: string;
   accessToken?: string;
+  comment?: string;
 }
 
 type Json = boolean | number | string | {[key: string]: Json};

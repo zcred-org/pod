@@ -6,7 +6,6 @@ import { createInjector, Injector } from 'typed-inject';
 import { CredentialStore } from './stores/credential.store.js';
 import { CredentialService } from './services/credential.service.js';
 import { AuthService } from './services/auth.service.js';
-import { AuthStore } from './stores/auth.store.js';
 import { AuthController } from './controllers/auth/auth.controller.js';
 
 export type AppContext = {
@@ -16,7 +15,6 @@ export type AppContext = {
   credentialService: CredentialService;
   credentialStore: CredentialStore;
   authService: AuthService;
-  authStore: AuthStore;
 }
 
 export class App {
@@ -45,7 +43,6 @@ export class App {
       .provideClass('dataSource', DataSource)
       .provideClass('credentialStore', CredentialStore)
       .provideClass('credentialService', CredentialService)
-      .provideClass('authStore', AuthStore)
       .provideClass('authService', AuthService);
 
     // register services

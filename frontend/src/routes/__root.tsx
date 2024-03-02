@@ -1,23 +1,45 @@
-import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
+import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router';
 import { Button } from '@nextui-org/react';
-import { useTheme } from '../hooks/useTheme.ts';
-import { TanStackRouterDevtools } from '../components/dev/TanStackRouterDevtools.tsx';
+import { useThemeStore } from '@/hooks/useTheme.store.ts';
+import { TanStackRouterDevtools } from '@/components/dev/TanStackRouterDevtools.tsx';
 import { Toaster } from 'sonner';
-import { Header } from '../components/Header/Header.tsx';
+import { Header } from '@/components/Header/Header.tsx';
+import { useEffect } from 'react';
+import { WalletAddressEventEmitter, WalletAddressEventsEnum } from '@/service/events/wallet-address-event.emitter.ts';
+import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
+import { useWagmiConnector } from '@/hooks/web3/ethereum/useWagmiConnector.ts';
+import { Alerts } from '@/components/modals/Alerts.tsx';
 
-export const Route = createRootRoute({
+
+interface RouterContext {
+  title: string;
+}
+
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
 });
 
 function RootComponent() {
-  const { isDarkTheme } = useTheme();
+  const isDarkTheme = useThemeStore(state => state.isDark);
+
+  // Global subscription to ETH address changes
+  const { connector } = useWagmiConnector();
+  useEffect(() => {
+    if (connector.isFetching || connector.failureReason) return;
+    WalletAddressEventEmitter.emit(
+      WalletAddressEventsEnum.WalletChanged,
+      WalletTypeEnum.Ethereum,
+      connector.data?.account.address || null,
+    );
+  }, [connector]);
 
   return (
     <>
       <Header/>
       <Outlet/>
       <TanStackRouterDevtools/>
+      <Alerts/>
       <Toaster
         richColors
         theme={isDarkTheme ? 'dark' : 'light'}

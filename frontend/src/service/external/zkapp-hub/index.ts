@@ -1,7 +1,7 @@
 import { CreateProgramReq, CreateProgramResp, ProgramEntity } from "./types.ts";
 import { config } from "../../../config/index.ts";
 
-const origin = new URL(config.zkappHubOrigin);
+const origin = new URL(config.zkAppHubOrigin);
 
 export class ZkappHub {
 

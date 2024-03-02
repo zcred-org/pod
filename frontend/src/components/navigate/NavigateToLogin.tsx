@@ -1,5 +1,5 @@
 import { Navigate, useRouterState } from '@tanstack/react-router';
-import { FC } from 'react';
+import { type FC } from 'react';
 
 export type NavigateToLoginProps = {
   /* Do redirect back after login, default is true */

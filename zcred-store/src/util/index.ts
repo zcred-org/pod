@@ -1,5 +1,5 @@
-import type { Identifier } from '../dtos/identifier.dto.js';
-import type { IssuerDto } from '../dtos/issuer.dto.js';
+import type { Identifier } from '../models/dtos/identifier.dto.js';
+import type { IssuerDto } from '../models/dtos/issuer.dto.js';
 
 /**
  *  Project root directory
