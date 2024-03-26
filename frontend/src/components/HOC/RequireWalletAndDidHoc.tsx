@@ -1,19 +1,10 @@
-import { type FC, PropsWithChildren, useEffect } from 'react';
-import { useDidStore } from '@/hooks/useDid.store.ts';
-import { DidModal } from '@/components/modals/DidModal.tsx';
-import { RequireWalletHoc } from './RequireWalletHoc.tsx';
-import { useWalletStore } from '@/hooks/web3/useWallet.store.ts';
+import type { PropsWithChildren, ReactNode } from 'react';
+import { NavigateToLogin } from '@/components/navigate/NavigateToLogin.tsx';
+import { $isWalletAndDidConnected } from '@/stores/other.ts';
 
-export const RequireWalletAndDidHoc: FC<PropsWithChildren> = ({ children }) => {
-  const address = useWalletStore(state => state.address);
-  const { addressOfOwner, reset, did } = useDidStore();
 
-  useEffect(() => {
-    if (addressOfOwner && address !== addressOfOwner) {
-      // console.log(`Resetting DID store: subject(${subjectId?.key}) !== addrFrom(${addressOfOwner})`);
-      reset();
-    }
-  }, [address, addressOfOwner, reset]);
-
-  return <RequireWalletHoc>{did ? children : <DidModal />}</RequireWalletHoc>;
-};
+export function RequireWalletAndDidHoc({ children }: PropsWithChildren): ReactNode {
+  return $isWalletAndDidConnected.value
+    ? <>{children}</>
+    : <NavigateToLogin />;
+}

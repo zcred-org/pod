@@ -1,15 +1,15 @@
 import { Card, CardBody, Progress } from '@nextui-org/react';
 import { createFileRoute } from '@tanstack/react-router';
-import { zCredStore } from '@/service/external/zcred-store';
+import { AxiosError } from 'axios';
 import dayjs from 'dayjs';
 import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
-import { AxiosError } from 'axios';
-import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
 import { queryClient } from '@/config/query-client.ts';
+import { zCredStore } from '@/service/external/zcred-store';
+import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
 
 export const Route = createFileRoute('/credential/$id')({
-  component: () => <RequireWalletAndDidHoc><CredentialComponent/></RequireWalletAndDidHoc>,
+  component: () => <RequireWalletAndDidHoc><CredentialComponent /></RequireWalletAndDidHoc>,
   errorComponent: ({ error }) => (
     <PageContainer>{
       error instanceof AxiosError && error.response?.status === 404 ? <p>Credential not found</p>
@@ -28,7 +28,7 @@ export const Route = createFileRoute('/credential/$id')({
   pendingComponent: () => (
     <PageContainer>
       <p>Loading credential...</p>
-      <Progress isStriped isIndeterminate/>
+      <Progress isStriped isIndeterminate />
     </PageContainer>
   ),
 });

@@ -11,18 +11,13 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as ProveImport } from './routes/prove'
 import { Route as CredentialsImport } from './routes/credentials'
 import { Route as CredentialIssueImport } from './routes/credential-issue'
+import { Route as ProveRouteImport } from './routes/prove/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as CredentialIdImport } from './routes/credential.$id'
 
 // Create/Update Routes
-
-const ProveRoute = ProveImport.update({
-  path: '/prove',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const CredentialsRoute = CredentialsImport.update({
   path: '/credentials',
@@ -31,6 +26,11 @@ const CredentialsRoute = CredentialsImport.update({
 
 const CredentialIssueRoute = CredentialIssueImport.update({
   path: '/credential-issue',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ProveRouteRoute = ProveRouteImport.update({
+  path: '/prove',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -52,16 +52,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/prove': {
+      preLoaderRoute: typeof ProveRouteImport
+      parentRoute: typeof rootRoute
+    }
     '/credential-issue': {
       preLoaderRoute: typeof CredentialIssueImport
       parentRoute: typeof rootRoute
     }
     '/credentials': {
       preLoaderRoute: typeof CredentialsImport
-      parentRoute: typeof rootRoute
-    }
-    '/prove': {
-      preLoaderRoute: typeof ProveImport
       parentRoute: typeof rootRoute
     }
     '/credential/$id': {
@@ -75,9 +75,9 @@ declare module '@tanstack/react-router' {
 
 export const routeTree = rootRoute.addChildren([
   IndexRoute,
+  ProveRouteRoute,
   CredentialIssueRoute,
   CredentialsRoute,
-  ProveRoute,
   CredentialIdRoute,
 ])
 

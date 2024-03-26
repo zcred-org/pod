@@ -1,4 +1,4 @@
-import { JalProgram } from "@jaljs/core";
+import type { JalProgram } from '@jaljs/core';
 
 export type CreateProgramReq = {
   program: JalProgram;

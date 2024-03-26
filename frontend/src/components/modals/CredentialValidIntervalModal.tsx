@@ -1,102 +1,84 @@
 import { Button, Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@nextui-org/react';
-import { create } from 'zustand';
-import { type ChangeEventHandler, useEffect, useState } from 'react';
+import { batch, signal } from '@preact/signals-react';
 import dayjs from 'dayjs';
-import { type RequireAtLeastOne } from 'type-fest';
+import { type ChangeEventHandler, type ReactNode } from 'react';
+import type { DateInterval, DateIntervalRequiredFields } from '@/types/date-interval.ts';
+import { RejectedByUserError } from '@/util/errors.ts';
 
-type EnabledFields = RequireAtLeastOne<{ from?: boolean, to?: boolean }>;
-type DateInterval = {
-  from?: Date;
-  to?: Date;
-}
-type Resolve = (value: DateInterval) => void;
-type Reject = (reason?: Error) => void;
+const request = signal<undefined | {
+  title: string;
+  enabledFields: DateIntervalRequiredFields;
+  resolve: (value: DateInterval) => void;
+  reject: (reason?: Error) => void;
+}>(undefined);
+const from = signal('');
+const to = signal('');
+const fromError = signal<string | undefined>(undefined);
+const toError = signal<string | undefined>(undefined);
 
-type State = {
-  enabledFields: EnabledFields;
-  resolve: Resolve | null;
-  reject: Reject | null;
-}
-
-type Actions = {
-  open: (args: { enabledFields: EnabledFields, resolve: Resolve, reject: Reject }) => void;
-  close: () => void;
-}
-
-const initialState: State = {
-  enabledFields: { from: true, to: true },
-  resolve: null,
-  reject: null,
-};
-
-const useModalStore = create<State & Actions>()(set => ({
-  ...initialState,
-  open: (args) => set(args),
-  close: () => set(initialState),
+request.subscribe(() => batch(() => {
+  from.value = '';
+  to.value = '';
+  fromError.value = undefined;
+  toError.value = undefined;
 }));
 
-export const CredentialValidIntervalModal = () => {
-  const { resolve, reject, enabledFields } = useModalStore();
-  const [state, setState] = useState({ from: '', to: '' });
+const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+  ({ from: fromError, to: toError })[e.currentTarget.name]!.value = undefined;
+  ({ from, to })[e.currentTarget.name]!.value = e.currentTarget.value;
+};
 
-  useEffect(() => setState({ from: '', to: '' }), [resolve]);
-
-  const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
-    setState({ ...state, [e.currentTarget.name]: e.target.value });
-  };
-
-  if (!enabledFields.to && !enabledFields.from) {
-    throw new Error('At least one field must be enabled for CredentialValidIntervalModal');
+const onSubmit = () => {
+  const fromParsed = request.value?.enabledFields.from ? dayjs(from.value) : undefined;
+  const toParsed = request.value?.enabledFields.to ? dayjs(to.value) : undefined;
+  if (fromParsed?.isValid() === false || toParsed?.isValid() === false) {
+    fromParsed?.isValid() === false && (fromError.value = 'Invalid date');
+    toParsed?.isValid() === false && (toError.value = 'Invalid date');
+    return;
   }
+  request.value!.resolve({
+    from: fromParsed?.toDate(),
+    to: toParsed?.toDate(),
+  });
+};
 
-  const title = enabledFields.to && enabledFields.from
-    ? 'Set Credential Valid Interval'
-    : enabledFields.to
-      ? 'Set Credential Valid To'
-      : enabledFields.from
-        ? 'Set Credential Valid From'
-        : '';
-  const description = enabledFields.to && enabledFields.from
-    ? 'Select interval when credential will be valid:'
-    : enabledFields.from
-      ? 'Select date when credential starts to be valid:'
-      : enabledFields.to
-        ? 'Select date when credential becames invalid:'
-        : '';
-  const onCancel = () => reject!(new Error('Cancelled'));
-  const onSubmit = () => {
-    const from = enabledFields.from ? dayjs(state.from).toDate() : undefined;
-    const to = enabledFields.to ? dayjs(state.to).toDate() : undefined;
-    resolve!({ from, to } as DateInterval);
-  };
+const onCancel = () => request.value!.reject(new RejectedByUserError());
+
+export function CredentialValidIntervalModal(): ReactNode {
+  const { enabledFields, title } = request.value || {};
 
   return (
-    <Modal isOpen={!!resolve} backdrop="blur" onClose={onCancel} placement="center">
+    <Modal isOpen={!!enabledFields} backdrop="blur" placement="center" hideCloseButton>
       <ModalContent>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody>
-          <p>{description}</p>
-          {enabledFields.from ? <Input
+          {enabledFields?.from ? <Input
             name="from"
-            label="From"
+            label="Valid From"
             type="date"
-            value={state.from}
+            value={from as unknown as typeof from.value}
             onChange={onChange}
-            isRequired={enabledFields.from}
+            isRequired={enabledFields?.from}
             isClearable
             labelPlacement="outside"
-            onClear={() => setState({ ...state, from: '' })}
+            onClear={() => from.value = ''}
+            errorMessage={fromError}
+            color={fromError.value ? 'danger' : undefined}
+            onFocus={() => fromError.value = undefined}
           /> : null}
-          {enabledFields.to ? <Input
+          {enabledFields?.to ? <Input
             name="to"
-            label="To"
+            label="Valid Until"
             type="date"
-            value={state.to}
+            value={to as unknown as typeof to.value}
             onChange={onChange}
-            isRequired={enabledFields.to}
+            isRequired={enabledFields?.to}
             isClearable
             labelPlacement="outside"
-            onClear={() => setState({ ...state, to: '' })}
+            onClear={() => to.value = ''}
+            errorMessage={toError}
+            color={toError.value ? 'danger' : undefined}
+            onFocus={() => toError.value = undefined}
           /> : null}
         </ModalBody>
         <ModalFooter>
@@ -104,32 +86,46 @@ export const CredentialValidIntervalModal = () => {
             onClick={onCancel}
             color="danger"
             variant="light"
+            size="sm"
           >Cancel</Button>
           <Button
             onClick={onSubmit}
             color="success"
+            size="sm"
           >Confirm</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
   );
-};
+}
 
 CredentialValidIntervalModal.open = async (
-  enabledFields: EnabledFields,
-): Promise<DateInterval> => {
-  return new Promise((resolve, reject) => {
-    useModalStore.getState().open({
-      enabledFields,
-      resolve: value => {
-        resolve(value);
-        useModalStore.getState().close();
-      },
-      reject: reason => {
-        reject(reason);
-        useModalStore.getState().close();
-      },
-    });
-  });
+  enabledFields: DateIntervalRequiredFields,
+): Promise<DateInterval | undefined> => new Promise((resolve, reject) => {
+  if (!enabledFields.to && !enabledFields.from) {
+    resolve(undefined);
+    return;
+  }
+  request.value = {
+    title: enabledFields.to && enabledFields.from
+      ? 'Credential Valid Interval'
+      : enabledFields.from
+        ? 'Credential Valid From'
+        : enabledFields.to
+          ? 'Credential Valid Until'
+          : '',
+    enabledFields,
+    resolve: value => {
+      resolve(value);
+      request.value = undefined;
+    },
+    reject: reason => {
+      reject(reason);
+      request.value = undefined;
+    },
+  };
+});
+
+CredentialValidIntervalModal.close = () => {
+  request.value = undefined;
 };
-CredentialValidIntervalModal.close = () => useModalStore.getState().close();

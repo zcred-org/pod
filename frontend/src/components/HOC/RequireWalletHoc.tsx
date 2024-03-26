@@ -1,10 +1,10 @@
-import { type FC, PropsWithChildren } from 'react';
-import { NavigateToLogin, NavigateToLoginProps } from '@/components/navigate/NavigateToLogin.tsx';
-import { useWalletStore } from '@/hooks/web3/useWallet.store.ts';
+import type { PropsWithChildren, ReactNode } from 'react';
+import { NavigateToLogin } from '@/components/navigate/NavigateToLogin.tsx';
+import { $isWalletConnected } from '@/stores/other.ts';
 
-type RequireWalletHocProps = PropsWithChildren & NavigateToLoginProps;
 
-export const RequireWalletHoc: FC<RequireWalletHocProps> = ({ children, saveLocation }) => {
-  const walletType = useWalletStore(state => state.type);
-  return walletType ? children : <NavigateToLogin saveLocation={saveLocation}/>;
-};
+export function RequireWalletHoc({ children }: PropsWithChildren): ReactNode {
+  return $isWalletConnected.value
+    ? <>{children}</>
+    : <NavigateToLogin />;
+}

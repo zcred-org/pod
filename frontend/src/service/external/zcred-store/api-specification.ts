@@ -1,5 +1,5 @@
-import { components, paths } from './generated';
-import { type HttpCredential } from '@zcredjs/core';
+import type { HttpCredential } from '@zcredjs/core';
+import type { components, paths } from './generated';
 
 export type ZCredStore = components['schemas'] & {
   CredentialDecoded: Omit<components['schemas']['CredentialDto'], 'data'> & {

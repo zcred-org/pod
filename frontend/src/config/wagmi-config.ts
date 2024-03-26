@@ -1,3 +1,4 @@
+import { getConnectorClient as _getConnectorClient } from '@wagmi/core';
 import { createWeb3Modal } from '@web3modal/wagmi/react';
 import { defaultWagmiConfig } from '@web3modal/wagmi/react/config';
 import { arbitrum, mainnet, polygonMumbai, sepolia } from 'wagmi/chains';
@@ -18,3 +19,5 @@ export const web3modal = createWeb3Modal({
   wagmiConfig,
   themeVariables: { '--w3m-border-radius-master': '2px' },
 });
+
+export const getConnectorClient = _getConnectorClient.bind(undefined, wagmiConfig);

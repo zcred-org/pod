@@ -1,4 +1,4 @@
-import { JalProgram } from "@jaljs/core";
+import type { JalProgram } from '@jaljs/core';
 
 export type Selector = {
   meta: {
@@ -29,7 +29,7 @@ export type Proposal = {
   comment?: string;
 }
 
-type Json = boolean | number | string | {[key: string]: Json};
+type Json = boolean | number | string | { [key: string]: Json };
 
 export type ProvingResult = {
   proof: string;

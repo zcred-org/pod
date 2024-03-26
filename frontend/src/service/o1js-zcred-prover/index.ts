@@ -1,16 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { type JalProgram } from '@jaljs/core';
+import { type ZkCredential } from '@zcredjs/core';
 import {
   isWorkerError,
+  isWorkerInitResp,
   isWorkerProofResp,
   isWorkerResp,
   type WorkerError,
   type WorkerInitReq,
   type WorkerProofReq,
   type WorkerProofResp,
-  type WorkerResp
-} from "./types.ts";
-import { type ZkCredential } from "@zcredjs/core";
-import { type JalProgram } from "@jaljs/core";
-import { type ProvingResult } from "../external/verifier/types.ts";
+  type WorkerResp,
+} from './types.ts';
+import type { ProvingResult } from '../external/verifier/types.ts';
 
 type CreateProofInput = {
   credential: ZkCredential;
@@ -32,9 +34,12 @@ export class O1JSZCredProver {
     this.workerInitialize = new Promise((resolve, reject) => {
       this.promises[0] = { resolve, reject };
     });
-    this.worker = new Worker(new URL(`./worker.ts`, import.meta.url), { type: "module" });
+    this.worker = new Worker(new URL(`./worker.ts`, import.meta.url), { type: 'module' });
     this.worker.onmessage = ({ data }: MessageEvent<WorkerResp>) => {
       if (isWorkerResp(data)) {
+        if (isWorkerInitResp(data) && import.meta.env.DEV) {
+          console.log('DEV: Worker initialized');
+        }
         this.promises[data.id].resolve(data);
         delete this.promises[data.id];
       }
@@ -42,9 +47,9 @@ export class O1JSZCredProver {
   }
 
   async createProof({
-    credential,
-    jalProgram
-  }: CreateProofInput): Promise<Omit<ProvingResult, "signature">> {
+  credential,
+  jalProgram,
+}: CreateProofInput): Promise<Omit<ProvingResult, 'signature'>> {
     await this.workerInitialize;
     const workerResp = await new Promise<
       WorkerProofResp | WorkerError
@@ -52,9 +57,9 @@ export class O1JSZCredProver {
       this.promises[this.idCount] = { resolve, reject };
       const workerReq: WorkerProofReq = {
         id: this.idCount,
-        type: "proof-req",
+        type: 'proof-req',
         credential: credential,
-        jalProgram: jalProgram
+        jalProgram: jalProgram,
       };
       this.idCount++;
       this.worker.postMessage(workerReq);

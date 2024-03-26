@@ -1,24 +1,24 @@
-import { CreateProgramReq, CreateProgramResp, ProgramEntity } from "./types.ts";
-import { config } from "../../../config/index.ts";
+import { config } from '@/config';
+import type { CreateProgramReq, CreateProgramResp, ProgramEntity } from './types.ts';
 
 const origin = new URL(config.zkAppHubOrigin);
 
 export class ZkappHub {
 
   static async createProgram(input: CreateProgramReq): Promise<CreateProgramResp> {
-    const endpoint = new URL("./api/v1/program", origin);
-    const method = "POST";
+    const endpoint = new URL('./api/v1/program', origin);
+    const method = 'POST';
     const resp = await fetch(endpoint, {
       method: method,
       body: JSON.stringify(input),
       headers: {
-        "Content-Type": "application/json"
-      }
+        'Content-Type': 'application/json',
+      },
     });
     if (resp.ok) return await resp.json();
     const message = await resp.text();
     throw new Error(
-      `Http request error. URL: ${endpoint.href}; message: ${message}; method: ${method}`
+      `Http request error. URL: ${endpoint.href}; message: ${message}; method: ${method}`,
     );
   }
 
@@ -28,7 +28,7 @@ export class ZkappHub {
     if (resp.ok) return await resp.json();
     const message = await resp.text();
     throw new Error(
-      `Http request error. URL: ${endpoint.href}; message: ${message}; method: GET`
+      `Http request error. URL: ${endpoint.href}; message: ${message}; method: GET`,
     );
   }
 }

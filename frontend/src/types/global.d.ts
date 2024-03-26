@@ -1,8 +1,6 @@
-/// <reference types="vite/client" />
-/// <reference types="vite-plugin-svgr/client" />
-
-import type { IAuroWallet } from '@zcredjs/mina';
+import type { ReduxDevtoolsExtensionCompose } from '@redux-devtools/extension';
 import type { IEIP1193Provider } from '@zcredjs/ethereum';
+import type { IAuroWallet } from '@zcredjs/mina';
 
 declare module '@zcredjs/mina' {
   interface IAuroEventHandlers {
@@ -19,5 +17,6 @@ declare global {
   interface Window {
     mina?: IAuroWallet;
     ethereum?: IEIP1193Provider;
+    __REDUX_DEVTOOLS_EXTENSION__?: ReduxDevtoolsExtensionCompose;
   }
 }

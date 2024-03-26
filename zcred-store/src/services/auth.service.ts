@@ -15,7 +15,8 @@ import crypto from 'node:crypto';
 export class AuthService {
   private did: DID = null as never;
 
-  private readonly nonce = new CacheClock();
+  /** Cache with key=did and value=nonce **/
+  private readonly nonceCache = new CacheClock();
 
   private readonly jwt;
 
@@ -36,7 +37,7 @@ export class AuthService {
   }
 
   public getNonce(did: string): string {
-    const { v: value } = this.nonce.get(did) || this.nonce.set(did, crypto.randomUUID());
+    const { v: value } = this.nonceCache.get(did) || this.nonceCache.set(did, crypto.randomUUID());
     return value;
   }
 

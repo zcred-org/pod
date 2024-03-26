@@ -1,14 +1,15 @@
-import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router';
 import { Button } from '@nextui-org/react';
-import { useThemeStore } from '@/hooks/useTheme.store.ts';
-import { TanStackRouterDevtools } from '@/components/dev/TanStackRouterDevtools.tsx';
-import { Toaster } from 'sonner';
-import { Header } from '@/components/Header/Header.tsx';
+import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router';
 import { useEffect } from 'react';
-import { WalletAddressEventEmitter, WalletAddressEventsEnum } from '@/service/events/wallet-address-event.emitter.ts';
-import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
+import { Toaster } from 'sonner';
+import { TanStackRouterDevtools } from '@/components/dev/TanStackRouterDevtools.tsx';
+import { Header } from '@/components/Header/Header.tsx';
+import { CredentialValidIntervalModal } from '@/components/modals/CredentialValidIntervalModal.tsx';
+import { PromptModals } from '@/components/modals/PromptModals.tsx';
 import { useWagmiConnector } from '@/hooks/web3/ethereum/useWagmiConnector.ts';
-import { Alerts } from '@/components/modals/Alerts.tsx';
+import { ThemeStore } from '@/stores/theme.store.ts';
+import { WalletStore } from '@/stores/wallet.store.ts';
+import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
 
 
 interface RouterContext {
@@ -21,32 +22,41 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootComponent() {
-  const isDarkTheme = useThemeStore(state => state.isDark);
+  return (
+    <>
+      <Header />
+      <Outlet />
+      <TanStackRouterDevtools />
+      <PromptModals />
+      <WagmiConnectorSubscription />
+      <Toast/>
+      <CredentialValidIntervalModal />
+    </>
+  );
+}
 
+function WagmiConnectorSubscription() {
   // Global subscription to ETH address changes
   const { connector } = useWagmiConnector();
   useEffect(() => {
     if (connector.isFetching || connector.failureReason) return;
-    WalletAddressEventEmitter.emit(
-      WalletAddressEventsEnum.WalletChanged,
-      WalletTypeEnum.Ethereum,
-      connector.data?.account.address || null,
-    );
+    WalletStore.calcNextWallet({
+      maybeWalletType: WalletTypeEnum.Ethereum,
+      isConnected: !!connector.data?.account.address,
+    }).then(WalletStore.commit);
   }, [connector]);
 
+  return null;
+}
+
+function Toast() {
   return (
-    <>
-      <Header/>
-      <Outlet/>
-      <TanStackRouterDevtools/>
-      <Alerts/>
-      <Toaster
-        richColors
-        theme={isDarkTheme ? 'dark' : 'light'}
-        position="top-center"
-        closeButton
-      />
-    </>
+    <Toaster
+      richColors
+      theme={ThemeStore.$isDark.value ? 'dark' : 'light'}
+      position="top-center"
+      closeButton
+    />
   );
 }
 

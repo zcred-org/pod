@@ -12,11 +12,10 @@ export const queryClient = new QueryClient({
       },
     },
     mutations: {
-      throwOnError: error => {
+      onError: error => {
         console.error('Mutation Error:', error);
         toast.error(`Mutation Error: ${error.message}`);
-        return false;
-      },
-    }
+      }
+    },
   },
 });

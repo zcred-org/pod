@@ -1,25 +1,29 @@
-import { ZCredStore, ZCredStoreCredentialByIdRoute, ZCredStoreCredentialsRoute, ZCredStoreCredentialUpsertRoute } from './api-specification.ts';
 import type { HttpCredential } from '@zcredjs/core';
-import { ZCredStoreApi } from './index.ts';
-import { useDidStore } from '@/hooks/useDid.store.ts';
+import { DidStore } from '@/stores/did.store.ts';
+import { type ZCredStore, ZCredStoreCredentialByIdRoute, ZCredStoreCredentialsRoute, ZCredStoreCredentialUpsertRoute } from './api-specification.ts';
+import type { ZCredStoreApi } from './index.ts';
 
 export class CredentialsApi {
-  constructor(private readonly context: ZCredStoreApi['context']) {}
+  constructor(private readonly context: ZCredStoreApi['context']) {
+    this.credentialById = this.credentialById.bind(this);
+    this.credentials = this.credentials.bind(this);
+    this.credentialUpsert = this.credentialUpsert.bind(this);
+  }
 
-  public readonly credentialById = async (id: string): Promise<ZCredStore['CredentialDecoded']> => {
+  public async credentialById(id: string): Promise<ZCredStore['CredentialDecoded']> {
     const res = await this.context.axios.request<ZCredStore['CredentialByIdRoute']['200']>({
       ...ZCredStoreCredentialByIdRoute,
       url: ZCredStoreCredentialByIdRoute.url.replace('{id}', id),
     });
     return {
       ...res.data,
-      data: await useDidStore.getState().decrypt<HttpCredential>(res.data.data),
+      data: await DidStore.decrypt<HttpCredential>(res.data.data),
     };
-  };
+  }
 
-  public readonly credentials = async (
+  public async credentials(
     filter: { subject?: ZCredStore['IdentifierDto'], issuer?: ZCredStore['IssuerDto'] } = {},
-  ): Promise<ZCredStore['CredentialDecoded'][]> => {
+  ): Promise<ZCredStore['CredentialDecoded'][]> {
     const params = filter.issuer && filter.subject && {
       'issuer.type': filter.issuer.type,
       'issuer.uri': filter.issuer.uri.replace(/\/+$/, ''), // TODO: Unify the format
@@ -33,14 +37,14 @@ export class CredentialsApi {
     // TODO: hangup???!
     return Promise.all(res.data.map(async credential => ({
       ...credential,
-      data: await useDidStore.getState().decrypt<HttpCredential>(credential.data),
+      data: await DidStore.decrypt<HttpCredential>(credential.data),
     })));
-  };
+  }
 
-  public readonly credentialUpsert = async (credential: HttpCredential, id?: string): Promise<ZCredStore['CredentialDecoded']> => {
+  public async credentialUpsert(credential: HttpCredential, id?: string): Promise<ZCredStore['CredentialDecoded']> {
     const body: ZCredStore['CredentialUpsertRoute']['body'] = {
       id,
-      data: await useDidStore.getState().encrypt(credential),
+      data: await DidStore.encrypt(credential),
       issuer: credential.meta.issuer,
       subjectId: credential.attributes.subject.id,
     };
@@ -50,7 +54,7 @@ export class CredentialsApi {
     });
     return {
       ...res.data,
-      data: await useDidStore.getState().decrypt<HttpCredential>(res.data.data),
+      data: await DidStore.decrypt<HttpCredential>(res.data.data),
     };
-  };
+  }
 }

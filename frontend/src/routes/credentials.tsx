@@ -1,16 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { PageContainer } from '@/components/PageContainer.tsx';
-import { CredentialCard } from '@/components/CredentialCard.tsx';
 import { Progress } from '@nextui-org/react';
-import { zCredStore } from '@/service/external/zcred-store';
-import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
+import { createFileRoute } from '@tanstack/react-router';
 import { FileSearch2 } from 'lucide-react';
-import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
-import { queryClient } from '@/config/query-client.ts';
+import { CredentialCard } from '@/components/CredentialCard.tsx';
 import { link } from '@/components/factories/link.tsx';
+import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
+import { PageContainer } from '@/components/PageContainer.tsx';
+import { queryClient } from '@/config/query-client.ts';
+import { zCredStore } from '@/service/external/zcred-store';
+import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
 
 export const Route = createFileRoute('/credentials')({
-  component: () => <RequireWalletAndDidHoc><CredentialsComponent/></RequireWalletAndDidHoc>,
+  component: () => <RequireWalletAndDidHoc><CredentialsComponent /></RequireWalletAndDidHoc>,
   beforeLoad: ({ location }) => {
     routeRequireWalletAndDid(location);
     return ({ title: 'Credentials' });
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/credentials')({
   pendingComponent: () => (
     <PageContainer>
       <p>Loading credentials...</p>
-      <Progress isStriped isIndeterminate/>
+      <Progress isStriped isIndeterminate />
     </PageContainer>
   ),
 });
@@ -41,7 +41,7 @@ function CredentialsComponent() {
         ))
         : (
           <div className="flex gap-3 justify-center">
-            <FileSearch2/>
+            <FileSearch2 />
             <p>You have no credentials</p>
           </div>
         )

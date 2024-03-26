@@ -1,15 +1,17 @@
-import { Card, CardBody, CardProps, Divider } from '@nextui-org/react';
-import { type FC, useMemo } from 'react';
+import { Card, CardBody, type CardProps, Divider } from '@nextui-org/react';
 import dayjs from 'dayjs';
-import { ZCredStore } from '@/service/external/zcred-store/api-specification.ts';
+import { type ReactNode, useMemo } from 'react';
 import { useColored } from '@/hooks/useColored.ts';
+import type { ZCredStore } from '@/service/external/zcred-store/api-specification.ts';
 
 type CredentialCardProps = {
   credential: ZCredStore['CredentialDecoded'],
   onClick?: (credential: ZCredStore['CredentialDecoded']) => void | Promise<void>,
 } & CardProps;
 
-export const CredentialCard: FC<CredentialCardProps> = ({ credential, onClick, ...cardProps }) => {
+export function CredentialCard(
+  { credential, onClick, ...cardProps }: CredentialCardProps,
+): ReactNode {
   const title = credential.data.attributes.type;
   const { issuanceDate, validFrom, validUntil } = useMemo(() => ({
     issuanceDate: dayjs(credential.data.attributes.issuanceDate).format('YYYY-MM-DD'),
@@ -23,7 +25,7 @@ export const CredentialCard: FC<CredentialCardProps> = ({ credential, onClick, .
     <Card className="w-full" isPressable={!!onClick} onClick={() => onClick?.(credential)} {...cardProps}>
       <CardBody>
         <p className="text-xl font-bold">{title}</p>
-        <Divider className="mt-3 mb-1"/>
+        <Divider className="mt-3 mb-1" />
         <p>
           <span className="font-bold">{'Issuance date: '}</span>
           {issuanceDate}
@@ -38,4 +40,4 @@ export const CredentialCard: FC<CredentialCardProps> = ({ credential, onClick, .
       </CardBody>
     </Card>
   );
-};
+}

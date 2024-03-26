@@ -1,31 +1,29 @@
-import { addressShort } from '@/util/helpers.ts';
 import { Dropdown, DropdownItem, DropdownMenu, DropdownSection, DropdownTrigger, Switch, User } from '@nextui-org/react';
-import { Box, CirclePlus, LogOut, Moon, Sun } from 'lucide-react';
-import { useDidStore } from '@/hooks/useDid.store.ts';
-import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
-import { useWalletStore } from '@/hooks/web3/useWallet.store.ts';
-import { useThemeStore } from '@/hooks/useTheme.store.ts';
-import { link } from '@/components/factories/link.tsx';
 import { compact } from 'lodash-es';
+import { Box, CirclePlus, LogOut, Moon, Sun } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { link } from '@/components/factories/link.tsx';
+import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
+import { DidStore } from '@/stores/did.store.ts';
+import { ThemeStore } from '@/stores/theme.store.ts';
+import { WalletStore } from '@/stores/wallet.store.ts';
+import { addressShort } from '@/util/helpers.ts';
 
-export const HeaderUserPanel = () => {
+
+export function HeaderUserPanel(): ReactNode {
   const { signOut } = useDisconnect();
-  const theme = useThemeStore();
-  const subject = useWalletStore(state => state.subjectId);
-  const walletType = useWalletStore(state => state.type);
-  const did = useDidStore(state => state.did);
 
   return (
     <Dropdown backdrop="blur">
       <DropdownTrigger>
         <User
-          name={(`${addressShort(subject?.key || '')}`)}
-          description={`did: ${addressShort(did?.id || '')}`}
+          name={(`${addressShort(WalletStore.$wallet.value?.address || '')}`)}
+          description={`did: ${addressShort(DidStore.$did.value?.id || '')}`}
           isFocusable
           as="button"
           avatarProps={{
             isBordered: true,
-            name: walletType || undefined,
+            name: WalletStore.$wallet.value?.type,
           }}
         />
       </DropdownTrigger>
@@ -33,26 +31,26 @@ export const HeaderUserPanel = () => {
         <DropdownSection showDivider children={compact([
           <DropdownItem
             as={link({ to: '/credentials' })}
-            endContent={<Box size={14}/>}
-            key='1'
+            endContent={<Box size={14} />}
+            key="1"
           >Credentials</DropdownItem>,
           import.meta.env.DEV ? <DropdownItem
             as={link({ to: '/credential-issue' })}
-            endContent={<CirclePlus size={14}/>}
-            key='2'
+            endContent={<CirclePlus size={14} />}
+            key="2"
           >Credential issue</DropdownItem> : null,
-        ])}/>
+        ])} />
         <DropdownSection showDivider>
           <DropdownItem
             isReadOnly
-            onClick={theme.toggle}
+            onClick={ThemeStore.toggle}
             endContent={<Switch
-              isSelected={theme.isDark}
+              isSelected={ThemeStore.$isDark.value}
               size="sm"
               color="default"
-              startContent={<Sun/>}
-              endContent={<Moon/>}
-              onValueChange={theme.toggle}
+              startContent={<Sun />}
+              endContent={<Moon />}
+              onValueChange={ThemeStore.toggle}
               classNames={{ wrapper: 'm-0' }}
             />}
           >Dark mode</DropdownItem>
@@ -66,4 +64,4 @@ export const HeaderUserPanel = () => {
       </DropdownMenu>
     </Dropdown>
   );
-};
+}

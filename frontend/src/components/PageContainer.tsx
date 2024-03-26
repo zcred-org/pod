@@ -1,7 +1,12 @@
-import { type FC, PropsWithChildren } from 'react';
+import { cn } from '@nextui-org/react';
+import type { ComponentProps, PropsWithChildren, ReactNode } from 'react';
 
-export const PageContainer: FC<PropsWithChildren> = ({ children }) => (
-  <div className="flex flex-col sm:self-center sm:min-w-[30rem] px-4 gap-3 my-10">
-    {children}
-  </div>
-);
+export function PageContainer(
+  { children, className, ...props }: PropsWithChildren<ComponentProps<'div'>>,
+): ReactNode {
+  return (
+    <div className={cn('flex flex-col sm:self-center sm:min-w-[30rem] px-4 gap-3 my-10', className)} {...props}>
+      {children}
+    </div>
+  );
+}

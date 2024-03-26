@@ -1,18 +1,9 @@
 import { Navigate, useRouterState } from '@tanstack/react-router';
-import { type FC } from 'react';
+import type { ReactNode } from 'react';
 
-export type NavigateToLoginProps = {
-  /* Do redirect back after login, default is true */
-  saveLocation?: boolean;
-};
 
-export const NavigateToLogin: FC<NavigateToLoginProps> = ({ saveLocation = true }) => {
+export function NavigateToLogin(): ReactNode {
   const { location } = useRouterState();
 
-  return (
-    <Navigate
-      to={'/'}
-      search={saveLocation ? { redirect: location.href } : undefined}
-    />
-  );
-};
+  return <Navigate to={'/'} search={{ redirect: location.href }} />;
+}

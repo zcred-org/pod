@@ -19,6 +19,6 @@ export const link = <
   TMaskTo extends string = '',
 >(props0: LinkProps<TRouteTree, TFrom, TTo, TMaskFrom, TMaskTo>) => {
   return forwardRef<typeof Link, typeof props0>(({ ...props }, ref) => {
-    return <Link ref={ref} {...props} {...props0 as any}/>;
+    return <Link ref={ref} {...props} {...props0 as any} />;
   });
 };
