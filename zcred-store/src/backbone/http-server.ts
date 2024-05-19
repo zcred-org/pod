@@ -1,4 +1,4 @@
-import Fastify, { FastifyReply, FastifyRequest } from 'fastify';
+import Fastify, { FastifyRequest } from 'fastify';
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
@@ -13,16 +13,19 @@ import { tokens } from '../util/tokens.js';
 import { CredentialIdDto } from '../controllers/credential/dtos/credential-id.dto.js';
 import jwt from '@fastify/jwt';
 import { JwtPayloadDto } from '../models/dtos/jwt-payload.dto.js';
+import fastifyHttpErrorsEnhanced from 'fastify-http-errors-enhanced';
+import ajvFormats from 'ajv-formats';
+import type { Ajv } from 'ajv';
+import { UnauthorizedError } from 'http-errors-enhanced';
 
 export class HttpServer implements Disposable {
-
   readonly fastify;
-
   public static readonly inject = tokens('config');
 
   constructor(private readonly config: Config) {
     this.fastify = Fastify({
       disableRequestLogging: true,
+      ajv: { customOptions: { allErrors: true } },
     }).withTypeProvider<TypeBoxTypeProvider>();
   }
 
@@ -31,10 +34,10 @@ export class HttpServer implements Disposable {
     this.fastify.register(cors, { origin: '*' });
     // register fastify jwt
     this.fastify.register(jwt, { secret: this.config.secretString });
-    this.fastify.decorate('authenticate', async (req: FastifyRequest, reply: FastifyReply) => {
+    this.fastify.decorate('authenticate', async (req: FastifyRequest/*, reply: FastifyReply*/) => {
       const err = await req.jwtVerify().catch((err: Error) => err);
       if (err instanceof Error) {
-        return reply.send(err);
+        throw new UnauthorizedError(err.message);
       }
     });
     // register swagger
@@ -51,6 +54,11 @@ export class HttpServer implements Disposable {
         // Useful for frontend code generation
         buildLocalReference: (json, _0, _1, i) => json.$id as string || `id-${i}`,
       },
+    });
+    // register enhanced http errors
+    await this.fastify.register(fastifyHttpErrorsEnhanced, {
+      // Add formats plugin's ajv instance
+      responseValidatorCustomizer: (ajv: Ajv) => ajvFormats.default(ajv),
     });
     // add schemas
     this.addSchemas();

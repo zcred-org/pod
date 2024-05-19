@@ -1,22 +1,21 @@
-import { hash as sha256 } from '@stablelib/sha256';
 import { type JWSSignature } from '@didtools/codecs';
-import * as u8a from 'uint8arrays';
-import KeyResolver from 'key-did-resolver';
 import { DID } from 'dids';
-import { Ed25519Provider } from 'key-did-provider-ed25519';
-import { InvalidSignatureError } from '../backbone/errors/invalid-signature.error.js';
 import { tokens } from '../util/tokens.js';
 import { type HttpServer } from '../backbone/http-server.js';
 import { type JwtPayloadCrete } from '../models/dtos/jwt-payload.dto.js';
 import { Config } from '../backbone/config.js';
 import { CacheClock } from 'cache-clock';
 import crypto from 'node:crypto';
+import { UnauthorizedError } from 'http-errors-enhanced';
+import type { Disposable } from 'typed-inject';
+import { didFromSeed } from '../util/index.js';
 
-export class AuthService {
+
+export class AuthService implements Disposable {
   private did: DID = null as never;
 
   /** Cache with key=did and value=nonce **/
-  private readonly nonceCache = new CacheClock();
+  private readonly nonceCache = new CacheClock({ ttl: 5e3 });
 
   private readonly jwt;
 
@@ -31,9 +30,7 @@ export class AuthService {
 
   public async register() {
     // TODO: did for signature verification create as on the client? Is it important which seed to use?
-    const provider = new Ed25519Provider(sha256(u8a.fromString(this.config.secretString)));
-    this.did = new DID({ provider, resolver: KeyResolver.getResolver() });
-    await this.did.authenticate();
+    this.did = await didFromSeed(this.config.secretString);
   }
 
   public getNonce(did: string): string {
@@ -46,8 +43,8 @@ export class AuthService {
     const [verifyResult, verifyError] = await this.did.verifyJWS({ payload: nonce, signatures: [signature] })
       .then((result) => [result, undefined] as const)
       .catch((error: Error) => [undefined, error] as const);
-    if (!verifyResult || verifyError) {
-      throw new InvalidSignatureError('Invalid signature');
+    if (verifyError || verifyResult?.didResolutionResult.didDocument?.id !== did) {
+      throw new UnauthorizedError('Invalid signature');
     }
     return this.jwt.sign({
       nonce,
@@ -55,5 +52,9 @@ export class AuthService {
     } satisfies JwtPayloadCrete, {
       expiresIn: '5m',
     });
+  }
+
+  async dispose() {
+    this.nonceCache.stop();
   }
 }

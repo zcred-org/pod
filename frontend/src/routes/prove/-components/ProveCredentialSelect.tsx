@@ -18,7 +18,7 @@ const $credentialsNotProvableIds = computed<string[]>(() => {
 });
 
 export const ProveCredentialSelect: FC = () => (<>
-  {$credentialsAsync.value.data.length > 1 && !!$cantContinueReason.value ? <Select
+  {$credentialsAsync.value.data.length > 1 && !$cantContinueReason.value ? <Select
     className="shadow-amber-500"
     items={$credentialsAsync.value.data}
     isRequired={!$credential}

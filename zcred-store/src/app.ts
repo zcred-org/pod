@@ -59,4 +59,9 @@ export class App {
   async run() {
     await this.context.resolve('httpServer').listen();
   }
+
+  async close() {
+    if (!this.rootContext) throw new Error("Use App.init method before");
+    await this.rootContext.dispose();
+  }
 }

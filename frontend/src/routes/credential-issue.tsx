@@ -42,7 +42,7 @@ function CredentialIssue() {
       await zCredStore.credential.credentialUpsert(credential);
     },
   });
-  const issuer = useMemo(() => new HttpIssuer('https://api.dev.sybil.center/api/v1/zcred/issuers/passport'), []);
+  const issuer = useMemo(() => new HttpIssuer('https://api.dev.sybil.center/issuers/passport'), []);
 
   return (
     <PageContainer>

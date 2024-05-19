@@ -11,9 +11,9 @@ export const CredentialEntity = pgTable('credential', {
   /** String "<zk-credential.attributes.subject.id.type>:<zk-credential.attributes.subject.id.key>" */
   subjectId: text('subject_id').notNull(),
   /** Date of creation of zk-credential */
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
   /** Date of last update of zk-credential */
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, table => ({
   controlledByIdx: index('controlled_by_idx').on(table.controlledBy),
   searchIdx: index('search_idx').on(table.controlledBy, table.subjectId, table.issuer),

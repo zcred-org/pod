@@ -5,7 +5,7 @@ export const CredentialsSearchDto = Type.Union([
     'subject.id.key': Type.String(),
     'subject.id.type': Type.String(),
     'issuer.type': Type.String(),
-    'issuer.uri': Type.String(),
+    'issuer.uri': Type.String({ format: 'uri' }),
   }, { additionalProperties: false }),
   Type.Object({}, { additionalProperties: false }),
 ]);

@@ -29,7 +29,7 @@ function RootComponent() {
       <TanStackRouterDevtools />
       <PromptModals />
       <WagmiConnectorSubscription />
-      <Toast/>
+      <Toast />
       <CredentialValidIntervalModal />
     </>
   );
