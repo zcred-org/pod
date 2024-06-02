@@ -1,6 +1,6 @@
-# zCredStore
+# zCred Store
 
-## Development
+## Development Environment
 
 ### Requirements
 
