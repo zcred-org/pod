@@ -1,6 +1,7 @@
 import { Card, CardBody, type CardProps, Divider } from '@nextui-org/react';
 import dayjs from 'dayjs';
 import { type ReactNode, useMemo } from 'react';
+import { config } from '@/config';
 import { useColored } from '@/hooks/useColored.ts';
 import type { ZCredStore } from '@/service/external/zcred-store/api-specification.ts';
 
@@ -34,7 +35,7 @@ export function CredentialCard(
           <span className="font-bold">{'Valid: '}</span>
           {validFrom}{' - '}{validUntil}
         </p>
-        {import.meta.env.DEV ? <p style={{ color: idColor }} className="text-small">
+        {config.isDev ? <p style={{ color: idColor }} className="text-small">
           {credential.id}
         </p> : null}
       </CardBody>

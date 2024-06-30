@@ -11,11 +11,15 @@ const didKeyBegin = 'did:key:';
 const hexAddressBegin = '0x';
 
 export const addressShort = (address: string) => {
-  // 0x0000000000000000000000000000000000000000
-  // did:key:000000000000000000000000000000000000000000000000
-  const from = address.startsWith(didKeyBegin) ? didKeyBegin.length : 0;
-  const to = address.startsWith(hexAddressBegin) ? hexAddressBegin.length + 4 : 4;
-  return `${address.slice(from, to)}...${address.slice(-4)}`;
+  if (address.startsWith(didKeyBegin)) {
+    // did:key:000000000000000000000000000000000000000000000000
+    return `${address.slice(didKeyBegin.length, didKeyBegin.length + 4)}...${address.slice(-4)}`;
+  } else if (address.startsWith(hexAddressBegin)) {
+    // 0x0000000000000000000000000000000000000000
+    return `${address.slice(0, hexAddressBegin.length + 4)}...${address.slice(-4)}`;
+  } else {
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
+  }
 };
 
 export function toJWTPayload(obj: object): string {

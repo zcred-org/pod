@@ -18,7 +18,7 @@ export function AuthController(context: Injector<AppContext>) {
       },
     },
     handler: async (req, reply) => {
-      const nonce = authService.getNonce(req.body.did);
+      const nonce = await authService.getNonce(req.body.did);
       return reply.status(HTTP.OK).send(nonce);
     },
   });

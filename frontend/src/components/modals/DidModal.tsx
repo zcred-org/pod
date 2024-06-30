@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { RequireWalletHoc } from '@/components/HOC/RequireWalletHoc.tsx';
 import { IconByWalletType } from '@/components/icons.tsx';
 import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
-import { AuroErrorCodeEnum } from '@/service/auro.ts';
+import { AuroErrorCodeEnum } from '@/types/auro-error-code.enum.ts';
 import { DidStore } from '@/stores/did.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { addressShort } from '@/util/helpers.ts';

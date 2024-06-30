@@ -12,14 +12,15 @@ import { type ProofStorePrepareData, proofStorePreparePure } from '@/routes/prov
 import type { ProvingResult } from '@/service/external/verifier/types.ts';
 import { zCredStore } from '@/service/external/zcred-store';
 import { zCredProver } from '@/service/o1js-zcred-prover';
+import type { ProposalQueryArgs } from '@/service/queries.ts';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import type { CredentialMarked } from '@/types/credentials-marked.ts';
-import { dateIntervalFieldsFromIssuerInfo } from '@/types/date-interval.ts';
+import { dateIntervalFieldsFrom } from '@/types/date-interval.ts';
 import { DetailedError, RejectedByUserError } from '@/util/errors.ts';
 import { isSubjectIdsEqual, verifyCredentialJWS } from '@/util/helpers.ts';
-import { signalAsync } from '@/util/signal-async.ts';
-import { signal, computed } from '@/util/signals-dev-tools.ts';
+import { signalAsync } from '@/util/signals/signal-async.ts';
+import { signal, computed } from '@/util/signals/signals-dev-tools.ts';
 
 const StoreName = 'ProofStore';
 
@@ -48,9 +49,16 @@ export class ProofStore {
   } = {};
 
   private static subscriptionsEnable() {
-    ProofStore.SUBs.credentialsRefetchEffect ??= effect(ProofStore.credentialsRefetch);
+    ProofStore.SUBs.credentialsRefetchEffect ??= effect(() => {
+      /** TODO: fix. Subscriptions of credentialsRefetch: **/
+      ProofStore.$challengeInitData.value;
+      ProofStore.$isSubjectMatch.value;
+      $isWalletAndDidConnected.value;
+      /** Function body **/
+      ProofStore.credentialsRefetch().then();
+    });
 
-    ProofStore.SUBs.finishEffect ??= effect(async function finishChallenge() {
+    ProofStore.SUBs.finishEffect ??= effect(function finishChallenge() {
         /** Subscriptions **/
         const proposal = ProofStore.$challengeInitData.value?.proposal;
         const proof = ProofStore.$proofAsync.value.data;
@@ -58,11 +66,11 @@ export class ProofStore {
         if (!proposal || !proof?.signature) return;
         ProofStore.subscriptionsDisable();
 
-        const redirectURL = await axios.post<{ redirectURL: string }>(proposal.verifierURL, proof)
-          .then(res => res.data.redirectURL);
-        toast.loading('Challenge completed! Redirecting...', { duration: 3e3 });
-        await new Promise(resolve => setTimeout(resolve, 3e3));
-        location.replace(redirectURL);
+        axios.post<{ redirectURL: string }>(proposal.verifierURL, proof).then(async ({ data: { redirectURL } }) => {
+          toast.loading('Challenge completed! Redirecting...', { duration: 3e3 });
+          await new Promise(resolve => setTimeout(resolve, 3e3));
+          location.replace(redirectURL);
+        });
       },
     );
   }
@@ -73,11 +81,10 @@ export class ProofStore {
     ProofStore.SUBs = {};
   }
 
-  public static async proveStorePrepare(proposalUrl: string | undefined) {
-    if (proposalUrl === ProofStore.$challengeInitData.peek()?.proposalURL) return;
+  public static async proveStorePrepare(args: ProposalQueryArgs) {
     ProofStore.subscriptionsEnable();
     try {
-      ProofStore.$challengeInitData.value = proposalUrl ? await proofStorePreparePure(proposalUrl) : null;
+      ProofStore.$challengeInitData.value = await proofStorePreparePure(args);
     } catch (error) {
       ProofStore.$challengeInitData.value = null;
       throw error;
@@ -145,7 +152,7 @@ export class ProofStore {
     ProofStore.$credentialUpsertAsync.loading();
     try {
       const validInterval = await CredentialValidIntervalModal.open(
-        dateIntervalFieldsFromIssuerInfo(initData.issuerInfo),
+        dateIntervalFieldsFrom(initData.issuerInfo),
       ).catch(error => {
         if (error instanceof RejectedByUserError) toast.warning('You need to set the validity period to continue');
         throw error;

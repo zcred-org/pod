@@ -2,24 +2,26 @@ import type { HttpIssuer, Info } from '@zcredjs/core';
 import axios from 'axios';
 import { queryClient } from '@/config/query-client.ts';
 import type { Proposal } from '@/service/external/verifier/types.ts';
+import { zCredStore } from '@/service/external/zcred-store';
 
+
+export type ProposalQueryArgs = { proposalURL: string, SDID: string };
 
 /**
  * Caches the proposal from the URL if it's valid
- * @param proposalURL Decoded proposal URL
- * @returns Proposal
  */
-export async function ensureProposalQuery(proposalURL: string): Promise<Proposal> {
+export async function ensureProposalQuery(args: ProposalQueryArgs): Promise<Proposal> {
   return queryClient.ensureQueryData({
-    queryKey: ['proposal', proposalURL],
-    queryFn: async () => await axios.get<Proposal>(proposalURL).then(res => res.data),
+    queryKey: ['proposal', args],
+    queryFn: async () => {
+      const secretData = await zCredStore.secretData.secretDataById(args.SDID);
+      return await axios.post<Proposal>(args.proposalURL, secretData).then(res => res.data);
+    },
   });
 }
 
 /**
  * Caches the issuer info
- * @param httpIssuer HttpIssuer
- * @returns Info
  */
 export async function ensureIssuerInfo(httpIssuer: HttpIssuer): Promise<Info> {
   return queryClient.ensureQueryData({

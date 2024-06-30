@@ -4,7 +4,7 @@ import { EIP1193Adapter } from '@zcredjs/ethereum';
 import { AuroWalletAdapter } from '@zcredjs/mina';
 import { getConnectorClient } from '@/config/wagmi-config.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
-import { signal } from '@/util/signals-dev-tools.ts';
+import { signal } from '@/util/signals/signals-dev-tools.ts';
 
 export type WalletStoreState = {
   adapter: IWalletAdapter,

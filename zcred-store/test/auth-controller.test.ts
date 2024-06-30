@@ -1,27 +1,24 @@
-import { App } from '../src/app.js';
-import { describe, beforeAll, afterAll, assert, expect } from 'vitest';
-import { jwtRequest, bodyJson } from './utils.js';
-import type { FastifyInstance } from 'fastify';
-import type { DID } from 'dids';
+import { describe, afterAll, assert, expect, beforeEach } from 'vitest';
+import { jwtRequest, bodyJson, testAppStart } from './utils.js';
 import * as HTTP from 'http-errors-enhanced';
 import { didFromSeed } from '../src/util/index.js';
 
-describe('AuthController', (test) => {
-  let app: App;
-  let fastify: FastifyInstance;
-  let did: DID;
+describe('AuthController', async (test) => {
+  const { pgContainer, app } = await testAppStart();
+  const fastify = app.context.resolve('httpServer').fastify;
+  const { nonceCache } = app.context.resolve('cacheManager');
+  const did = await didFromSeed('user1');
 
-  beforeAll(async () => {
-    app = await App.init();
-    fastify = app.context.resolve('httpServer').fastify;
-    did = await didFromSeed('user1');
+  beforeEach(() => nonceCache.clear());
+
+  afterAll(async () => {
+    await app.close();
+    await pgContainer.stop();
   });
-  afterAll(async () => await app.close());
 
   test('Should provide JWT', async () => await jwtRequest({ fastify, did }));
 
   test('Should reject when user1 tries to authenticate as user2', async () => {
-    // Step 1: get nonce for user2
     const { id: otherId } = await didFromSeed('user2');
     const wantAuthResp = await fastify.inject({
       method: 'POST', url: '/api/v1/want-auth',
@@ -31,7 +28,6 @@ describe('AuthController', (test) => {
       statusCode: HTTP.OK,
       body: expect.stringMatching(/^.{8}-.{4}-.{4}-.{4}-.{12}$/), // body is UUID "nonce"
     });
-    // Step 2: try to authenticate as user2
     const { signatures: [signature] } = await did.createJWS(wantAuthResp.body);
     assert.deepNestedInclude(await fastify.inject({ method: 'POST', url: '/api/v1/auth', body: { did: otherId, signature } }).then(bodyJson), {
       statusCode: HTTP.UNAUTHORIZED,
@@ -39,7 +35,20 @@ describe('AuthController', (test) => {
     });
   });
 
+  test('Auth without receiving nonce should fail', async () => {
+    assert.deepNestedInclude(await fastify.inject({
+      method: 'POST', url: '/api/v1/auth', body: {
+        did: did.id,
+        signature: { protected: '', signature: '' },
+      },
+    }).then(bodyJson), {
+      statusCode: HTTP.UNAUTHORIZED,
+      body: new HTTP.UnauthorizedError('Nonce not found').serialize(),
+    });
+  });
+
   test('Should reject on strange signature', async () => {
+    await nonceCache.set(did.id, '123');
     assert.deepNestedInclude(await fastify.inject({
       method: 'POST', url: '/api/v1/auth',
       body: { did: did.id, signature: { protected: 'something', signature: 'something' } },

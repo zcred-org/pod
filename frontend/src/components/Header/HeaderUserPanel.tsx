@@ -2,7 +2,8 @@ import { Dropdown, DropdownItem, DropdownMenu, DropdownSection, DropdownTrigger,
 import { compact } from 'lodash-es';
 import { Box, CirclePlus, LogOut, Moon, Sun } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { link } from '@/components/factories/link.tsx';
+import { config } from '@/config';
+import { useAsLinkBuilder } from '@/hooks/useAsLinkBuilder.ts';
 import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
 import { DidStore } from '@/stores/did.store.ts';
 import { ThemeStore } from '@/stores/theme.store.ts';
@@ -12,6 +13,7 @@ import { addressShort } from '@/util/helpers.ts';
 
 export function HeaderUserPanel(): ReactNode {
   const { signOut } = useDisconnect();
+  const linkBuilder = useAsLinkBuilder();
 
   return (
     <Dropdown backdrop="blur">
@@ -30,12 +32,14 @@ export function HeaderUserPanel(): ReactNode {
       <DropdownMenu>
         <DropdownSection showDivider children={compact([
           <DropdownItem
-            as={link({ to: '/credentials' })}
+            {...linkBuilder({ to: '/credentials' })}
+            className={'text-foreground'}
             endContent={<Box size={14} />}
             key="1"
           >Credentials</DropdownItem>,
-          import.meta.env.DEV ? <DropdownItem
-            as={link({ to: '/credential-issue' })}
+          config.isDev ? <DropdownItem
+            {...linkBuilder({ to: '/credential-issue' })}
+            className={'text-foreground'}
             endContent={<CirclePlus size={14} />}
             key="2"
           >Credential issue</DropdownItem> : null,

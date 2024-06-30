@@ -14,7 +14,7 @@ import { AuroStore } from '@/stores/auro.store.ts';
 import { $isWalletAndDidConnected, $isWalletConnected } from '@/stores/other.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
-import { addressShort, base64UrlDecode, checkProposalValidity, isSubjectIdsEqual, subjectTypeToWalletEnum } from '@/util/helpers.ts';
+import { addressShort, checkProposalValidity, isSubjectIdsEqual, subjectTypeToWalletEnum } from '@/util/helpers.ts';
 
 
 export const Route = createFileRoute('/')({
@@ -22,18 +22,20 @@ export const Route = createFileRoute('/')({
   validateSearch: z.object({
     redirect: z.string().catch('/').optional(),
     proposalURL: z.string().optional(),
+    SDID: z.string().optional(),
   }),
   beforeLoad: () => ({ title: 'Sign In' }),
-  loaderDeps: ({ search: { proposalURL } }) => ({ proposalURL: proposalURL ? base64UrlDecode(proposalURL) : undefined }),
-  loader: async ({ deps: { proposalURL } }) => {
-    const proposal = proposalURL ? await ensureProposalQuery(proposalURL) : undefined;
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps: { proposalURL, SDID } }) => {
+    const proveArgs = proposalURL && SDID ? { proposalURL: proposalURL, SDID: SDID } : undefined;
+    const proposal = proveArgs ? await ensureProposalQuery(proveArgs) : undefined;
     proposal && checkProposalValidity(proposal);
     const requiredId = proposal?.selector.attributes.subject.id;
     return {
-      proposal,
       requiredId,
       requiredWallet: requiredId ? subjectTypeToWalletEnum(requiredId.type) : undefined,
       verifierHost: proposal ? new URL(proposal.verifierURL).host : undefined,
+      proveArgs,
     };
   },
   pendingComponent: () => (
@@ -47,16 +49,17 @@ function SignInComponent() {
   const router = useRouter();
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const { requiredId, requiredWallet, verifierHost } = Route.useLoaderData();
+  const { requiredId, requiredWallet, verifierHost, proveArgs } = Route.useLoaderData();
   const { open: isEthConnecting } = useWeb3ModalState();
   const { connector: wagmiConnector, account: wagmiAccount } = useWagmiConnector();
   const wallet = WalletStore.$wallet.value;
 
   useEffect(() => {
     // Preload prove page if proposalURL is present
-    if (!search.proposalURL) return;
-    router.preloadRoute({ to: '/prove', search: { proposalURL: search.proposalURL } }).then();
-  }, [router, search.proposalURL]);
+    if (proveArgs) {
+      router.preloadRoute({ to: '/prove', search: proveArgs }).then();
+    }
+  }, [router, proveArgs]);
 
   if (!$isWalletConnected.value) {
     const isEthLoading = isEthConnecting || wagmiConnector.isFetching || !!wagmiAccount.address;
@@ -116,8 +119,8 @@ function SignInComponent() {
     return <DidModal />;
   }
 
-  if (search.proposalURL) {
-    return <Navigate to={'/prove'} search={{ proposalURL: search.proposalURL }} />;
+  if (proveArgs) {
+    return <Navigate to={'/prove'} search={proveArgs} />;
   }
   return <Navigate to={search.redirect || '/credentials'} />;
 }

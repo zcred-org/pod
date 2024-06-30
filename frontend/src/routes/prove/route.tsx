@@ -11,7 +11,6 @@ import { ProveTitleText } from '@/routes/prove/-components/ProveTitleText.tsx';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
 import { ProofStore } from '@/stores/proof.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { base64UrlDecode } from '@/util/helpers.ts';
 
 
 const {
@@ -26,17 +25,18 @@ export const Route = createFileRoute('/prove')({
   component: () => <ProveComponent />,
   validateSearch: z.object({
     proposalURL: z.string(),
+    SDID: z.string(),
   }),
   pendingComponent: PendingComponent,
   beforeLoad: ({ search, cause }) => {
     if (!$isWalletAndDidConnected.value && cause !== 'preload') {
       throw redirect({ to: '/', search: { proposalURL: search.proposalURL } });
     }
-    const verifierHost = new URL(base64UrlDecode(search.proposalURL)).host;
+    const verifierHost = new URL(search.proposalURL).host;
     return { title: `Prove for ${verifierHost}` };
   },
-  loaderDeps: ({ search }) => ({ proposalURL: base64UrlDecode(search.proposalURL) }),
-  loader: async ({ deps }) => await ProofStore.proveStorePrepare(deps.proposalURL),
+  loaderDeps: ({ search }) => search,
+  loader: async ({ deps }) => await ProofStore.proveStorePrepare(deps),
 });
 
 function ProveComponent() {

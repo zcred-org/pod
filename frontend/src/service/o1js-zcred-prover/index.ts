@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type JalProgram } from '@jaljs/core';
 import { type ZkCredential } from '@zcredjs/core';
+import { config } from '@/config';
 import {
   isWorkerError,
   isWorkerInitResp,
@@ -37,7 +38,7 @@ export class O1JSZCredProver {
     this.worker = new Worker(new URL(`./worker.ts`, import.meta.url), { type: 'module' });
     this.worker.onmessage = ({ data }: MessageEvent<WorkerResp>) => {
       if (isWorkerResp(data)) {
-        if (isWorkerInitResp(data) && import.meta.env.DEV) {
+        if (isWorkerInitResp(data) && config.isDev) {
           console.log('DEV: Worker initialized');
         }
         this.promises[data.id].resolve(data);

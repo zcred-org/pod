@@ -2,7 +2,7 @@ import type { HttpCredential, HttpIssuer, Info } from '@zcredjs/core';
 import type { O1JSCredentialFilter } from '@/service/o1js-credential-filter';
 import type { WalletStoreState } from '@/stores/wallet.store.ts';
 import type { CredentialMarked } from '@/types/credentials-marked.ts';
-import { type DateInterval, dateIntervalFieldsFromIssuerInfo, isDateIntervalMatched } from '@/types/date-interval.ts';
+import { type DateInterval, dateIntervalFieldsFrom, isDateIntervalMatched } from '@/types/date-interval.ts';
 import { DetailedError } from '@/util/errors.ts';
 
 export async function credentialIssueOrUpdatePure(
@@ -18,7 +18,7 @@ export async function credentialIssueOrUpdatePure(
   let credentialNew: HttpCredential | undefined = undefined;
   if (!args.credential) {
     if (!args.httpIssuer.browserIssue) throw new Error('Issuer does not support credential issuance');
-    if (!isDateIntervalMatched(args.validInterval, dateIntervalFieldsFromIssuerInfo(args.issuerInfo))) {
+    if (!isDateIntervalMatched(args.validInterval, dateIntervalFieldsFrom(args.issuerInfo))) {
       throw new Error('Valid interval does not match issuer info');
     }
     credentialNew = await args.httpIssuer.browserIssue({

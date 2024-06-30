@@ -16,6 +16,8 @@ declare module '@tanstack/react-router' {
   }
 }
 
+const navigate = (path: string) => void router.navigate({ to: path });
+
 export const router = createRouter({
   routeTree,
   defaultPreload: 'intent',
@@ -28,7 +30,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <NextUIProvider className="flex flex-col min-h-screen">
+        <NextUIProvider className="flex flex-col min-h-screen" navigate={navigate}>
           <HelmetProvider>
             <RouterProvider router={router} />
           </HelmetProvider>

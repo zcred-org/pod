@@ -1,24 +1,33 @@
 import { DID } from 'dids';
-import dotenv from 'dotenv';
-import * as path from 'node:path';
-import { dirname } from 'node:path';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { type FastifyInstance } from 'fastify';
 import { assert } from 'vitest';
 import * as HTTP from 'http-errors-enhanced';
-import { fileURLToPath } from 'node:url';
 import type { IssuerDto } from '../src/models/dtos/issuer.dto.js';
 import type { Identifier } from '../src/models/dtos/identifier.dto.js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { App } from '../src/app.js';
+import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import * as schema from '../src/models/entities/schema.js';
 
-export async function startPostgresAndInjectToEnv() {
+export async function testAppStart() {
   const pgContainer = await new PostgreSqlContainer('postgres:15-alpine').start();
-  dotenv.config({ path: path.join(dirname(fileURLToPath(import.meta.url)), '.env.test'), override: true });
-  process.env.DB_HOST = pgContainer.getHost();
-  process.env.DB_PORT = pgContainer.getPort().toString();
-  process.env.DB_NAME = pgContainer.getDatabase();
-  process.env.DB_USER = pgContainer.getUsername();
-  process.env.DB_PASSWORD = pgContainer.getPassword();
-  return pgContainer;
+  const pgClient = postgres(pgContainer.getConnectionUri());
+  await migrate(drizzle(pgClient, { schema }), { migrationsFolder: 'migrations' });
+  await pgClient.end();
+
+  const app = await App.init({
+    envFilePath: new URL('.env.test', import.meta.url),
+    env: {
+      DB_USER: pgContainer.getUsername(),
+      DB_PASSWORD: pgContainer.getPassword(),
+      DB_HOST: pgContainer.getHost(),
+      DB_PORT: pgContainer.getPort().toString(),
+      DB_NAME: pgContainer.getDatabase(),
+    },
+  });
+  return { pgContainer, app };
 }
 
 export async function jwtRequest({ fastify, did }: { fastify: FastifyInstance, did: DID }) {

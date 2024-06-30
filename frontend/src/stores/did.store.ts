@@ -5,7 +5,7 @@ import { Ed25519Provider } from 'key-did-provider-ed25519';
 import { getResolver } from 'key-did-resolver';
 import * as u8a from 'uint8arrays';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { signal } from '@/util/signals-dev-tools.ts';
+import { signal } from '@/util/signals/signals-dev-tools.ts';
 
 const _$addressOfOwner = signal<string | null>(null, 'DidStore.addressOfOwner');
 

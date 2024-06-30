@@ -8,7 +8,7 @@ export function isDateIntervalMatched(interval: DateInterval | undefined, requir
     && !!required?.to === interval?.to instanceof Date;
 }
 
-export function dateIntervalFieldsFromIssuerInfo(issuerInfo: Info): DateIntervalRequiredFields {
+export function dateIntervalFieldsFrom(issuerInfo: Info): DateIntervalRequiredFields {
   return {
     from: issuerInfo.credential.attributesPolicy.validFrom === 'custom',
     to: issuerInfo.credential.attributesPolicy.validUntil === 'custom',

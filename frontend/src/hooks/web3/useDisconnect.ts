@@ -10,12 +10,12 @@ import { WalletStore } from '@/stores/wallet.store';
 
 
 const signOutBase = async () => {
+  await wagmiDisconnect(wagmiConfig);
   batch(() => {
     WalletStore.reset();
     AuroStore.disconnect();
     DidStore.reset();
   });
-  await wagmiDisconnect(wagmiConfig);
 };
 
 export const useDisconnect = () => {

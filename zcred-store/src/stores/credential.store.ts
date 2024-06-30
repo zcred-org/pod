@@ -1,4 +1,4 @@
-import { type DataSource } from '../backbone/db-client.js';
+import { type DbClient } from '../backbone/db-client.js';
 import { tokens } from '../util/tokens.js';
 import { CredentialEntity, type CredentialEntityNew } from '../models/entities/credential.entity.js';
 import { and, eq, type Placeholder, sql } from 'drizzle-orm';
@@ -14,9 +14,9 @@ export class CredentialStore {
   private readonly findOneByIdQuery;
   private readonly upsertOneQuery;
 
-  public static readonly inject = tokens('dataSource');
+  public static readonly inject = tokens('dbClient');
 
-  constructor({ db }: DataSource) {
+  constructor({ db }: DbClient) {
     this.findOneByIdQuery = db.select().from(CredentialEntity).where(and(
       eq(CredentialEntity.id, sql.placeholder('id')),
       eq(CredentialEntity.controlledBy, sql.placeholder('controlledBy')),

@@ -1,6 +1,4 @@
-import { App } from '../src/app.js';
-import { jwtRequest, startPostgresAndInjectToEnv, bodyJson, subjectIdSplit, issuerSplit } from './utils.js';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { jwtRequest, bodyJson, subjectIdSplit, issuerSplit, testAppStart } from './utils.js';
 import { sql, count } from 'drizzle-orm';
 import { describe, beforeAll, beforeEach, afterAll, expect, assert } from 'vitest';
 import { CredentialEntity } from '../src/models/entities/credential.entity.js';
@@ -10,9 +8,8 @@ import { didFromSeed } from '../src/util/index.js';
 import type { CredentialUpsertDto } from '../src/controllers/credential/dtos/credential-upsert.dto.js';
 
 describe('CredentialsController', async () => {
-  const pgContainer = await startPostgresAndInjectToEnv();
-  const app = await App.init();
-  const db = app.context.resolve('dataSource').db;
+  const { pgContainer, app } = await testAppStart();
+  const db = app.context.resolve('dbClient').db;
   const fastify = app.context.resolve('httpServer').fastify;
   let did1 = await didFromSeed('user1'), user1Auth: string;
   let did2 = await didFromSeed('user2'), user2Auth: string;
@@ -41,7 +38,6 @@ describe('CredentialsController', async () => {
   }).returning().prepare('test.CredentialsController.1');
 
   beforeAll(async () => {
-    await migrate(db, { migrationsFolder: 'migrations' });
     [user1Auth, user2Auth] = await Promise.all([
       jwtRequest({ fastify, did: did1 }).then(jwt => `Bearer ${jwt}`),
       jwtRequest({ fastify, did: did2 }).then(jwt => `Bearer ${jwt}`),
@@ -56,7 +52,10 @@ describe('CredentialsController', async () => {
     ]);
   });
 
-  afterAll(async () => void await Promise.all([app.close(), pgContainer.stop()]));
+  afterAll(async () => {
+    await app.close();
+    await pgContainer.stop();
+  });
 
   describe('GET /credentials', async (test) => {
     test('Route requires authorization', async () => {

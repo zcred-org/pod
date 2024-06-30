@@ -3,187 +3,827 @@
  * Do not make direct changes to the file.
  */
 
-
 export interface paths {
-  "/api/v1/credential": {
-    /** @description Create or update a credential */
-    post: {
-      requestBody?: {
-        content: {
-          "application/json": components["schemas"]["CredentialUpsertDto"];
+    "/api/v1/credential": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
-      responses: {
-        /** @description Default Response */
-        200: {
-          content: {
-            "application/json": components["schemas"]["CredentialDto"];
-          };
-        };
-        /** @description Credential update rejected with provided id */
-        403: {
-          content: {
-            "application/json": string;
-          };
-        };
-      };
-    };
-  };
-  "/api/v1/credentials": {
-    /** @description Get all or search credentials */
-    get: {
-      parameters: {
-        query: {
-          "subject.id.key": string;
-          "subject.id.type": string;
-          "issuer.type": string;
-          "issuer.uri": string;
-        };
-      };
-      responses: {
-        /** @description Encrypted credentials of subject */
-        200: {
-          content: {
-            "application/json": components["schemas"]["CredentialDto"][];
-          };
-        };
-        /** @description Validation error message */
-        400: {
-          content: {
-            "application/json": string;
-          };
-        };
-      };
-    };
-  };
-  "/api/v1/credential/{id}": {
-    /** @description Get an encrypted credential by id */
-    get: {
-      parameters: {
-        path: {
-          id: string;
-        };
-      };
-      responses: {
-        /** @description Default Response */
-        200: {
-          content: {
-            "application/json": components["schemas"]["CredentialDto"];
-          };
-        };
-        /** @description Credential not found */
-        404: {
-          content: {
-            "application/json": string;
-          };
-        };
-      };
-    };
-  };
-  "/api/v1/want-auth": {
-    /** @description Request a nonce for signing for continue authentication */
-    post: {
-      requestBody: {
-        content: {
-          "application/json": {
-            did: string;
-          };
-        };
-      };
-      responses: {
-        /** @description Nonce for signing by DID */
-        200: {
-          content: {
-            "application/json": string;
-          };
-        };
-      };
-    };
-  };
-  "/api/v1/auth": {
-    /** @description Receives signature and returns JWT */
-    post: {
-      requestBody: {
-        content: {
-          "application/json": {
-            did: string;
-            /** @description JWSSignature from JWS */
-            signature: {
-              protected: string;
-              signature: string;
+        get?: never;
+        put?: never;
+        /** @description Create or update a credential */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
             };
-          };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CredentialUpsertDto"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CredentialDto"];
+                    };
+                };
+                /** @description Error returned when the client payload is either invalid, malformed or has logical validation errors. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 400
+                             * @enum {number}
+                             */
+                            statusCode: 400;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            error: "Bad Request";
+                            /**
+                             * @description The error message
+                             * @example Bad Request.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            code?: "Bad Request";
+                            errors?: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description The validation errors in the client payload. */
+                            failedValidations?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Error returned when client does not provide any valid authorization. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 401
+                             * @enum {number}
+                             */
+                            statusCode: 401;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            error: "Unauthorized";
+                            /**
+                             * @description The error message
+                             * @example Unauthorized.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            code?: "Unauthorized";
+                        };
+                    };
+                };
+                /** @description Error returned when the requested resource is not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 404
+                             * @enum {number}
+                             */
+                            statusCode: 404;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Not Found
+                             * @enum {string}
+                             */
+                            error: "Not Found";
+                            /**
+                             * @description The error message
+                             * @example Not Found.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Not Found
+                             * @enum {string}
+                             */
+                            code?: "Not Found";
+                        };
+                    };
+                };
+            };
         };
-      };
-      responses: {
-        /** @description JWT */
-        200: {
-          content: {
-            "application/json": string;
-          };
-        };
-        /** @description Error message */
-        401: {
-          content: {
-            "application/json": string;
-          };
-        };
-      };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-  };
+    "/api/v1/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get all or search credentials */
+        get: {
+            parameters: {
+                query: {
+                    "subject.id.key": string;
+                    "subject.id.type": string;
+                    "issuer.type": string;
+                    "issuer.uri": string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Encrypted credentials of subject */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CredentialDto"][];
+                    };
+                };
+                /** @description Error returned when the client payload is either invalid, malformed or has logical validation errors. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 400
+                             * @enum {number}
+                             */
+                            statusCode: 400;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            error: "Bad Request";
+                            /**
+                             * @description The error message
+                             * @example Bad Request.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            code?: "Bad Request";
+                            errors?: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description The validation errors in the client payload. */
+                            failedValidations?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Error returned when client does not provide any valid authorization. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 401
+                             * @enum {number}
+                             */
+                            statusCode: 401;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            error: "Unauthorized";
+                            /**
+                             * @description The error message
+                             * @example Unauthorized.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            code?: "Unauthorized";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/credential/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get an encrypted credential by id */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CredentialDto"];
+                    };
+                };
+                /** @description Error returned when the client payload is either invalid, malformed or has logical validation errors. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 400
+                             * @enum {number}
+                             */
+                            statusCode: 400;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            error: "Bad Request";
+                            /**
+                             * @description The error message
+                             * @example Bad Request.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            code?: "Bad Request";
+                            errors?: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description The validation errors in the client payload. */
+                            failedValidations?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Error returned when client does not provide any valid authorization. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 401
+                             * @enum {number}
+                             */
+                            statusCode: 401;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            error: "Unauthorized";
+                            /**
+                             * @description The error message
+                             * @example Unauthorized.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            code?: "Unauthorized";
+                        };
+                    };
+                };
+                /** @description Error returned when the requested resource is not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 404
+                             * @enum {number}
+                             */
+                            statusCode: 404;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Not Found
+                             * @enum {string}
+                             */
+                            error: "Not Found";
+                            /**
+                             * @description The error message
+                             * @example Not Found.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Not Found
+                             * @enum {string}
+                             */
+                            code?: "Not Found";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/want-auth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Request a nonce for signing for continue authentication */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        did: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Nonce for signing by DID */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string;
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Receives signature and returns JWT */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        did: string;
+                        /** @description JWSSignature from JWS */
+                        signature: {
+                            protected: string;
+                            signature: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description JWT */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string;
+                    };
+                };
+                /** @description Error returned when the client payload is either invalid, malformed or has logical validation errors. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 400
+                             * @enum {number}
+                             */
+                            statusCode: 400;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            error: "Bad Request";
+                            /**
+                             * @description The error message
+                             * @example Bad Request.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            code?: "Bad Request";
+                            errors?: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description The validation errors in the client payload. */
+                            failedValidations?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Error returned when client does not provide any valid authorization. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 401
+                             * @enum {number}
+                             */
+                            statusCode: 401;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            error: "Unauthorized";
+                            /**
+                             * @description The error message
+                             * @example Unauthorized.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            code?: "Unauthorized";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/secret-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Create temp secrets and receive its ID */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SecretDataDto"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                        };
+                    };
+                };
+                /** @description Error returned when the client payload is either invalid, malformed or has logical validation errors. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 400
+                             * @enum {number}
+                             */
+                            statusCode: 400;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            error: "Bad Request";
+                            /**
+                             * @description The error message
+                             * @example Bad Request.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            code?: "Bad Request";
+                            errors?: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description The validation errors in the client payload. */
+                            failedValidations?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/secret-data/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Get temp secrets by ID */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SecretDataDto"];
+                    };
+                };
+                /** @description Error returned when the client payload is either invalid, malformed or has logical validation errors. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 400
+                             * @enum {number}
+                             */
+                            statusCode: 400;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            error: "Bad Request";
+                            /**
+                             * @description The error message
+                             * @example Bad Request.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            code?: "Bad Request";
+                            errors?: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description The validation errors in the client payload. */
+                            failedValidations?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Error returned when the requested resource is not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 404
+                             * @enum {number}
+                             */
+                            statusCode: 404;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Not Found
+                             * @enum {string}
+                             */
+                            error: "Not Found";
+                            /**
+                             * @description The error message
+                             * @example Not Found.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Not Found
+                             * @enum {string}
+                             */
+                            code?: "Not Found";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
-
 export type webhooks = Record<string, never>;
-
 export interface components {
-  schemas: {
-    /** @description Encrypted credential */
-    CredentialDto: {
-      /** Format: uuid */
-      id: string;
-      data: string;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
+    schemas: {
+        /** @description Encrypted credential */
+        CredentialDto: {
+            /** Format: uuid */
+            id: string;
+            data: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @description Credential identifier */
+        CredentialIdDto: {
+            /** Format: uuid */
+            id: string;
+        };
+        CredentialUpsertDto: {
+            /** Format: uuid */
+            id?: string;
+            data: string;
+            issuer: components["schemas"]["IssuerDto"];
+            subjectId: components["schemas"]["IdentifierDto"];
+        };
+        IdentifierDto: {
+            type: string;
+            key: string;
+        };
+        IssuerDto: {
+            type: string;
+            /** Format: uri */
+            uri: string;
+        };
+        JwtPayloadDto: {
+            nonce: string;
+            did: string;
+            exp: number;
+            iat: number;
+        };
+        /** @description Secret verification data. Can include additional properties. */
+        SecretDataDto: {
+            subject: {
+                id: components["schemas"]["IdentifierDto"];
+            } & {
+                [key: string]: unknown;
+            };
+            clientSession: string;
+            /** Format: uri */
+            redirectURL: string;
+            issuerAccessToken?: string;
+        } & {
+            [key: string]: unknown;
+        };
     };
-    /** @description Credential identifier */
-    CredentialIdDto: {
-      /** Format: uuid */
-      id: string;
-    };
-    CredentialUpsertDto: {
-      /** Format: uuid */
-      id?: string;
-      data: string;
-      issuer: components["schemas"]["IssuerDto"];
-      subjectId: components["schemas"]["IdentifierDto"];
-    };
-    IdentifierDto: {
-      type: string;
-      key: string;
-    };
-    IssuerDto: {
-      type: string;
-      /** Format: uri */
-      uri: string;
-    };
-    JwtPayloadDto: {
-      nonce: string;
-      did: string;
-      exp: number;
-      iat: number;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
-
 export type $defs = Record<string, never>;
-
-export type external = Record<string, never>;
-
 export type operations = Record<string, never>;

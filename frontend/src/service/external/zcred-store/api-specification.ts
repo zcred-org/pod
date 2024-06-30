@@ -25,6 +25,10 @@ export type ZCredStore = components['schemas'] & {
     body: NonNullable<paths['/api/v1/auth']['post']['requestBody']>['content']['application/json'];
     200: paths['/api/v1/auth']['post']['responses']['200']['content']['application/json'];
   },
+  SecretDataByIdRoute: {
+    query: paths['/api/v1/secret-data/{id}']['get']['parameters']['path'];
+    200: paths['/api/v1/secret-data/{id}']['get']['responses']['200']['content']['application/json'];
+  }
 };
 
 type Route<Url extends keyof paths, Method extends keyof paths[Url]> = {
@@ -56,3 +60,8 @@ export const ZCredStoreAuthRoute = {
   url: '/api/v1/auth',
   method: 'post',
 } satisfies Route<'/api/v1/auth', 'post'>;
+
+export const ZCredStoreSecretDataByIdRoute = {
+  url: '/api/v1/secret-data/{id}',
+  method: 'get',
+} satisfies Route<'/api/v1/secret-data/{id}', 'get'>;

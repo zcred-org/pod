@@ -26,3 +26,6 @@ export async function didFromSeed(seed: string) {
 export const subjectIdConcat = (subjectId: Identifier) => `${subjectId.type}:${subjectId.key}`;
 
 export const issuerConcat = (issuer: IssuerDto) => `${issuer.type}:${issuer.uri}`;
+
+// 40 symbols, overflow on 2059-05-25T17:38:27.456Z
+export const genID = () => crypto.randomUUID().replace(/-/g, '') + Date.now().toString(36);

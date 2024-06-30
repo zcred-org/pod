@@ -1,8 +1,9 @@
 import { effect, type Signal, type ReadonlySignal, signal as _signal, computed as _computed } from '@preact/signals-react';
 import { set } from 'lodash-es';
+import { config } from '@/config';
 
 // Main signal-holder for tracking other signals values in effect below
-const tracking = import.meta.env.DEV && window.__REDUX_DEVTOOLS_EXTENSION__
+const tracking = config.isDev && window.__REDUX_DEVTOOLS_EXTENSION__
   ? _signal<Record<string, Signal<unknown>>>({})
   : undefined;
 

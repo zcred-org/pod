@@ -1,6 +1,6 @@
 import { DidStore } from '@/stores/did.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { computed } from '@/util/signals-dev-tools.ts';
+import { computed } from '@/util/signals/signals-dev-tools.ts';
 
 
 export const $isWalletConnected = computed(

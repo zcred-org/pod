@@ -17,6 +17,7 @@ import fastifyHttpErrorsEnhanced from 'fastify-http-errors-enhanced';
 import ajvFormats from 'ajv-formats';
 import type { Ajv } from 'ajv';
 import { UnauthorizedError } from 'http-errors-enhanced';
+import { SecretDataDto } from '../controllers/secret-data/dtos/secret-data.dto.js';
 
 export class HttpServer implements Disposable {
   readonly fastify;
@@ -75,13 +76,13 @@ export class HttpServer implements Disposable {
   }
 
   private addSchemas() {
-    // TODO: Where to place schemas registration?
     this.fastify.addSchema(CredentialDto);
     this.fastify.addSchema(CredentialIdDto);
     this.fastify.addSchema(CredentialUpsertDto);
     this.fastify.addSchema(IdentifierDto);
     this.fastify.addSchema(IssuerDto);
     this.fastify.addSchema(JwtPayloadDto);
+    this.fastify.addSchema(SecretDataDto);
   }
 
   async listen(): Promise<void> {

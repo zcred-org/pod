@@ -2,7 +2,7 @@ import { Button } from '@nextui-org/react';
 import { createRootRouteWithContext, Link, Outlet } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { Toaster } from 'sonner';
-import { TanStackRouterDevtools } from '@/components/dev/TanStackRouterDevtools.tsx';
+import { TanStackDevtools } from '@/components/dev/TanStackDevtools.tsx';
 import { Header } from '@/components/Header/Header.tsx';
 import { CredentialValidIntervalModal } from '@/components/modals/CredentialValidIntervalModal.tsx';
 import { PromptModals } from '@/components/modals/PromptModals.tsx';
@@ -26,7 +26,7 @@ function RootComponent() {
     <>
       <Header />
       <Outlet />
-      <TanStackRouterDevtools />
+      <TanStackDevtools />
       <PromptModals />
       <WagmiConnectorSubscription />
       <Toast />

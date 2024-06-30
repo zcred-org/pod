@@ -1,12 +1,12 @@
 import { HttpIssuer } from '@zcredjs/core';
 import { O1JSCredentialFilter } from '@/service/o1js-credential-filter';
-import { ensureIssuerInfo, ensureProposalQuery } from '@/service/queries.ts';
+import { ensureIssuerInfo, ensureProposalQuery, type ProposalQueryArgs } from '@/service/queries.ts';
 import { checkProposalValidity } from '@/util/helpers.ts';
 
 export type ProofStorePrepareData = Awaited<ReturnType<typeof proofStorePreparePure>>;
 
-export async function proofStorePreparePure(proposalURL: string) {
-  const proposal = await ensureProposalQuery(proposalURL);
+export async function proofStorePreparePure(args: ProposalQueryArgs) {
+  const proposal = await ensureProposalQuery(args);
   checkProposalValidity(proposal);
   const httpIssuer = new HttpIssuer(
     proposal.selector.meta.issuer.uri,
@@ -19,5 +19,5 @@ export async function proofStorePreparePure(proposalURL: string) {
     }),
     O1JSCredentialFilter.create(proposal.program),
   ]);
-  return { proposalURL, proposal, httpIssuer, issuerInfo, credentialFilter };
+  return { proposalURL: args.proposalURL, proposal, httpIssuer, issuerInfo, credentialFilter };
 }

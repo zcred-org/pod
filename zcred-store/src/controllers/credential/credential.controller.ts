@@ -4,11 +4,10 @@ import { Injector } from 'typed-inject';
 import { CredentialUpsertDtoRef } from './dtos/credential-upsert.dto.js';
 import { Type } from '@sinclair/typebox';
 import { CredentialsSearchDto } from './dtos/credentials-search.dto.js';
-import { CredentialDtoRef, credentialDtoFrom, type CredentialDto } from './dtos/credential.dto.js';
+import { CredentialDtoRef, credentialDtoFrom } from './dtos/credential.dto.js';
 import { Identifier } from '../../models/dtos/identifier.dto.js';
 import { type IssuerDto } from '../../models/dtos/issuer.dto.js';
 import * as HTTP from 'http-errors-enhanced';
-import { NotFoundError } from 'http-errors-enhanced';
 
 
 export function CredentialController(context: Injector<AppContext>) {
@@ -38,7 +37,7 @@ export function CredentialController(context: Injector<AppContext>) {
         data: req.body.data,
       });
       if (!credential) {
-        throw new NotFoundError('Credential not found');
+        throw new HTTP.NotFoundError('Credential not found');
       }
       return reply.status(HTTP.OK).send(credentialDtoFrom(credential));
     },

@@ -1,8 +1,6 @@
-import dotenv, { DotenvConfigOptions, type DotenvConfigOutput } from 'dotenv';
+import dotenv from 'dotenv';
 
-function configENV(options?: DotenvConfigOptions): DotenvConfigOutput {
-  return dotenv.config(options);
-}
+export type ConfigArgs = { envFilePath?: URL, env?: Partial<NodeJS.ProcessEnv> };
 
 export class Config {
   /** Protocol e.g. http or https */
@@ -21,12 +19,16 @@ export class Config {
     password: string,
     database: string,
   };
+  /** Database connection url */
+  readonly dbUrl: string;
   /** Secret string, for example, for JWT */
   readonly secretString: string;
 
-  constructor(envFilePath?: URL) {
-    if (envFilePath) configENV({ path: envFilePath, override: true });
-    else configENV();
+  constructor(args?: ConfigArgs) {
+    if (args?.envFilePath) dotenv.config({ path: args.envFilePath, override: true });
+    else dotenv.config();
+    if (args?.env) dotenv.populate(process.env, args.env, { override: true });
+
     this.protocol = process.env['PROTOCOL'] || 'http';
     this.host = process.env['HOST'] || '0.0.0.0';
     this.port = process.env['PORT'] ? Number(process.env['PORT']) : 8080;
@@ -39,6 +41,7 @@ export class Config {
       password: ENV.getStringOrThrow('DB_PASSWORD'),
       database: ENV.getStringOrThrow('DB_NAME'),
     };
+    this.dbUrl = `postgresql://${this.db.user}:${this.db.password}@${this.db.host}:${this.db.port}/${this.db.database}`;
 
     this.secretString = ENV.getStringOrThrow('SECRET_STRING');
   }

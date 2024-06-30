@@ -1,6 +1,6 @@
 import { type ReadonlySignal } from '@preact/signals-react';
 import type { OverrideProperties } from 'type-fest';
-import { signal } from '@/util/signals-dev-tools.ts';
+import { signal } from '@/util/signals/signals-dev-tools.ts';
 
 type StateAbstract<Data> = {
   isIdle: false;

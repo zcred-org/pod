@@ -49,22 +49,37 @@ const CredentialIdRoute = CredentialIdImport.update({
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
     '/prove': {
+      id: '/prove'
+      path: '/prove'
+      fullPath: '/prove'
       preLoaderRoute: typeof ProveRouteImport
       parentRoute: typeof rootRoute
     }
     '/credential-issue': {
+      id: '/credential-issue'
+      path: '/credential-issue'
+      fullPath: '/credential-issue'
       preLoaderRoute: typeof CredentialIssueImport
       parentRoute: typeof rootRoute
     }
     '/credentials': {
+      id: '/credentials'
+      path: '/credentials'
+      fullPath: '/credentials'
       preLoaderRoute: typeof CredentialsImport
       parentRoute: typeof rootRoute
     }
     '/credential/$id': {
+      id: '/credential/$id'
+      path: '/credential/$id'
+      fullPath: '/credential/$id'
       preLoaderRoute: typeof CredentialIdImport
       parentRoute: typeof rootRoute
     }
@@ -73,12 +88,44 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren([
+export const routeTree = rootRoute.addChildren({
   IndexRoute,
   ProveRouteRoute,
   CredentialIssueRoute,
   CredentialsRoute,
   CredentialIdRoute,
-])
+})
 
 /* prettier-ignore-end */
+
+/* ROUTE_MANIFEST_START
+{
+  "routes": {
+    "__root__": {
+      "filePath": "__root.tsx",
+      "children": [
+        "/",
+        "/prove",
+        "/credential-issue",
+        "/credentials",
+        "/credential/$id"
+      ]
+    },
+    "/": {
+      "filePath": "index.tsx"
+    },
+    "/prove": {
+      "filePath": "prove/route.tsx"
+    },
+    "/credential-issue": {
+      "filePath": "credential-issue.tsx"
+    },
+    "/credentials": {
+      "filePath": "credentials.tsx"
+    },
+    "/credential/$id": {
+      "filePath": "credential.$id.tsx"
+    }
+  }
+}
+ROUTE_MANIFEST_END */

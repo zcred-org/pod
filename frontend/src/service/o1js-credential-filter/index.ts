@@ -2,6 +2,7 @@ import type { JalProgram } from '@jaljs/core';
 import { JsProgramInputTransformer, JsProgramTranslator } from '@jaljs/o1js';
 import type { ZkCredential } from '@zcredjs/core';
 import * as o1js from 'o1js';
+import { config } from '@/config';
 import type { FilterModule } from '@/service/o1js-credential-filter/types.ts';
 import { codeToURL, toJalSetup } from '@/util/index.ts';
 
@@ -16,7 +17,7 @@ export class O1JSCredentialFilter {
   ) {}
 
   static async create(jalProgram: JalProgram): Promise<O1JSCredentialFilter> {
-    const args = import.meta.env.DEV
+    const args = config.isDev
       ? [/\.cjs$/, '.mjs'] as const
       : [/\.mjs$/, '.cjs'] as const;
     jalProgram.target = jalProgram.target.replace(args[0], args[1]);

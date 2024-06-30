@@ -19,7 +19,7 @@ export function Header(): ReactNode {
   // });
   // console.log('breadcrumbs', breadcrumbs);
 
-  const title = matches.at(-1)?.context.title;
+  const title = matches.at(-1)?.context?.title;
 
   return (<>
     <Helmet>

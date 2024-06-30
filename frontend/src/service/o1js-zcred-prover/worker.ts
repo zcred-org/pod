@@ -3,6 +3,7 @@ import { InputTransformer, type JalProgram } from '@jaljs/core';
 import { ZkProgramInputTransformer, ZkProgramTranslator } from '@jaljs/o1js';
 import * as o1js from 'o1js';
 import { O1TrGraph } from 'o1js-trgraph';
+import { config } from '@/config';
 import { codeToURL, type JalSetup, toJalSetup } from '@/util/index.ts';
 import {
   isWorkerInitReq,
@@ -28,7 +29,7 @@ async function createZkProof({
   jalProgram,
 }: WorkerProofReq): Promise<WorkerProofResp | WorkerError> {
   try {
-    const args = import.meta.env.DEV
+    const args = config.isDev
       ? [/\.cjs$/, '.mjs'] as const
       : [/\.mjs$/, '.cjs'] as const;
     jalProgram.target = jalProgram.target.replace(args[0], args[1]);

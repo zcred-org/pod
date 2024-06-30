@@ -1,4 +1,6 @@
 {
+  "id": "427a9cd1-99bf-422c-b606-2fed80a1357c",
+  "prevId": "ee562e83-6feb-4277-b723-c14cc862d7fe",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -54,6 +56,7 @@
       },
       "indexes": {
         "controlled_by_idx": {
+          "name": "controlled_by_idx",
           "columns": [
             {
               "expression": "controlled_by",
@@ -62,13 +65,13 @@
               "nulls": "last"
             }
           ],
-          "with": {},
-          "name": "controlled_by_idx",
           "isUnique": false,
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "search_idx": {
+          "name": "search_idx",
           "columns": [
             {
               "expression": "controlled_by",
@@ -89,13 +92,34 @@
               "nulls": "last"
             }
           ],
-          "with": {},
-          "name": "search_idx",
           "isUnique": false,
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.keyv": {
+      "name": "keyv",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "varchar(255)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
@@ -104,10 +128,8 @@
   "enums": {},
   "schemas": {},
   "_meta": {
+    "columns": {},
     "schemas": {},
-    "tables": {},
-    "columns": {}
-  },
-  "id": "ee562e83-6feb-4277-b723-c14cc862d7fe",
-  "prevId": "00000000-0000-0000-0000-000000000000"
+    "tables": {}
+  }
 }

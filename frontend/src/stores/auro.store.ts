@@ -1,7 +1,7 @@
 import { batch, type ReadonlySignal } from '@preact/signals-react';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
-import { signal } from '@/util/signals-dev-tools.ts';
+import { signal } from '@/util/signals/signals-dev-tools.ts';
 
 abstract class AuroAutoConnect {
   private static readonly autoConnectKey = 'mina:isAutoConnect';
