@@ -5,7 +5,7 @@ import type { Proposal } from '@/service/external/verifier/types.ts';
 import { zCredStore } from '@/service/external/zcred-store';
 
 
-export type ProposalQueryArgs = { proposalURL: string, SDID: string };
+export type ProposalQueryArgs = { proposalURL: string, sdid: string };
 
 /**
  * Caches the proposal from the URL if it's valid
@@ -14,7 +14,7 @@ export async function ensureProposalQuery(args: ProposalQueryArgs): Promise<Prop
   return queryClient.ensureQueryData({
     queryKey: ['proposal', args],
     queryFn: async () => {
-      const secretData = await zCredStore.secretData.secretDataById(args.SDID);
+      const secretData = await zCredStore.secretData.secretDataById(args.sdid);
       return await axios.post<Proposal>(args.proposalURL, secretData).then(res => res.data);
     },
   });

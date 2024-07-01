@@ -22,12 +22,12 @@ export const Route = createFileRoute('/')({
   validateSearch: z.object({
     redirect: z.string().catch('/').optional(),
     proposalURL: z.string().optional(),
-    SDID: z.string().optional(),
+    sdid: z.string().optional(),
   }),
   beforeLoad: () => ({ title: 'Sign In' }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { proposalURL, SDID } }) => {
-    const proveArgs = proposalURL && SDID ? { proposalURL: proposalURL, SDID: SDID } : undefined;
+  loader: async ({ deps: { proposalURL, sdid } }) => {
+    const proveArgs = proposalURL && sdid ? { proposalURL: proposalURL, sdid } : undefined;
     const proposal = proveArgs ? await ensureProposalQuery(proveArgs) : undefined;
     proposal && checkProposalValidity(proposal);
     const requiredId = proposal?.selector.attributes.subject.id;
