@@ -15,7 +15,7 @@ export function CredentialController(context: Injector<AppContext>) {
   const credentialService = context.resolve('credentialService');
 
   fastify.route({
-    onRequest: fastify.authenticate,
+    onRequest: [fastify.frontendOnly, fastify.authenticate],
     method: 'POST',
     url: '/api/v1/credential',
     schema: {
@@ -26,6 +26,7 @@ export function CredentialController(context: Injector<AppContext>) {
         [HTTP.NOT_FOUND]: HTTP.notFoundSchema,
         [HTTP.BAD_REQUEST]: HTTP.badRequestSchema,
         [HTTP.UNAUTHORIZED]: HTTP.unauthorizedSchema,
+        [HTTP.FORBIDDEN]: HTTP.forbiddenSchema,
       },
     },
     handler: async (req, reply) => {
@@ -44,7 +45,7 @@ export function CredentialController(context: Injector<AppContext>) {
   });
 
   fastify.route({
-    onRequest: fastify.authenticate,
+    onRequest: [fastify.frontendOnly, fastify.authenticate],
     method: 'GET',
     url: '/api/v1/credentials',
     schema: {
@@ -54,6 +55,7 @@ export function CredentialController(context: Injector<AppContext>) {
         [HTTP.OK]: Type.Array(CredentialDtoRef, { description: 'Encrypted credentials of subject' }),
         [HTTP.BAD_REQUEST]: HTTP.badRequestSchema,
         [HTTP.UNAUTHORIZED]: HTTP.unauthorizedSchema,
+        [HTTP.FORBIDDEN]: HTTP.forbiddenSchema,
       },
     },
     handler: async (req, reply) => {
@@ -73,7 +75,7 @@ export function CredentialController(context: Injector<AppContext>) {
   });
 
   fastify.route({
-    onRequest: fastify.authenticate,
+    onRequest: [fastify.frontendOnly, fastify.authenticate],
     method: 'GET',
     url: '/api/v1/credential/:id',
     schema: {
@@ -84,6 +86,7 @@ export function CredentialController(context: Injector<AppContext>) {
         [HTTP.NOT_FOUND]: HTTP.notFoundSchema,
         [HTTP.BAD_REQUEST]: HTTP.badRequestSchema,
         [HTTP.UNAUTHORIZED]: HTTP.unauthorizedSchema,
+        [HTTP.FORBIDDEN]: HTTP.forbiddenSchema,
       },
     },
     handler: async (req, reply) => {

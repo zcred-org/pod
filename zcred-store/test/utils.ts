@@ -1,8 +1,5 @@
-import { DID } from 'dids';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { type FastifyInstance } from 'fastify';
-import { assert } from 'vitest';
-import * as HTTP from 'http-errors-enhanced';
 import type { IssuerDto } from '../src/models/dtos/issuer.dto.js';
 import type { Identifier } from '../src/models/dtos/identifier.dto.js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
@@ -10,6 +7,7 @@ import { App } from '../src/app.js';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from '../src/models/entities/schema.js';
+import type { JwtPayloadCrete } from '../src/models/dtos/jwt-payload.dto.js';
 
 export async function testAppStart() {
   const pgContainer = await new PostgreSqlContainer('postgres:15-alpine').start();
@@ -30,24 +28,11 @@ export async function testAppStart() {
   return { pgContainer, app };
 }
 
-export async function jwtRequest({ fastify, did }: { fastify: FastifyInstance, did: DID }) {
-  const nonceResp = await fastify.inject({
-    url: '/api/v1/want-auth',
-    method: 'POST',
-    body: { did: did.id },
-  });
-  assert.equal(nonceResp.statusCode, HTTP.OK, `authResp.statusCode must be ${HTTP.OK}, but got ${nonceResp.statusCode}. Body: ${nonceResp.body}`);
-  const nonce = nonceResp.body;
-  const { signatures: [signature] } = await did.createJWS(nonce);
-  const authResp = await fastify.inject({
-    url: '/api/v1/auth',
-    method: 'POST',
-    body: { did: did.id, signature },
-  });
-  assert.equal(authResp.statusCode, HTTP.OK, `authResp.statusCode must be ${HTTP.OK}, but got ${authResp.statusCode}. Body: ${authResp.body}`);
-  const jwt = authResp.body;
-  assert.isString(jwt, 'Auth must return a JWT string');
-  return jwt;
+export async function testJwtCreate({ app, did }: { app: App, did: string }): Promise<string> {
+  return app.context.resolve('httpServer').fastify.jwt.sign({
+    nonce: crypto.randomUUID(),
+    did,
+  } satisfies JwtPayloadCrete);
 }
 
 export function bodyJson<T extends Awaited<ReturnType<FastifyInstance['inject']>>>(res: T): Omit<T, 'body'> & { body: any } {

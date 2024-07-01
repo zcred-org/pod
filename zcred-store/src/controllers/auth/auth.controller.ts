@@ -8,6 +8,7 @@ export function AuthController(context: Injector<AppContext>) {
   const authService = context.resolve('authService');
 
   fastify.route({
+    onRequest: fastify.frontendOnly,
     method: 'POST',
     url: '/api/v1/want-auth',
     schema: {
@@ -15,6 +16,8 @@ export function AuthController(context: Injector<AppContext>) {
       body: Type.Object({ did: Type.String() }),
       response: {
         [HTTP.OK]: Type.String({ format: 'uuid', description: 'Nonce for signing by DID' }),
+        [HTTP.BAD_REQUEST]: HTTP.badRequestSchema,
+        [HTTP.FORBIDDEN]: HTTP.forbiddenSchema,
       },
     },
     handler: async (req, reply) => {
@@ -24,6 +27,7 @@ export function AuthController(context: Injector<AppContext>) {
   });
 
   fastify.route({
+    onRequest: fastify.frontendOnly,
     method: 'POST',
     url: '/api/v1/auth',
     schema: {
@@ -39,6 +43,7 @@ export function AuthController(context: Injector<AppContext>) {
         [HTTP.OK]: Type.String({ description: 'JWT' }),
         [HTTP.BAD_REQUEST]: HTTP.badRequestSchema,
         [HTTP.UNAUTHORIZED]: HTTP.unauthorizedSchema,
+        [HTTP.FORBIDDEN]: HTTP.forbiddenSchema,
       },
     },
     handler: async (req, reply) => {

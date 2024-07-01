@@ -6,6 +6,7 @@ import type { SecretDataDto } from '../src/controllers/secret-data/dtos/secret-d
 describe('SecretDataController', async (test) => {
   const { pgContainer, app } = await testAppStart();
   const fastify = app.context.resolve('httpServer').fastify;
+  const frontendOrigin = app.context.resolve('config').frontendURL.origin;
   const { secretDataCache } = app.context.resolve('cacheManager');
 
   beforeEach(() => secretDataCache.clear());
@@ -23,51 +24,40 @@ describe('SecretDataController', async (test) => {
       prop1: 1,
       otherInfo: { prop2: 2, prop3: 'prop3' },
     };
-    const res1 = await fastify.inject({
-      method: 'POST',
-      url: '/api/v1/secret-data',
+    const resCreate = await fastify.inject({
+      method: 'POST', url: '/api/v1/secret-data',
       payload,
     }).then(bodyJson);
-    expect(res1).toMatchObject({
+    expect(resCreate).toMatchObject({
       statusCode: HTTP.OK,
       body: { id: expect.stringMatching(/^[0-9a-z]{40}$/) },
     });
-    const id = res1.body.id as string;
+    const id = resCreate.body.id as string;
     expect(await secretDataCache.get(id)).to.deep.equal(payload);
 
-    const res2 = await fastify.inject({
-      method: 'GET',
-      url: `/api/v1/secret-data/${id}`,
-      payload,
+    const resGet = await fastify.inject({
+      method: 'GET', url: `/api/v1/secret-data/${id}`,
+      headers: { origin: frontendOrigin },
     }).then(bodyJson);
-    expect(res2).toMatchObject({
-      statusCode: HTTP.OK,
-      body: payload,
-    });
+    expect(resGet).toMatchObject({ statusCode: HTTP.OK, body: payload });
   });
 
-  test('Route validates body', async () => {
+  test('Incorrect data cannot be saved', async () => {
     expect(await fastify.inject({
-      method: 'POST',
-      url: '/api/v1/secret-data',
+      method: 'POST', url: '/api/v1/secret-data',
       payload: {},
+      headers: { origin: frontendOrigin },
     }).then(bodyJson)).toMatchObject({
       statusCode: HTTP.BAD_REQUEST,
       body: new HTTP.BadRequestError('One or more validations failed trying to process your request.', {
-        failedValidations: {
-          body: {
-            clientSession: 'must be present',
-            redirectURL: 'must be present',
-            subject: 'must be present',
-          },
-        },
+        failedValidations: { body: { subject: 'must be present' } },
       }).serialize(true, true),
     });
 
     expect(await fastify.inject({
-      method: 'POST',
-      url: '/api/v1/secret-data',
+      method: 'POST', url: '/api/v1/secret-data',
       payload: { subject: { id: {} }, clientSession: 123, redirectURL: '', other1: 1, other2: { value: 2 } },
+      headers: { origin: frontendOrigin },
     }).then(bodyJson)).toMatchObject({
       statusCode: HTTP.BAD_REQUEST,
       body: new HTTP.BadRequestError('One or more validations failed trying to process your request.', {
@@ -82,13 +72,23 @@ describe('SecretDataController', async (test) => {
     });
   });
 
-  test('Not found', async () => {
+  test('Route handles a non-existing ID', async () => {
     expect(await fastify.inject({
-      method: 'GET',
-      url: '/api/v1/secret-data/123',
+      method: 'GET', url: '/api/v1/secret-data/123',
+      headers: { origin: frontendOrigin },
     }).then(bodyJson)).toMatchObject({
       statusCode: HTTP.NOT_FOUND,
       body: new HTTP.NotFoundError('Data not found').serialize(true, true),
+    });
+  });
+
+  test('Saved data accessible from frontend only', async () => {
+    expect(await fastify.inject({
+      method: 'GET', url: `/api/v1/secret-data/123`,
+      headers: { origin: 'http://example.com' },
+    }).then(bodyJson)).toMatchObject({
+      statusCode: HTTP.FORBIDDEN,
+      body: new HTTP.ForbiddenError('You do not have permission to access this resource.').serialize(),
     });
   });
 });

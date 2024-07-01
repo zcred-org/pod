@@ -9,7 +9,7 @@ export function SecretDataController(context: Injector<AppContext>) {
   const { fastify } = context.resolve('httpServer');
   const { secretDataCache } = context.resolve('cacheManager');
 
-  fastify.route({
+fastify.route({
     method: 'POST',
     url: '/api/v1/secret-data',
     schema: {
@@ -23,12 +23,13 @@ export function SecretDataController(context: Injector<AppContext>) {
     handler: async (req, reply) => {
       const id = genID();
       await secretDataCache.set(id, req.body);
-      reply.status(HTTP.OK).send({ id });
+      return reply.status(HTTP.OK).send({ id });
     },
   });
 
   fastify.route({
-    method: 'get',
+    onRequest: [fastify.frontendOnly],
+    method: 'GET',
     url: '/api/v1/secret-data/:id',
     schema: {
       description: 'Get temp secrets by ID',
@@ -37,6 +38,7 @@ export function SecretDataController(context: Injector<AppContext>) {
         [HTTP.OK]: SecretDataDtoRef,
         [HTTP.NOT_FOUND]: HTTP.notFoundSchema,
         [HTTP.BAD_REQUEST]: HTTP.badRequestSchema,
+        [HTTP.FORBIDDEN]: HTTP.forbiddenSchema,
       },
     },
     handler: async (req, reply) => {

@@ -2,12 +2,12 @@ import { type JWSSignature } from '@didtools/codecs';
 import { DID } from 'dids';
 import { tokens } from '../util/tokens.js';
 import { type HttpServer } from '../backbone/http-server.js';
-import { type JwtPayloadCrete } from '../models/dtos/jwt-payload.dto.js';
 import { Config } from '../backbone/config.js';
 import crypto from 'node:crypto';
 import { UnauthorizedError } from 'http-errors-enhanced';
 import { didFromSeed } from '../util/index.js';
 import type { CacheManager } from '../backbone/cache-manager.js';
+import type { JwtPayloadCrete } from '../models/dtos/jwt-payload.dto.js';
 
 
 export class AuthService {
@@ -54,11 +54,6 @@ export class AuthService {
     if (verifyError || verifyResult?.didResolutionResult.didDocument?.id !== did) {
       throw new UnauthorizedError('Invalid signature');
     }
-    return this.jwt.sign({
-      nonce,
-      did,
-    } satisfies JwtPayloadCrete, {
-      expiresIn: '5m',
-    });
+    return this.jwt.sign({ nonce, did } satisfies JwtPayloadCrete);
   }
 }

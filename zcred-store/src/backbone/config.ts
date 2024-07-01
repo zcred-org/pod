@@ -9,6 +9,8 @@ export class Config {
   readonly host: string;
   /** Http expose server domain */
   readonly exposeDomain: URL;
+  /** Frontend origin */
+  readonly frontendURL: URL;
   /** Http server port */
   readonly port: number;
   /** Database connection options */
@@ -33,6 +35,7 @@ export class Config {
     this.host = process.env['HOST'] || '0.0.0.0';
     this.port = process.env['PORT'] ? Number(process.env['PORT']) : 8080;
     this.exposeDomain = new URL(ENV.getUrlOrThrow('PATH_TO_EXPOSE_DOMAIN').origin);
+    this.frontendURL = new URL(ENV.getUrlOrThrow('FRONTEND_ORIGIN').origin);
 
     this.db = {
       host: ENV.getStringOrThrow('DB_HOST'),

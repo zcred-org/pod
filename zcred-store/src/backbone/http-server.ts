@@ -16,8 +16,9 @@ import { JwtPayloadDto } from '../models/dtos/jwt-payload.dto.js';
 import fastifyHttpErrorsEnhanced from 'fastify-http-errors-enhanced';
 import ajvFormats from 'ajv-formats';
 import type { Ajv } from 'ajv';
-import { UnauthorizedError } from 'http-errors-enhanced';
+import * as HTTP from 'http-errors-enhanced';
 import { SecretDataDto } from '../controllers/secret-data/dtos/secret-data.dto.js';
+import { originToHostnames } from '../util/index.js';
 
 export class HttpServer implements Disposable {
   readonly fastify;
@@ -33,12 +34,22 @@ export class HttpServer implements Disposable {
   async register(): Promise<void> {
     // register fastify cors
     this.fastify.register(cors, { origin: '*' });
+    this.fastify.decorate('frontendOnly', async (req: FastifyRequest/*, reply: FastifyReply*/) => {
+      const hostnames = req.headers.origin ? await originToHostnames(req.headers.origin) : [];
+      if (!hostnames.includes(this.config.frontendURL.origin)) {
+        // throw new HTTP.ForbiddenError(`"${hostnames.join(',')}" not include "${this.config.frontendURL.origin}"`);
+        throw new HTTP.ForbiddenError('You do not have permission to access this resource.');
+      }
+    });
     // register fastify jwt
-    this.fastify.register(jwt, { secret: this.config.secretString });
+    this.fastify.register(jwt, {
+      secret: this.config.secretString,
+      sign: { expiresIn: '5m' },
+    });
     this.fastify.decorate('authenticate', async (req: FastifyRequest/*, reply: FastifyReply*/) => {
       const err = await req.jwtVerify().catch((err: Error) => err);
       if (err instanceof Error) {
-        throw new UnauthorizedError(err.message);
+        throw new HTTP.UnauthorizedError(err.message);
       }
     });
     // register swagger

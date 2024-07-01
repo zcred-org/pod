@@ -30,6 +30,7 @@
     "@vitest/coverage-v8": "^1.6.0",
     "@zcredjs/core": "^1.1.1",
     "drizzle-kit": "^0.22.8",
+    "jwt-decode": "^4.0.0",
     "nodemon": "^3.1.4",
     "tsx": "^4.16.0",
     "type-fest": "^4.20.1",

@@ -4,6 +4,8 @@ import { Ed25519Provider } from 'key-did-provider-ed25519';
 import { DID } from 'dids';
 import { getResolver } from 'key-did-resolver';
 import crypto from 'node:crypto';
+import dns from 'node:dns/promises';
+import net from 'node:net';
 
 /**
  *  Project root directory
@@ -29,3 +31,15 @@ export const issuerConcat = (issuer: IssuerDto) => `${issuer.type}:${issuer.uri}
 
 // 40 symbols, overflow on 2059-05-25T17:38:27.456Z
 export const genID = () => crypto.randomUUID().replace(/-/g, '') + Date.now().toString(36);
+
+export async function originToHostnames(origin: string): Promise<string[]> {
+  if (net.isIP(origin)) {
+    try {
+      return await dns.reverse(origin);
+    } catch (err) {
+      return [];
+    }
+  } else {
+    return [origin];
+  }
+}

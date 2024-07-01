@@ -67,7 +67,6 @@ function ProveComponent() {
       <div className="grow">
         {computed(() => $proofAsync.value.isLoading && <Progress
           isIndeterminate
-          isStriped
           label="Creating a proof..."
         />)}
       </div>
