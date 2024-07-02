@@ -1,11 +1,11 @@
 import { cn } from '@nextui-org/react';
 import type { ReactNode, SVGProps } from 'react';
 import IconEthereum from '@/assets/icons8_ethereum.svg?react';
+import IconLogoSvg from '@/assets/logo.svg?react';
 import IconMinaWord from '@/assets/mina-word.svg?react';
-import IconSheild from '@/assets/shield.svg?react';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
 
-export const IconShield = IconSheild;
+export const IconLogo = IconLogoSvg;
 
 export function IconEth({ className, ...props }: SVGProps<SVGSVGElement>): ReactNode {
   return <IconEthereum className={cn('fill-blue-500 -mx-1', className)} {...props} />;
