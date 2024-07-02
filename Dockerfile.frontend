@@ -10,8 +10,9 @@ COPY . .
 RUN rm -r ./zcred-store
 RUN rm -r ./zkapp-hub
 RUN npm install -g pnpm
+RUN pnpm install --frozen-lockfile
 RUN pnpm run build
-RUN rm -r ./zcred-store/src
+RUN rm -r ./frontend/src
 
 FROM nginx:alpine-slim
 
