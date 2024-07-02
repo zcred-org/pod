@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "test": "echo 'frontend has not tests'",
     "zcred-store:gen": "openapi-typescript http://localhost:5001/documentation/json -o src/service/external/zcred-store/generated.d.ts",
     "bundle:visualize": "pnpm dlx vite-bundle-visualizer"
   },

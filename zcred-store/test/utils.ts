@@ -7,6 +7,7 @@ import { App } from '../src/app.js';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from '../src/models/entities/schema.js';
+import crypto from "node:crypto";
 import type { JwtPayloadCrete } from '../src/models/dtos/jwt-payload.dto.js';
 
 export async function testAppStart() {
