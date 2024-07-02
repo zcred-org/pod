@@ -1,0 +1,23 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY . .
+
+RUN rm -r ./frontend
+RUN rm -r ./zkapp-hub
+RUN npm install -g pnpm
+RUN pnpm install
+RUN pnpm run build
+RUN rm -r ./zcred-store/src
+RUN apk --update add postgresql-client
+RUN apk add --no-cache --upgrade bash
+RUN cd ./zcred-store/bin && chmod +x cloud-sql-proxy && chmod +x wait-for-postgres.sh && cd ../..
+
+CMD cd ./zcred-store && \
+    node ./scripts/create-gcp-key.js && \
+    ./bin/cloud-sql-proxy --credentials-file ./gcp-key.json --port 5435 $GCP_INSTANCE_CONNECTION_NAME & \
+    cd ./zcred-store && \
+    ./bin/wait-for-postgres.sh . && \
+    pnpm run migration:migrate \
+    && cd .. && node ./zcred-store/dist/main.js
