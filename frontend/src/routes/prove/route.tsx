@@ -30,7 +30,7 @@ export const Route = createFileRoute('/prove')({
   pendingComponent: PendingComponent,
   beforeLoad: ({ search, cause }) => {
     if (!$isWalletAndDidConnected.value && cause !== 'preload') {
-      throw redirect({ to: '/', search: { proposalURL: search.proposalURL } });
+      throw redirect({ to: '/', search });
     }
     const verifierHost = new URL(search.proposalURL).host;
     return { title: `Prove for ${verifierHost}` };

@@ -39,7 +39,7 @@ export const Route = createFileRoute('/')({
   },
   pendingComponent: () => (
     <PageContainer>
-      <Progress isStriped isIndeterminate label="Loading proposal..." />
+      <Progress isIndeterminate label="Loading proposal..." />
     </PageContainer>
   ),
 });
