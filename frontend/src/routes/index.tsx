@@ -3,14 +3,13 @@ import { createFileRoute, Navigate, useNavigate, useRouter } from '@tanstack/rea
 import { useWeb3ModalState } from '@web3modal/wagmi/react';
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { IconByWalletType, IconEth, IconMina } from '@/components/icons.tsx';
+import { IconByWalletType, IconEth } from '@/components/icons.tsx';
 import { DidModal } from '@/components/modals/DidModal.tsx';
 import { SwitchToRequiredIdModal } from '@/components/modals/SwitchToRequiredIdModal.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
 import { web3modal } from '@/config/wagmi-config.ts';
 import { useWagmiConnector } from '@/hooks/web3/ethereum/useWagmiConnector.ts';
 import { ensureProposalQuery } from '@/service/queries.ts';
-import { AuroStore } from '@/stores/auro.store.ts';
 import { $isWalletAndDidConnected, $isWalletConnected } from '@/stores/other.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
@@ -40,7 +39,7 @@ export const Route = createFileRoute('/')({
   },
   pendingComponent: () => (
     <PageContainer>
-      <Progress isStriped isIndeterminate label="Loading proposal..." />
+      <Progress isIndeterminate label="Loading proposal..." />
     </PageContainer>
   ),
 });
@@ -63,13 +62,13 @@ function SignInComponent() {
 
   if (!$isWalletConnected.value) {
     const isEthLoading = isEthConnecting || wagmiConnector.isFetching || !!wagmiAccount.address;
-    const isMinaLoading = AuroStore.$isConnecting.value;
+    // const isMinaLoading = AuroStore.$isConnecting.value;
 
-    const isEthDisabled = isMinaLoading;
-    const isMinaDisabled = isEthLoading || !window.mina;
+    // const isEthDisabled = isMinaLoading;
+    // const isMinaDisabled = isEthLoading || !window.mina;
 
     const isEthVisible = !requiredWallet || requiredWallet === WalletTypeEnum.Ethereum;
-    const isMinaVisible = !requiredWallet || requiredWallet === WalletTypeEnum.Auro;
+    // const isMinaVisible = !requiredWallet || requiredWallet === WalletTypeEnum.Auro;
 
     return (
       <PageContainer className="grow items-center justify-center">
@@ -87,18 +86,18 @@ function SignInComponent() {
         <div className="max-w-[300px] mx-auto flex flex-col justify-center gap-5">
           {isEthVisible && <Button
             className="text-white shadow-xl shadow-blue-500/30 bg-gradient-to-br from-blue-400 to-blue-600 dark:from-blue-400 dark:to-blue-700"
-            isDisabled={isEthDisabled}
+            // isDisabled={isEthDisabled}
             isLoading={isEthLoading}
             onClick={() => web3modal.open()}
             size="lg"
           ><IconEth className="w-7 h-7 fill-white" />Sign In With Ethereum</Button>}
-          {isMinaVisible && <Button
-            className="text-white shadow-xl shadow-indigo-500/30 bg-gradient-to-br from-indigo-400 to-indigo-600 dark:from-indigo-400 dark:to-indigo-700"
-            isDisabled={isMinaDisabled}
-            isLoading={isMinaLoading}
-            onClick={AuroStore.connect}
-            size="lg"
-          ><IconMina className="w-7 h-7 fill-white stroke-white" />Sign In With Mina</Button>}
+          {/*{isMinaVisible && <Button*/}
+          {/*  className="text-white shadow-xl shadow-indigo-500/30 bg-gradient-to-br from-indigo-400 to-indigo-600 dark:from-indigo-400 dark:to-indigo-700"*/}
+          {/*  isDisabled={isMinaDisabled}*/}
+          {/*  isLoading={isMinaLoading}*/}
+          {/*  onClick={AuroStore.connect}*/}
+          {/*  size="lg"*/}
+          {/*><IconMina className="w-7 h-7 fill-white stroke-white" />Sign In With Mina</Button>}*/}
           {requiredId && <div className="h-3" />}
           {requiredId && <Button
             onClick={() => navigate({ to: '/' })}
