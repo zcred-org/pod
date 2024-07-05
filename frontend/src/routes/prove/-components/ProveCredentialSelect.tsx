@@ -7,7 +7,7 @@ import { ProofStore } from '@/stores/proof.store.ts';
 const {
   $credentialsAsync,
   $credential,
-  $proofAsync,
+  $proofCreateAsync,
   $cantContinueReason,
 } = ProofStore;
 
@@ -29,7 +29,7 @@ export const ProveCredentialSelect: FC = () => (<>
     disabledKeys={$credentialsNotProvableIds.value}
     placeholder="Select a credential"
     isLoading={$credentialsAsync.value.isLoading}
-    isDisabled={$proofAsync.value.isLoading || $proofAsync.value.isSuccess}
+    isDisabled={$proofCreateAsync.value.isLoading || $proofCreateAsync.value.isSuccess}
     description={$credentialsAsync.value.data.at(0)?.isProvable && $credentialsAsync.value.data.at(1)?.isProvable
       ? 'You have more than one suitable credential, please specify which one you would like to use'
       : undefined}

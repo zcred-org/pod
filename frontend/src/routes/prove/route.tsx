@@ -16,9 +16,10 @@ import { WalletStore } from '@/stores/wallet.store.ts';
 const {
   $isSubjectMatch,
   $requiredId,
-  $proofAsync,
+  $proofCreateAsync,
   $cantContinueReason,
   $proposalComment,
+  $proofSendAsync,
 } = ProofStore;
 
 export const Route = createFileRoute('/prove')({
@@ -65,10 +66,12 @@ function ProveComponent() {
         minRows={1}
       />)}
       <div className="grow">
-        {computed(() => $proofAsync.value.isLoading && <Progress
+        {computed(() => ($proofCreateAsync.value.isLoading || $proofSendAsync.value.isLoading) ? <Progress
           isIndeterminate
-          label="Creating a proof..."
-        />)}
+          label={$proofCreateAsync.value.isLoading ? 'Creating a proof...'
+            : $proofSendAsync.value.isLoading ? 'Sending a proof...'
+              : ''}
+        /> : null)}
       </div>
       <div className="flex gap-3">
         <ProvePageButtons />
