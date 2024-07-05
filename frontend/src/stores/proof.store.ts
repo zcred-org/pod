@@ -2,7 +2,7 @@
 
 import { batch, effect } from '@preact/signals-react';
 import type { Identifier } from '@zcredjs/core';
-import axios from 'axios';
+import axios, { type AxiosError } from 'axios';
 import { toast } from 'sonner';
 import type { SetOptional } from 'type-fest';
 import { CredentialValidIntervalModal } from '@/components/modals/CredentialValidIntervalModal.tsx';
@@ -35,51 +35,35 @@ export class ProofStore {
   public static $credential = signal<CredentialMarked | null>(null, `${StoreName}.state.credential`);
 
   public static $credentialUpsertAsync = signalAsync()({ name: `${StoreName}.async.credentialUpsert` });
-  public static $proofAsync = signalAsync<SetOptional<ProvingResult, 'signature'>>()({
+
+  public static $proofCreateAsync = signalAsync<SetOptional<ProvingResult, 'signature'>>()({
     staleDataOnLoading: true,
     name: `${StoreName}.async.proof`,
   });
-  public static $proofSigningAsync = signalAsync()({ name: `${StoreName}.async.proofSigning` });
+  public static $proofSignAsync = signalAsync()({ name: `${StoreName}.async.proofSigning` });
+  public static $proofSendAsync = signalAsync()({ name: `${StoreName}.async.proofSend` });
 
   public static $cantContinueReason = signal<string | null>(null, `${StoreName}.state.cantContinueReason`);
 
   private static SUBs: {
     credentialsRefetchEffect?: (() => void);
-    finishEffect?: (() => void);
   } = {};
 
   private static subscriptionsEnable() {
     ProofStore.SUBs.credentialsRefetchEffect ??= effect(() => {
-      /** TODO: fix. Subscriptions of credentialsRefetch: **/
+      /** TODO: fix subscriptions duplication. Subscriptions of credentialsRefetch: **/
       ProofStore.$challengeInitData.value;
       ProofStore.$isSubjectMatch.value;
       $isWalletAndDidConnected.value;
       /** Function body **/
       ProofStore.credentialsRefetch().then();
     });
-
-    ProofStore.SUBs.finishEffect ??= effect(function finishChallenge() {
-        /** Subscriptions **/
-        const proposal = ProofStore.$challengeInitData.value?.proposal;
-        const proof = ProofStore.$proofAsync.value.data;
-        /** Function body **/
-        if (!proposal || !proof?.signature) return;
-        ProofStore.subscriptionsDisable();
-
-        axios.post<{ redirectURL: string }>(proposal.verifierURL, proof).then(async ({ data: { redirectURL } }) => {
-          toast.loading('Challenge completed! Redirecting...', { duration: 3e3 });
-          await new Promise(resolve => setTimeout(resolve, 3e3));
-          location.replace(redirectURL);
-        });
-      },
-    );
   }
 
-  private static subscriptionsDisable() {
-    ProofStore.SUBs.credentialsRefetchEffect?.();
-    ProofStore.SUBs.finishEffect?.();
-    ProofStore.SUBs = {};
-  }
+  // private static subscriptionsDisable() {
+  //   ProofStore.SUBs.credentialsRefetchEffect?.();
+  //   ProofStore.SUBs = {};
+  // }
 
   public static async proveStorePrepare(args: ProposalQueryArgs) {
     ProofStore.subscriptionsEnable();
@@ -95,9 +79,9 @@ export class ProofStore {
     /** Subscriptions for effect(credentialsRefetch) **/
     const initData = ProofStore.$challengeInitData.value;
     const isSubjectMatch = ProofStore.$isSubjectMatch.value;
-    const isAuthorized = $isWalletAndDidConnected.value;
+    const isWalletAndDidConnected = $isWalletAndDidConnected.value;
     /** Function body **/
-    if (!isSubjectMatch || !initData || !isAuthorized) {
+    if (!isSubjectMatch || !initData || !isWalletAndDidConnected) {
       return batch(() => {
         ProofStore.$credentialsAsync.reset();
         ProofStore.$credential.value = null;
@@ -205,7 +189,7 @@ export class ProofStore {
       throw new Error('Selected credential is not provable');
     }
 
-    ProofStore.$proofAsync.loading();
+    ProofStore.$proofCreateAsync.loading();
     console.time('createProof');
     const [proof, error] = await zCredProver.createProof({
       credential: credential.data,
@@ -215,18 +199,18 @@ export class ProofStore {
       .catch((error: Error) => [undefined, new DetailedError('Proof creation failed', error)] as const);
     console.timeEnd('createProof');
     if (proof) {
-      ProofStore.$proofAsync.resolve(proof);
-      ProofStore.signChallenge().then();
+      ProofStore.$proofCreateAsync.resolve(proof);
+      ProofStore.proofSign().then();
     } else {
-      ProofStore.$proofAsync.reject(error);
+      ProofStore.$proofCreateAsync.reject(error);
       throw error;
     }
   }
 
-  public static async signChallenge() {
+  public static async proofSign() {
     const wallet = WalletStore.$wallet.peek();
     const proposal = ProofStore.$challengeInitData.peek()?.proposal;
-    const proof = ProofStore.$proofAsync.peek().data;
+    const proof = ProofStore.$proofCreateAsync.peek().data;
 
     if (!proof || !wallet || !proposal) {
       const errors: string[] = [];
@@ -236,19 +220,45 @@ export class ProofStore {
       throw new Error(`Challenge signing failed: ${errors.join(', ')}`);
     }
 
-    ProofStore.$proofSigningAsync.loading();
+    ProofStore.$proofSignAsync.loading();
     const [signature, error] = await wallet.adapter.sign({ message: proposal.challenge.message })
       .then(signature => [signature, undefined] as const)
       .catch((error) => [undefined, new DetailedError('Challenge signing failed', error)] as const);
     batch(() => {
       if (signature) {
-        ProofStore.$proofAsync.resolve({ ...proof, signature });
-        ProofStore.$proofSigningAsync.resolve();
+        ProofStore.$proofCreateAsync.resolve({ ...proof, signature });
+        ProofStore.$proofSignAsync.resolve();
+        ProofStore.proofSend().then();
       } else {
-        ProofStore.$proofSigningAsync.reject(error!);
+        ProofStore.$proofSignAsync.reject(error!);
       }
     });
     if (error) throw error;
+  }
+
+  public static async proofSend() {
+    /** Read state **/
+    const proposal = ProofStore.$challengeInitData.peek()?.proposal;
+    const proof = ProofStore.$proofCreateAsync.peek().data;
+    /** Perform checks **/
+    if (!proposal) throw new Error('ProofStore is not initialized');
+    if (!proof) throw new Error('Proof is not created');
+    if (!proof.signature) throw new Error('Proof is not signed');
+    /** Perform logic **/
+    ProofStore.$proofSendAsync.loading();
+    const [response, error] = await axios.post<{ redirectURL: string }>(proposal.verifierURL, proof)
+      .then(res => [res, undefined] as const)
+      .catch((error: AxiosError) => [undefined, error] as const);
+    if (response) {
+      ProofStore.$proofSendAsync.resolve();
+      toast.success('Challenge completed! Redirecting...', { duration: 3e3 });
+      await new Promise(resolve => setTimeout(resolve, 3e3));
+      location.replace(response.data.redirectURL);
+    } else {
+      ProofStore.$proofSendAsync.reject(error);
+      toast.error('Failed to send proof');
+      throw error;
+    }
   }
 
   public static $requiredId = computed<Identifier | null>(() => ProofStore.$challengeInitData.value?.proposal.selector.attributes.subject.id ?? null, `${StoreName}.computed.requiredId`);

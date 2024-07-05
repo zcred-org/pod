@@ -2,15 +2,21 @@ import { Button } from '@nextui-org/react';
 import { ProofStore } from '@/stores/proof.store.ts';
 
 const {
-  $credentialsAsync,
-  $credentialUpsert,
   $cantContinueReason,
-  $proofSigningAsync,
-  $proofAsync,
-  $credential,
-  proofCreate,
-  signChallenge,
+
+  $credentialsAsync,
   $credentialUpsertAsync,
+  $credentialUpsert,
+  $credential,
+
+  $proofCreateAsync,
+  proofCreate,
+
+  $proofSignAsync,
+  proofSign,
+
+  $proofSendAsync,
+  proofSend,
 } = ProofStore;
 
 export function ProvePageButtons() {
@@ -21,6 +27,7 @@ export function ProvePageButtons() {
       color="danger"
       onClick={() => window.location.href = document.referrer}
     >Reject</Button>
+
     {$credentialUpsert.value && <Button
       className="grow"
       color="success"
@@ -28,19 +35,29 @@ export function ProvePageButtons() {
       onClick={$credentialUpsert.value.fn}
       isDisabled={!!$cantContinueReason.value}
     >{$credentialUpsert.value.isIssue ? 'Issue credential' : 'Update credential'}</Button>}
-    {!$credentialUpsert.value && !$proofAsync.value.isSuccess && <Button
+
+    {!$credentialUpsert.value && !$proofCreateAsync.value.isSuccess && <Button
       className="grow"
       color="success"
-      isLoading={$proofAsync.value.isLoading || $credentialsAsync.value.isLoading}
+      isLoading={$proofCreateAsync.value.isLoading || $credentialsAsync.value.isLoading}
       isDisabled={!$credential.value || !!$cantContinueReason.value}
       onClick={proofCreate}
     >Create proof</Button>}
-    {$proofAsync.value.isSuccess && <Button
+
+    {$proofCreateAsync.value.isSuccess && !$proofSignAsync.value.isSuccess && <Button
       className="grow"
       color="success"
-      isLoading={$proofSigningAsync.value.isLoading}
-      onClick={signChallenge}
-      isDisabled={$proofSigningAsync.value.isSuccess || !!$cantContinueReason.value}
+      isLoading={$proofSignAsync.value.isLoading}
+      onClick={proofSign}
+      isDisabled={$proofSignAsync.value.isSuccess || !!$cantContinueReason.value}
     >Sign challenge</Button>}
+
+    {$proofSignAsync.value.isSuccess && <Button
+      className="grow"
+      color="success"
+      isLoading={$proofSendAsync.value.isLoading}
+      onClick={proofSend}
+      isDisabled={$proofSendAsync.value.isSuccess || !!$cantContinueReason.value}
+    >Send proof</Button>}
   </>);
 }
