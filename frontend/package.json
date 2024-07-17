@@ -15,7 +15,7 @@
   "dependencies": {
     "@jaljs/core": "1.0.5",
     "@jaljs/friendly-zcred": "^0.0.5",
-    "@jaljs/o1js": "1.1.5",
+    "@jaljs/o1js": "1.1.7",
     "@marko19907/string-to-color": "^1.0.0",
     "@nextui-org/react": "^2.4.2",
     "@preact/signals-react": "2.0.1",
