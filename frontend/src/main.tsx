@@ -25,17 +25,19 @@ export const router = createRouter({
     title: 'ZCred App',
   },
 });
+// @ts-expect-error - globalThis is not defined in the types
+globalThis.appRouter = router;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={wagmiConfig}>
         <NextUIProvider className="flex flex-col min-h-screen" navigate={navigate}>
           <HelmetProvider>
             <RouterProvider router={router} />
           </HelmetProvider>
         </NextUIProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   </StrictMode>,
 );

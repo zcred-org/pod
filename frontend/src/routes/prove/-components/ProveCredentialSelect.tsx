@@ -2,14 +2,14 @@ import { Select, SelectItem } from '@nextui-org/react';
 import { computed } from '@preact/signals-react';
 import type { FC } from 'react';
 import { CredentialCard } from '@/components/CredentialCard.tsx';
-import { ProofStore } from '@/stores/proof.store.ts';
+import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 
 const {
   $credentialsAsync,
   $credential,
   $proofCreateAsync,
-  $cantContinueReason,
-} = ProofStore;
+  $terminateAsync,
+} = VerificationStore;
 
 const $credentialsNotProvableIds = computed<string[]>(() => {
   return $credentialsAsync.value.data.reduce<string[]>((acc, cred) => {
@@ -18,7 +18,7 @@ const $credentialsNotProvableIds = computed<string[]>(() => {
 });
 
 export const ProveCredentialSelect: FC = () => (<>
-  {$credentialsAsync.value.data.length > 1 && !$cantContinueReason.value ? <Select
+  {$credentialsAsync.value.data.length > 1 ? <Select
     className="shadow-amber-500"
     items={$credentialsAsync.value.data}
     isRequired={!$credential}
@@ -29,7 +29,7 @@ export const ProveCredentialSelect: FC = () => (<>
     disabledKeys={$credentialsNotProvableIds.value}
     placeholder="Select a credential"
     isLoading={$credentialsAsync.value.isLoading}
-    isDisabled={$proofCreateAsync.value.isLoading || $proofCreateAsync.value.isSuccess}
+    isDisabled={$proofCreateAsync.value.isLoading || $proofCreateAsync.value.isSuccess || !$terminateAsync.value.isIdle}
     description={$credentialsAsync.value.data.at(0)?.isProvable && $credentialsAsync.value.data.at(1)?.isProvable
       ? 'You have more than one suitable credential, please specify which one you would like to use'
       : undefined}

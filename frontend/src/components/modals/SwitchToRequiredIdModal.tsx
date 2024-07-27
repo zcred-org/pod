@@ -2,13 +2,12 @@ import { Button, Card, CardBody, CardHeader, Divider, Modal, ModalBody, ModalCon
 import type { Identifier } from '@zcredjs/core';
 import { CircleUserRound, ShieldAlert } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { IconByWalletType } from '@/components/icons.tsx';
+import { IconByWalletType } from '@/components/icons/icons.tsx';
 import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
-import type { Nillable } from '@/types';
 import { addressShort, subjectTypeToWalletEnum } from '@/util/helpers.ts';
 
 export function SwitchToRequiredIdModal(
-  { requiredId, subjectId }: { requiredId: Nillable<Identifier>; subjectId: Nillable<Identifier> },
+  { requiredId, subjectId }: { requiredId: Identifier; subjectId: Identifier },
 ): ReactNode {
   return <Modal isOpen backdrop="blur" placement="center" hideCloseButton>
     <ModalContent>

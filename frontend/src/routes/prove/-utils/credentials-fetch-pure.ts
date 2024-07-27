@@ -39,8 +39,11 @@ export async function credentialsFetchPure(
     credentialFilter,
     issuerInfo,
   });
-  const isAutoSelectFirst: boolean = !!credentials.at(0)?.isProvable && !credentials.at(1)?.isProvable;
-  const isSelectedNotFound: boolean = !!credentialSelectedId
-    && !credentials.some(({ id, isProvable }) => id === credentialSelectedId && isProvable);
-  return { credentials, isAutoSelectFirst, isSelectedNotFound };
+  const credential1: CredentialMarked | null = credentials.at(0) || null;
+  const isProvable1: boolean = !!credential1?.isProvable;
+  const isNotProvable2: boolean = !credentials.at(1)?.isProvable;
+  const isAutoSelectFirst: CredentialMarked | null = isProvable1 && isNotProvable2 && credential1 || null;
+  const credentialToSelect: CredentialMarked | null = isAutoSelectFirst
+    || credentialSelectedId && credentials.find(({ id }) => id === credentialSelectedId) || null;
+  return { credentials, credentialToSelect };
 }

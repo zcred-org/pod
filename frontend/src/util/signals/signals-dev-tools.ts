@@ -22,7 +22,7 @@ if (tracking) {
 }
 
 function track<D, T extends Signal<D> | ReadonlySignal<D>>(signal: T, path?: string): T {
-  if (tracking && path) tracking.value = { ...tracking.value, [path]: signal };
+  if (tracking && path) tracking.value = { ...tracking.peek(), [path]: signal };
   return signal;
 }
 

@@ -13,7 +13,7 @@ import {
   type WorkerProofResp,
   type WorkerResp,
 } from './types.ts';
-import type { ProvingResult } from '../external/verifier/types.ts';
+import type { ProvingResultUnsigned } from '../external/verifier/types.ts';
 
 type CreateProofInput = {
   credential: ZkCredential;
@@ -50,7 +50,7 @@ export class O1JSZCredProver {
   async createProof({
   credential,
   jalProgram,
-}: CreateProofInput): Promise<Omit<ProvingResult, 'signature'>> {
+}: CreateProofInput): Promise<ProvingResultUnsigned> {
     await this.workerInitialize;
     const workerResp = await new Promise<
       WorkerProofResp | WorkerError

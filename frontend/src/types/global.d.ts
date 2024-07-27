@@ -2,6 +2,7 @@ import type { ReduxDevtoolsExtensionCompose } from '@redux-devtools/extension';
 import type { UseQueryOptions, DefaultError, QueryKey, DataTag } from '@tanstack/react-query';
 import type { IEIP1193Provider } from '@zcredjs/ethereum';
 import type { IAuroWallet } from '@zcredjs/mina';
+import type { router } from '@/main.tsx';
 
 declare module '@zcredjs/mina' {
   interface IAuroEventHandlers {
@@ -15,6 +16,8 @@ declare module '@zcredjs/mina' {
 }
 
 declare global {
+  const appRouter: typeof router;
+
   interface Window {
     mina?: IAuroWallet;
     ethereum?: IEIP1193Provider;

@@ -2,20 +2,21 @@ import { FriendlyZCredTranslator } from '@jaljs/friendly-zcred';
 import { Card, CardBody, CardHeader, Divider } from '@nextui-org/react';
 import { computed } from '@preact/signals-react';
 import { type FC, type ReactNode } from 'react';
-import { ProofStore } from '@/stores/proof.store.ts';
+import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 
-const $credentialType = computed<string | undefined>(() => {
-  return ProofStore.$credential.value?.data.attributes.type || ProofStore.$challengeInitData.value?.issuerInfo?.credential.type || 'unknown';
+const $credentialType = computed<string>(() => {
+  return VerificationStore.$credential.value?.data.attributes.type || VerificationStore.$initDataAsync.value.data?.issuerInfo?.credential.type || 'unknown';
 });
 
 const $credentialFriendlyJal = computed<ReactNode | undefined>(() => {
-  const challengeInitData = ProofStore.$challengeInitData.value;
-  const credential = ProofStore.$credential.value;
-  const program = challengeInitData?.proposal.program;
+  const initData = VerificationStore.$initDataAsync.value.data;
+  const credential = VerificationStore.$credential.value;
+  const program = initData?.proposal.program;
 
   const definitions = credential?.data.meta.definitions.attributes
-    || challengeInitData?.issuerInfo?.definitions.attributes;
-  const friendlyJal = program && definitions && new FriendlyZCredTranslator(program, definitions).translate();
+    || initData?.issuerInfo?.definitions.attributes;
+  const friendlyJal = program && definitions
+    && new FriendlyZCredTranslator(program, definitions).translate();
 
   return friendlyJal
     ?.split('\n')

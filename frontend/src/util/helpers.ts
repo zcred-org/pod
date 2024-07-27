@@ -30,6 +30,10 @@ export const base64UrlDecode = (base64string: string) => {
   return u8a.toString(u8a.fromString(base64string, 'base64url'), 'utf-8');
 };
 
+export function getId() {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
+
 export const subjectTypeToWalletEnum = (subjectType: string): WalletTypeEnum => {
   if (subjectType === 'ethereum:address') {
     return WalletTypeEnum.Ethereum;
@@ -40,10 +44,9 @@ export const subjectTypeToWalletEnum = (subjectType: string): WalletTypeEnum => 
   throw new Error(`Unknown subject type: ${subjectType}`);
 };
 
-export const checkProposalValidity = (proposal: Proposal) => {
+export const checkProposalValidity = (proposal: Proposal): boolean => {
   const recipientDomain = /(?<=recipient url: ).*?(?=\n)/i.exec(proposal?.challenge.message ?? '')?.[0];
-  if (proposal && (!recipientDomain || !proposal.verifierURL.startsWith(recipientDomain)))
-    throw new Error('Invalid Proposal');
+  return Boolean(recipientDomain && proposal.verifierURL.startsWith(recipientDomain));
 };
 
 export const verifyCredentialJWS = async (credential: HttpCredential, issuerKid: string) => {
@@ -60,3 +63,25 @@ export const verifyCredentialJWS = async (credential: HttpCredential, issuerKid:
 export const isSubjectIdsEqual = (a: Nillable<Identifier>, b: Nillable<Identifier>): boolean => {
   return !!a && !!b && a.type === b.type && a.key === b.key;
 };
+
+export function go<TErr>() {
+  return async <TRes>(
+    promise: Promise<TRes>,
+  ): Promise<[TRes, undefined] | [undefined, TErr]> => {
+    try {
+      return [await promise, undefined] as const;
+    } catch (err) {
+      return [undefined, err as TErr] as const;
+    }
+  };
+}
+
+export async function gopher<TRes, TErr = unknown>(
+  func: Promise<TRes>,
+): Promise<[TRes, undefined] | [undefined, TErr]> {
+  try {
+    return [await func, undefined] as const;
+  } catch (err) {
+    return [undefined, err as TErr] as const;
+  }
+}

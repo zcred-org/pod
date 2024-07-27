@@ -3,6 +3,7 @@ import { Button, type ButtonProps, Modal, ModalBody, ModalContent, ModalFooter, 
 import { signal } from '@preact/signals-react';
 import type { ReactNode } from 'react';
 import type { SetOptional } from 'type-fest';
+import { getId } from '@/util/helpers.ts';
 
 type TAction<Action extends string = string> = Action | {
   label?: string;
@@ -18,6 +19,7 @@ type Prompt<
   id: string;
   title?: ReactNode;
   text: ReactNode;
+  isNoClosable?: boolean;
   actions: Action[];
   resolve: (action: Action) => void;
 }
@@ -29,14 +31,19 @@ type PromptNew<
 
 const prompts = signal<Prompt[]>([]);
 
-export const prompt = async <
-  Value extends string = string,
-  Action extends TAction<Value> = TAction<Value>
->(prompt: PromptNew<Value, Action>) => {
-  const id = Math.random().toString(36).substring(7);
-  return new Promise<(Action extends object ? Action['value'] : Action) | 'Cancel'>((resolve) => {
-    prompts.value = [...prompts.value, { ...prompt, id, resolve: resolve as any }];
-  });
+export const promptModal = async <
+  Value extends string,
+  Action extends TAction<Value>,
+  IsUnrejectable extends boolean = false,
+>(promptNew: PromptNew<Value, Action> & { isNoClosable?: IsUnrejectable }): Promise<
+  (Action extends object ? Action['value'] : Action)
+  | (IsUnrejectable extends true ? never : 'Cancel')
+> => {
+  return new Promise((resolve) => prompts.value = [...prompts.value, {
+    ...promptNew,
+    id: getId(),
+    resolve: resolve as any,
+  }]);
 };
 
 const onClose = (prompt: Prompt, action: string) => {
@@ -46,7 +53,14 @@ const onClose = (prompt: Prompt, action: string) => {
 
 export function PromptModals(): ReactNode {
   return <>{prompts.value.map((prompt) => (
-    <Modal isOpen placement="center" key={prompt.id} onClose={() => onClose(prompt, 'Cancel')}>
+    <Modal
+      isOpen
+      hideCloseButton={prompt.isNoClosable}
+      backdrop="blur"
+      placement="center"
+      key={prompt.id}
+      onClose={prompt.isNoClosable ? undefined : () => onClose(prompt, 'Cancel')}
+    >
       <ModalContent>
         <ModalHeader>
           {prompt.title || 'Prompt'}
@@ -63,6 +77,7 @@ export function PromptModals(): ReactNode {
               onClick={() => onClose(prompt, action.value)}
               variant={action.variant}
               color={action.color}
+              size="sm"
             >{action.label}</Button>;
           })}
         </ModalFooter>
