@@ -4,9 +4,14 @@ import { type ProvingResult, type VerifierResponse, type Proposal, isProposal } 
 import type { ZCredStore } from '@/service/external/zcred-store/api-specification.ts';
 import { checkProposalValidity } from '@/util/helpers.ts';
 
+
 export class VerifierApi {
-  public static async proposalGet(args: { proposalURL: string, secretData: ZCredStore['SecretDataDto'] }): Promise<Proposal> {
-    const res = await axios.post<Proposal>(args.proposalURL, args.secretData)
+  public static async proposalGet({ proposalURL, secretData, signal }: {
+    proposalURL: string,
+    secretData: ZCredStore['SecretDataDto'],
+    signal?: AbortSignal,
+  }): Promise<Proposal> {
+    const res = await axios.post<Proposal>(proposalURL, secretData, { signal })
       .catch(VerifierApi.#catchVerifierException);
     if (!isProposal(res.data)) throw new VerifierException(VEC.PROPOSAL_BAD_RESP);
     if (!checkProposalValidity(res.data)) throw new VerifierException(VEC.PROPOSAL_BAD_RESP);

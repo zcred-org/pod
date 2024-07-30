@@ -1,5 +1,5 @@
 import type { JsonZcredException } from '@zcredjs/core';
-import { SEC } from '@zcredjs/core';
+import { SEC, IEC } from '@zcredjs/core';
 import type { SetOptional } from 'type-fest';
 import { IconStatusEnum } from '@/components/icons/IconStatus.tsx';
 import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
@@ -33,6 +33,16 @@ export abstract class VerificationTerminateActions {
     });
   }
 
+  public static async rejectNoSecretData() {
+    return await VerificationTerminateActions.reject({
+      ui: {
+        status: IconStatusEnum.Error,
+        message: 'Session has expired, please start from the beginning',
+      },
+      isSkipVerifierReq: true,
+    });
+  }
+
   public static async rejectAttributesNotMatch() {
     return await VerificationTerminateActions.reject({
       ui: {
@@ -44,6 +54,7 @@ export abstract class VerificationTerminateActions {
   }
 
   public static async rejectNoCredsAndNoIssuer(issuerHost: string) {
+    const issuerError = VerificationStore.$issuerError.peek();
     return await VerificationTerminateActions.reject({
       ui: {
         status: IconStatusEnum.Error,
@@ -52,7 +63,7 @@ You have no suitable credential and the issuer (${issuerHost}) cannot issue a ne
 Please check back later.
           `.trim(),
       },
-      error: { code: SEC.REJECT },
+      error: issuerError ?? { code: IEC.NO_ISSUER },
     });
   }
 
@@ -75,6 +86,7 @@ Please check back later.
         error,
       }).then(res => res?.redirectURL).catch(() => undefined);
     }
+    console.debug('Verification rejected', { ui, error, redirectURLFromVerifier });
     VerificationStore.$terminateAsync.resolve({
       ui: {
         status: ui.status ?? IconStatusEnum.Error,

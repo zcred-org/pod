@@ -1,5 +1,5 @@
 import { Divider, Progress, CardBody, Card, CardHeader, CardFooter, Button, cn } from '@nextui-org/react';
-import { type ReadonlySignal, type Signal, batch } from '@preact/signals-react';
+import { type ReadonlySignal, batch } from '@preact/signals-react';
 import { useEffect, useMemo } from 'react';
 import { IconStatusEnum, IconStatus } from '@/components/icons/IconStatus.tsx';
 import { computed, signal } from '@/util/signals/signals-dev-tools.ts';
@@ -74,7 +74,7 @@ class Redirector {
 
   #intervalId: ReturnType<typeof setInterval> | undefined;
   readonly #$isRedirected = signal(false);
-  readonly #$progress: Signal<number>;
+  readonly #$progress = signal(this.totalDelayMs);
   readonly #$isTicking = signal(false);
   public readonly host: string | undefined;
 
@@ -87,7 +87,6 @@ class Redirector {
   }
 
   constructor(private readonly redirectURL: string) {
-    this.#$progress = signal(this.totalDelayMs);
     this.host = new URL(redirectURL).host;
     this.restart = this.restart.bind(this);
     this.redirect = this.redirect.bind(this);

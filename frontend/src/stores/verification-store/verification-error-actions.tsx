@@ -1,7 +1,7 @@
 import { isJsonIssuerException, isJsonVerifierException } from '@zcredjs/core';
 import { toast } from 'sonner';
 import { promptModal } from '@/components/modals/PromptModals.tsx';
-import { IssuerBrowserIssueException, VerifierProofSendException } from '@/stores/verification-store/other/verification-exceptions-spec.ts';
+import { IssuerBrowserIssueException, VerifierProofSendException } from '@/stores/verification-store/other/exceptions-specification.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';

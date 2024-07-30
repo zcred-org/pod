@@ -4,7 +4,7 @@ declare module NodeJS {
     HOST: string;
     PORT: string;
     PATH_TO_EXPOSE_DOMAIN: string;
-    FRONTEND_ORIGIN: string;
+    FRONTEND_ORIGINS: string;
     SECRET_STRING: string;
     DB_HOST: string;
     DB_PORT: string;

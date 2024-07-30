@@ -7,8 +7,8 @@ import { VerificationTerminateActions } from '@/stores/verification-store/verifi
 export function ProvePageButtons() {
   const {
     $credentialsAsync,
-    $credentialUpsertAsync,
-    $credentialUpsertInfo,
+    $credentialIssueAsync,
+    $isIssuanceRequired,
     $credential,
 
     $proofCreateAsync,
@@ -27,7 +27,8 @@ export function ProvePageButtons() {
       onClick={VerificationTerminateActions.rejectByUser}
       isLoading={$terminateAsync.value.isLoading}
       isDisabled={
-        $credentialUpsertAsync.value.isLoading
+        $credentialsAsync.value.isLoading
+        || $credentialIssueAsync.value.isLoading
         || $proofCreateAsync.value.isLoading
         || $proofSignAsync.value.isLoading
         || $proofSendAsync.value.isLoading
@@ -35,14 +36,14 @@ export function ProvePageButtons() {
     >Reject</Button>
 
     {$terminateAsync.value.isIdle && (<>
-      {$credentialUpsertInfo.value && <Button
+      {$isIssuanceRequired.value && <Button
         className="grow"
         color="success"
-        isLoading={$credentialUpsertAsync.value.isLoading}
-        onClick={VerificationActions.credentialUpsert}
-      >{$credentialUpsertInfo.value.isIssue ? 'Issue credential' : 'Update credential'}</Button>}
+        isLoading={$credentialIssueAsync.value.isLoading}
+        onClick={VerificationActions.credentialIssue}
+      >Issue credential</Button>}
 
-      {!$credentialUpsertInfo.value && !$proofCreateAsync.value.isSuccess && <Button
+      {!$isIssuanceRequired.value && !$proofCreateAsync.value.isSuccess && <Button
         className="grow"
         color="success"
         isLoading={$proofCreateAsync.value.isLoading || $credentialsAsync.value.isLoading}

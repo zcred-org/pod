@@ -1,43 +1,53 @@
 import { Progress } from '@nextui-org/react';
-import { createFileRoute } from '@tanstack/react-router';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { createFileRoute, type ErrorComponentProps, Link } from '@tanstack/react-router';
+import { AxiosError } from 'axios';
 import { FileSearch2 } from 'lucide-react';
 import { CredentialCard } from '@/components/CredentialCard.tsx';
-import { link } from '@/components/factories/link.tsx';
 import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
-import { queryClient } from '@/config/query-client.ts';
-import { zCredStore } from '@/service/external/zcred-store';
+import { useOnScrollOver } from '@/hooks/useOnScrollOver.ts';
+import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
 import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
+
 
 export const Route = createFileRoute('/credentials')({
   component: () => <RequireWalletAndDidHoc><CredentialsComponent /></RequireWalletAndDidHoc>,
+  pendingComponent: PendingComponent,
+  errorComponent: ErrorComponent,
+
   beforeLoad: ({ location }) => {
     routeRequireWalletAndDid(location);
     return ({ title: 'Credentials' });
   },
-  loader: () => queryClient.ensureQueryData({
-    queryKey: ['credentials'],
-    queryFn: () => zCredStore.credential.credentials(),
-  }),
-  pendingComponent: () => (
-    <PageContainer>
-      <p>Loading credentials...</p>
-      <Progress isStriped isIndeterminate />
-    </PageContainer>
-  ),
+  loader: () => credentialsInfiniteQuery.prefetch(),
 });
 
 function CredentialsComponent() {
-  const credentials = Route.useLoaderData();
+  const {
+    data, error,
+    isPending, isError, isFetchingNextPage,
+    hasNextPage, fetchNextPage,
+  } = useInfiniteQuery(credentialsInfiniteQuery.default);
+
+  useOnScrollOver({
+    refOrElement: window,
+    onScrollOver: fetchNextPage,
+    isDisabled: !hasNextPage || isFetchingNextPage || isPending,
+  });
+
+  if (isPending) return <PendingComponent />;
+  if (isError) return <ErrorComponent error={error} />;
+
+  const credentials = data.pages.flatMap(p => p.credentials);
 
   return (
     <PageContainer>
       {credentials.length ? credentials.map((credential) => (
-          <CredentialCard
+          <Link to={`/credential/$id`} params={{ id: credential.id }}><CredentialCard
             credential={credential}
             key={credential.id}
-            as={link({ to: `/credential/$id`, params: { id: credential.id } })}
-          />
+          /></Link>
         ))
         : (
           <div className="flex gap-3 justify-center">
@@ -46,6 +56,24 @@ function CredentialsComponent() {
           </div>
         )
       }
+      {isFetchingNextPage && <Progress isIndeterminate />}
     </PageContainer>
   );
+}
+
+function PendingComponent() {
+  return (
+    <PageContainer>
+      <p>Loading credentials...</p>
+      <Progress isIndeterminate />
+    </PageContainer>
+  );
+}
+
+function ErrorComponent({ error }: Pick<ErrorComponentProps, 'error'>) {
+  return <PageContainer className="text-center">{
+    error instanceof AxiosError && error.response?.status === 404 ? <p>Credential not found</p>
+      : error instanceof Error ? <p>Error: {error.message}</p>
+        : <p>Unknown Error</p>
+  }</PageContainer>;
 }

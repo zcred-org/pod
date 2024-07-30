@@ -1,7 +1,6 @@
 import { Button, Card, CardBody, CardHeader, Divider, Progress, Skeleton, Textarea } from '@nextui-org/react';
 import { computed } from '@preact/signals-react';
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { useEffect } from 'react';
 import { z } from 'zod';
 import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
 import { SwitchToRequiredIdModal } from '@/components/modals/SwitchToRequiredIdModal.tsx';
@@ -11,7 +10,6 @@ import { ProveFriendlyJAL } from '@/routes/prove/-components/ProveFriendlyJAL.ts
 import { ProvePageButtons } from '@/routes/prove/-components/ProvePageButtons.tsx';
 import { ProveTitleText } from '@/routes/prove/-components/ProveTitleText.tsx';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
-import { VerificationActions } from '@/stores/verification-store/verification-actions.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
@@ -33,6 +31,8 @@ export const Route = createFileRoute('/prove')({
   },
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => await VerificationInitActions.init(deps),
+  onEnter: VerificationInitActions.subscriptionsEnable,
+  onLeave: VerificationInitActions.subscriptionsDisable,
 });
 
 function ProveComponent() {
@@ -43,11 +43,7 @@ function ProveComponent() {
   } = VerificationStore;
   const wallet = WalletStore.$wallet.value;
 
-  useEffect(() => {
-    VerificationActions.subscriptionsEnable();
-    return VerificationActions.subscriptionsDisable;
-  }, []);
-
+  if ($initDataAsync.value.isLoading) return <PendingComponent />;
   if (!$isSubjectMatch.value) return (
     <SwitchToRequiredIdModal
       requiredId={$initDataAsync.value.data!.requiredId}

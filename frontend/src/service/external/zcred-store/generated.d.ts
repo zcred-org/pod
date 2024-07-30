@@ -109,6 +109,39 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Error returned when client is not authorized to access the requested resource. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 403
+                             * @enum {number}
+                             */
+                            statusCode: 403;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            error: "Forbidden";
+                            /**
+                             * @description The error message
+                             * @example Forbidden.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            code?: "Forbidden";
+                        };
+                    };
+                };
                 /** @description Error returned when the requested resource is not found. */
                 404: {
                     headers: {
@@ -157,14 +190,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Get all or search credentials */
+        /** @description Get many or search credentials */
         get: {
             parameters: {
-                query: {
-                    "subject.id.key": string;
-                    "subject.id.type": string;
-                    "issuer.type": string;
-                    "issuer.uri": string;
+                query?: {
+                    "subject.id.key"?: string;
+                    "subject.id.type"?: string;
+                    "issuer.type"?: string;
+                    "issuer.uri"?: string;
+                    offset?: number;
+                    limit?: number;
                 };
                 header?: never;
                 path?: never;
@@ -172,13 +207,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Encrypted credentials of subject */
+                /** @description Default Response */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["CredentialDto"][];
+                        "application/json": components["schemas"]["CredentialsDto"];
                     };
                 };
                 /** @description Error returned when the client payload is either invalid, malformed or has logical validation errors. */
@@ -251,6 +286,39 @@ export interface paths {
                              * @enum {string}
                              */
                             code?: "Unauthorized";
+                        };
+                    };
+                };
+                /** @description Error returned when client is not authorized to access the requested resource. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 403
+                             * @enum {number}
+                             */
+                            statusCode: 403;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            error: "Forbidden";
+                            /**
+                             * @description The error message
+                             * @example Forbidden.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            code?: "Forbidden";
                         };
                     };
                 };
@@ -365,6 +433,39 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Error returned when client is not authorized to access the requested resource. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 403
+                             * @enum {number}
+                             */
+                            statusCode: 403;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            error: "Forbidden";
+                            /**
+                             * @description The error message
+                             * @example Forbidden.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            code?: "Forbidden";
+                        };
+                    };
+                };
                 /** @description Error returned when the requested resource is not found. */
                 404: {
                     headers: {
@@ -440,6 +541,79 @@ export interface paths {
                     };
                     content: {
                         "application/json": string;
+                    };
+                };
+                /** @description Error returned when the client payload is either invalid, malformed or has logical validation errors. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 400
+                             * @enum {number}
+                             */
+                            statusCode: 400;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            error: "Bad Request";
+                            /**
+                             * @description The error message
+                             * @example Bad Request.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            code?: "Bad Request";
+                            errors?: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description The validation errors in the client payload. */
+                            failedValidations?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Error returned when client is not authorized to access the requested resource. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 403
+                             * @enum {number}
+                             */
+                            statusCode: 403;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            error: "Forbidden";
+                            /**
+                             * @description The error message
+                             * @example Forbidden.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            code?: "Forbidden";
+                        };
                     };
                 };
             };
@@ -559,6 +733,39 @@ export interface paths {
                              * @enum {string}
                              */
                             code?: "Unauthorized";
+                        };
+                    };
+                };
+                /** @description Error returned when client is not authorized to access the requested resource. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 403
+                             * @enum {number}
+                             */
+                            statusCode: 403;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            error: "Forbidden";
+                            /**
+                             * @description The error message
+                             * @example Forbidden.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            code?: "Forbidden";
                         };
                     };
                 };
@@ -720,6 +927,39 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Error returned when client is not authorized to access the requested resource. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 403
+                             * @enum {number}
+                             */
+                            statusCode: 403;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            error: "Forbidden";
+                            /**
+                             * @description The error message
+                             * @example Forbidden.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Forbidden
+                             * @enum {string}
+                             */
+                            code?: "Forbidden";
+                        };
+                    };
+                };
                 /** @description Error returned when the requested resource is not found. */
                 404: {
                     headers: {
@@ -777,6 +1017,28 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        /** @description List of paginated credentials with total count */
+        CredentialsDto: {
+            credentials: {
+                /** Format: uuid */
+                id: string;
+                data: string;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                updatedAt: string;
+            }[];
+            countTotal: number;
+        };
+        CredentialsSearchParamsDto: {
+            "subject.id.key"?: string;
+            "subject.id.type"?: string;
+            "issuer.type"?: string;
+            /** Format: uri */
+            "issuer.uri"?: string;
+            offset?: number;
+            limit?: number;
+        };
         /** @description Credential identifier */
         CredentialIdDto: {
             /** Format: uuid */
@@ -811,9 +1073,9 @@ export interface components {
             } & {
                 [key: string]: unknown;
             };
-            clientSession: string;
+            clientSession?: string;
             /** Format: uri */
-            redirectURL: string;
+            redirectURL?: string;
             issuerAccessToken?: string;
         } & {
             [key: string]: unknown;

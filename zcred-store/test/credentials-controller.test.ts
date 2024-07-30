@@ -9,7 +9,7 @@ import type { CredentialUpsertDto } from '../src/controllers/credential/dtos/cre
 
 describe('CredentialsController', async () => {
   const { pgContainer, app } = await testAppStart();
-  const frontendOrigin = app.context.resolve('config').frontendURL.origin;
+  const frontendOrigin = app.context.resolve('config').frontendURLs[0]!.origin;
   const db = app.context.resolve('dbClient').db;
   const fastify = app.context.resolve('httpServer').fastify;
   let did1 = await didFromSeed('user1'), user1Auth: string;
@@ -19,14 +19,14 @@ describe('CredentialsController', async () => {
     id: 'f21764ff-6253-40a1-b737-613443647c85',
     data: JSON.stringify({ test: 'encrypted data 1' }),
     controlledBy: did1.id,
-    issuer: 'http:https://center.two/issuers/passport',
+    issuer: 'http:https://center.one/issuers/passport',
     subjectId: 'mina:publickey:B62qqXhJ8qgXdApGoAvZHeXrHEg6YGqmThFcRN8xKqAvJsqjmUMVaZE',
   } as CredentialEntity;
   let user1Cred2 = {
     id: '4268acc3-6a91-4515-ac52-1329101b6e33',
     data: JSON.stringify({ test: 'encrypted data 2' }),
     controlledBy: did1.id,
-    issuer: 'http:https://center.one/issuers/passport',
+    issuer: 'http:https://center.two/issuers/passport',
     subjectId: 'mina:publickey:B62qqXhJ8qgXdApGoAvZHeXrHEg6YGqmThFcRN8xKqAvJsqjmUMVaZE',
   } as CredentialEntity;
 
@@ -75,9 +75,12 @@ describe('CredentialsController', async () => {
       }).then(bodyJson);
       expect(resUser1).toMatchObject({
         statusCode: HTTP.OK,
-        body: expect.arrayContaining([credentialDtoFrom(user1Cred1), credentialDtoFrom(user1Cred2)]),
+        body: {
+          credentials: expect.arrayContaining([credentialDtoFrom(user1Cred1), credentialDtoFrom(user1Cred2)]),
+          countTotal: 2,
+        },
       });
-      assert.equal(resUser1.body.length, 2);
+      assert.equal(resUser1.body.credentials.length, 2);
     });
 
     test('User2 getting his 0 items', async () => {
@@ -87,9 +90,9 @@ describe('CredentialsController', async () => {
       }).then(bodyJson);
       assert.deepNestedInclude(resUser2, {
         statusCode: HTTP.OK,
-        body: [],
+        body: { credentials: [], countTotal: 0 },
       });
-      assert.equal(resUser2.body.length, 0);
+      assert.equal(resUser2.body.credentials.length, 0);
     });
 
     test('Route provides search by querystring', async () => {
@@ -107,9 +110,40 @@ describe('CredentialsController', async () => {
       }).then(bodyJson);
       assert.deepNestedInclude(res, {
         statusCode: HTTP.OK,
-        body: [credentialDtoFrom(user1Cred1)],
+        body: {
+          credentials: [credentialDtoFrom(user1Cred1)],
+          countTotal: 1,
+        },
       });
-      assert.equal(res.body.length, 1);
+      assert.equal(res.body.credentials.length, 1);
+    });
+
+    test('Route handles pagination', async () => {
+      const [res1, res2] = await Promise.all([
+        fastify.inject({
+          method: 'GET', url: `/api/v1/credentials`,
+          query: {
+            limit: '1',
+          },
+          headers: { Authorization: user1Auth, origin: frontendOrigin },
+        }).then(bodyJson),
+        fastify.inject({
+          method: 'GET', url: `/api/v1/credentials`,
+          query: {
+            limit: '1',
+            offset: '1',
+          },
+          headers: { Authorization: user1Auth, origin: frontendOrigin },
+        }).then(bodyJson),
+      ]);
+
+      expect(res1).toMatchObject({ statusCode: HTTP.OK, body: { countTotal: 2 } });
+      expect(res1.body.credentials).toHaveLength(1);
+      expect(res2).toMatchObject({ statusCode: HTTP.OK, body: { countTotal: 2 } });
+      expect(res2.body.credentials).toHaveLength(1);
+      expect([...res1.body.credentials, ...res2.body.credentials]).toEqual(expect.arrayContaining(
+        [credentialDtoFrom(user1Cred1), credentialDtoFrom(user1Cred2)],
+      ));
     });
   });
 
@@ -204,9 +238,12 @@ describe('CredentialsController', async () => {
       }).then(bodyJson);
       expect(res).toMatchObject({
         statusCode: HTTP.OK,
-        body: expect.arrayContaining([credentialDtoFrom(user1Cred1), credentialDtoFrom(user1Cred2), user1Cred3Dto]),
+        body: {
+          credentials: expect.arrayContaining([credentialDtoFrom(user1Cred1), credentialDtoFrom(user1Cred2), user1Cred3Dto]),
+          countTotal: 3,
+        },
       });
-      assert.equal(res.body.length, 3);
+      assert.equal(res.body.credentials.length, 3);
     });
 
     test('User can update existing item', async () => {
@@ -239,14 +276,17 @@ describe('CredentialsController', async () => {
       }).then(bodyJson);
       expect(res).toMatchObject({
         statusCode: HTTP.OK,
-        body: expect.arrayContaining([{
-          id: user1Cred1.id,
-          data: user1Cred1Updated.data,
-          updatedAt: expect.not.stringMatching(user1Cred1.updatedAt.toISOString()),
-          createdAt: user1Cred1.createdAt.toISOString(),
-        }, credentialDtoFrom(user1Cred2)]),
+        body: {
+          credentials: expect.arrayContaining([{
+            id: user1Cred1.id,
+            data: user1Cred1Updated.data,
+            updatedAt: expect.not.stringMatching(user1Cred1.updatedAt.toISOString()),
+            createdAt: user1Cred1.createdAt.toISOString(),
+          }, credentialDtoFrom(user1Cred2)]),
+          countTotal: 2,
+        },
       });
-      assert.equal(res.body.length, 2);
+      assert.equal(res.body.credentials.length, 2);
     });
 
     test('User can\'t update anyone else\'s item', async () => {

@@ -1,6 +1,7 @@
 import { type Static, Type } from '@sinclair/typebox';
 import { CredentialEntity } from '../../../models/entities/credential.entity.js';
 
+
 export type CredentialDto = Static<typeof CredentialDto>
 
 export const CredentialDto = Type.Object({
