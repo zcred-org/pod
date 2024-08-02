@@ -13,6 +13,8 @@ import { VerificationTerminateActions } from '@/stores/verification-store/verifi
 
 export abstract class VerificationCredentialsActions {
   public static $refetchNoWait(offsetMin?: number) {
+    /** Subscriptions **/
+    credentialsInfiniteQuery.$signal.$data!.value;
     /** Read state **/
     const initData = VerificationStore.$initDataAsync.value.data;
     const isSubjectMatch = VerificationStore.$isSubjectMatch.value;

@@ -44,10 +44,9 @@ function CredentialsComponent() {
   return (
     <PageContainer>
       {credentials.length ? credentials.map((credential) => (
-          <Link to={`/credential/$id`} params={{ id: credential.id }}><CredentialCard
-            credential={credential}
-            key={credential.id}
-          /></Link>
+          <Link key={credential.id} to={`/credential/$id`} params={{ id: credential.id }}>
+            <CredentialCard credential={credential} />
+          </Link>
         ))
         : (
           <div className="flex gap-3 justify-center">
