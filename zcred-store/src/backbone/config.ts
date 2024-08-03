@@ -35,8 +35,8 @@ export class Config {
     this.host = process.env['HOST'] || '0.0.0.0';
     this.port = process.env['PORT'] ? Number(process.env['PORT']) : 8080;
     this.exposeDomain = new URL(ENV.getUrlOrThrow('PATH_TO_EXPOSE_DOMAIN').origin);
-    this.frontendURLs = ENV.getStringOrThrow('FRONTEND_ORIGINS').split('|').map(url => new URL(url));
-    if (!this.frontendURLs.length) throw new Error('ENV variable "FRONTEND_ORIGINS" must be non-empty');
+    this.frontendURLs = ENV.getStringOrThrow('FRONTEND_ORIGIN').split('|').map(url => new URL(url));
+    if (!this.frontendURLs.length) throw new Error('ENV variable "FRONTEND_ORIGIN" must be non-empty');
 
     this.db = {
       host: ENV.getStringOrThrow('DB_HOST'),
