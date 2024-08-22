@@ -35,7 +35,7 @@ jobs:
           echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
-        run: pnpm install --force
+        run: pnpm install --force --frozen-lockfile
 
       - name: Build
         env:
