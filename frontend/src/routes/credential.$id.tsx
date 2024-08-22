@@ -1,42 +1,34 @@
 import { Card, CardBody, Progress } from '@nextui-org/react';
-import { createFileRoute } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
+import { createFileRoute, type ErrorComponentProps } from '@tanstack/react-router';
 import { AxiosError } from 'axios';
 import dayjs from 'dayjs';
 import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
-import { queryClient } from '@/config/query-client.ts';
-import { zCredStore } from '@/service/external/zcred-store';
+import { credentialQuery } from '@/service/queries/credential.query.ts';
 import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
+
 
 export const Route = createFileRoute('/credential/$id')({
   component: () => <RequireWalletAndDidHoc><CredentialComponent /></RequireWalletAndDidHoc>,
-  errorComponent: ({ error }) => (
-    <PageContainer>{
-      error instanceof AxiosError && error.response?.status === 404 ? <p>Credential not found</p>
-        : error instanceof Error ? <p>Error: {error.message}</p>
-          : <p>Unknown Error</p>
-    }</PageContainer>
-  ),
+  pendingComponent: PendingComponent,
+  errorComponent: ErrorComponent,
+
   beforeLoad: ({ location }) => {
     routeRequireWalletAndDid(location);
     return ({ title: 'Credential' });
   },
-  loader: ({ params }) => queryClient.ensureQueryData({
-    queryKey: ['credential', params.id],
-    queryFn: () => zCredStore.credential.credentialById(params.id),
-  }),
-  pendingComponent: () => (
-    <PageContainer>
-      <p>Loading credential...</p>
-      <Progress isStriped isIndeterminate />
-    </PageContainer>
-  ),
+  loader: ({ params }) => credentialQuery.prefetch(params.id),
 });
 
 function CredentialComponent() {
-  const credential = Route.useLoaderData();
+  const params = Route.useParams();
+  const { data, error, isPending, isError } = useQuery(credentialQuery(params.id));
 
-  const { attributes: { issuanceDate, type, validFrom, validUntil } } = credential.data;
+  if (isPending) return <PendingComponent />;
+  if (isError) return <ErrorComponent error={error} />;
+
+  const { attributes: { issuanceDate, type, validFrom, validUntil } } = data.data;
 
   // TODO: Display credential attributes by their definitions
 
@@ -65,4 +57,21 @@ function CredentialComponent() {
       {/*</Table>*/}
     </PageContainer>
   );
+}
+
+function PendingComponent() {
+  return (
+    <PageContainer>
+      <p>Loading credential...</p>
+      <Progress isIndeterminate />
+    </PageContainer>
+  );
+}
+
+function ErrorComponent({ error }: Pick<ErrorComponentProps, 'error'>) {
+  return <PageContainer className="text-center">{
+    error instanceof AxiosError && error.response?.status === 404 ? <p>Credential not found</p>
+      : error instanceof Error ? <p>Error: {error.message}</p>
+        : <p>Unknown Error</p>
+  }</PageContainer>;
 }

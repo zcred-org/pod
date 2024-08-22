@@ -3,7 +3,7 @@ import { Link, useMatches } from '@tanstack/react-router';
 import { Moon, Sun } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { IconLogo } from '@/components/icons.tsx';
+import { IconLogo } from '@/components/icons/icons.tsx';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
 import { ThemeStore } from '@/stores/theme.store.ts';
 import { HeaderUserPanel } from './HeaderUserPanel.tsx';

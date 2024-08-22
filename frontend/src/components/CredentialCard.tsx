@@ -3,11 +3,12 @@ import dayjs from 'dayjs';
 import { type ReactNode, useMemo } from 'react';
 import { config } from '@/config';
 import { useColored } from '@/hooks/useColored.ts';
-import type { ZCredStore } from '@/service/external/zcred-store/api-specification.ts';
+import type { CredentialDecoded } from '@/service/external/zcred-store/types/credentials.types.ts';
+
 
 type CredentialCardProps = {
-  credential: ZCredStore['CredentialDecoded'],
-  onClick?: (credential: ZCredStore['CredentialDecoded']) => void | Promise<void>,
+  credential: CredentialDecoded,
+  onClick?: (credential: CredentialDecoded) => void | Promise<void>,
 } & CardProps;
 
 export function CredentialCard(

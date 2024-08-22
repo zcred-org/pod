@@ -2,6 +2,7 @@ import { Button, Card, CardBody, CardHeader, Divider, Progress, Skeleton, Textar
 import { computed } from '@preact/signals-react';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
+import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
 import { SwitchToRequiredIdModal } from '@/components/modals/SwitchToRequiredIdModal.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
 import { ProveCredentialSelect } from '@/routes/prove/-components/ProveCredentialSelect.tsx';
@@ -9,21 +10,13 @@ import { ProveFriendlyJAL } from '@/routes/prove/-components/ProveFriendlyJAL.ts
 import { ProvePageButtons } from '@/routes/prove/-components/ProvePageButtons.tsx';
 import { ProveTitleText } from '@/routes/prove/-components/ProveTitleText.tsx';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
-import { ProofStore } from '@/stores/proof.store.ts';
+import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
+import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 
 
-const {
-  $isSubjectMatch,
-  $requiredId,
-  $proofCreateAsync,
-  $cantContinueReason,
-  $proposalComment,
-  $proofSendAsync,
-} = ProofStore;
-
 export const Route = createFileRoute('/prove')({
-  component: () => <ProveComponent />,
+  component: () => <RequireWalletAndDidHoc><ProveComponent /></RequireWalletAndDidHoc>,
   validateSearch: z.object({
     proposalURL: z.string(),
     sdid: z.string(),
@@ -37,40 +30,42 @@ export const Route = createFileRoute('/prove')({
     return { title: `Prove for ${verifierHost}` };
   },
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) => await ProofStore.proveStorePrepare(deps),
+  loader: async ({ deps }) => await VerificationInitActions.init(deps),
+  onEnter: VerificationInitActions.subscriptionsEnable,
+  onLeave: VerificationInitActions.subscriptionsDisable,
 });
 
 function ProveComponent() {
+  const {
+    $initDataAsync,
+    $isSubjectMatch,
+    $holyCrapWhatsLoadingNow,
+  } = VerificationStore;
   const wallet = WalletStore.$wallet.value;
 
-  if (!$isSubjectMatch.value) {
-    return <SwitchToRequiredIdModal requiredId={$requiredId.value} subjectId={wallet!.subjectId} />;
-  }
+  if ($initDataAsync.value.isLoading) return <PendingComponent />;
+  if (!$isSubjectMatch.value) return (
+    <SwitchToRequiredIdModal
+      requiredId={$initDataAsync.value.data!.requiredId}
+      subjectId={wallet!.subjectId}
+    />
+  );
 
   return (
     <PageContainer>
       <ProveTitleText />
       <ProveFriendlyJAL />
       <ProveCredentialSelect />
-      {$proposalComment.value ? <Textarea
+      {$initDataAsync.value.data?.proposal.comment ? <Textarea
         label="Comment"
-        defaultValue={$proposalComment.value}
+        defaultValue={$initDataAsync.value.data.proposal.comment}
         isReadOnly isRequired
         minRows={1}
       /> : null}
-      {computed(() => $cantContinueReason.value && <Textarea
-        label="Can't continue"
-        value={$cantContinueReason.value}
-        isReadOnly isRequired
-        color="danger"
-        minRows={1}
-      />)}
       <div className="grow">
-        {computed(() => ($proofCreateAsync.value.isLoading || $proofSendAsync.value.isLoading) ? <Progress
+        {computed(() => $holyCrapWhatsLoadingNow.value ? <Progress
           isIndeterminate
-          label={$proofCreateAsync.value.isLoading ? 'Creating a proof...'
-            : $proofSendAsync.value.isLoading ? 'Sending a proof...'
-              : ''}
+          label={$holyCrapWhatsLoadingNow.value}
         /> : null)}
       </div>
       <div className="flex gap-3">

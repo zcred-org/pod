@@ -6,7 +6,7 @@ import type { SecretDataDto } from '../src/controllers/secret-data/dtos/secret-d
 describe('SecretDataController', async (test) => {
   const { pgContainer, app } = await testAppStart();
   const fastify = app.context.resolve('httpServer').fastify;
-  const frontendOrigin = app.context.resolve('config').frontendURL.origin;
+  const frontendOrigin = app.context.resolve('config').frontendURLs[0]!.origin;
   const { secretDataCache } = app.context.resolve('cacheManager');
 
   beforeEach(() => secretDataCache.clear());

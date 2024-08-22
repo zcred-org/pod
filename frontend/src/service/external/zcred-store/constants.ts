@@ -1,0 +1,1 @@
+export const CREDENTIALS_GET_DEFAULT_LIMIT = 10;

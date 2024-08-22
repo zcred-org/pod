@@ -3,15 +3,14 @@ import { useMutation } from '@tanstack/react-query';
 import { type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { RequireWalletHoc } from '@/components/HOC/RequireWalletHoc.tsx';
-import { IconByWalletType } from '@/components/icons.tsx';
+import { IconByWalletType } from '@/components/icons/icons.tsx';
 import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
-import { AuroErrorCodeEnum } from '@/types/auro-error-code.enum.ts';
 import { DidStore } from '@/stores/did.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
+import { AuroErrorCodeEnum } from '@/types/auro-error-code.enum.ts';
 import { addressShort } from '@/util/helpers.ts';
 
-// TODO: Need to think about signMessageText, and pass it to WalletAdapter.sign entirely
-const messageText = 'WARNING! Make sure you are on zcred.org domain. If not, you are being phished!';
+const messageText = 'WARNING! Make sure you are on zcred.me domain. If not, you are being phished!';
 
 export function DidModal(): ReactNode {
   const wallet = WalletStore.$wallet.value;

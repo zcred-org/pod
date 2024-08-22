@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { type JalProgram } from '@jaljs/core';
-import { type ZkCredential } from '@zcredjs/core';
+import type { JalProgram } from '@jaljs/core';
+import type { ZkCredential } from '@zcredjs/core';
 import type { Proof } from 'o1js';
-import { type ProvingResult } from '../external/verifier/types.ts';
+import type { ProvingResultUnsigned } from '../external/verifier/types.ts';
 
 export type WorkerMessage = {
   id: number;
@@ -79,7 +79,7 @@ export function isWorkerProofReq(data: unknown): data is WorkerProofReq {
 
 export type WorkerProofResp = WorkerMessage & {
   type: 'proof-resp';
-  result: Omit<ProvingResult, 'signature'>;
+  result: ProvingResultUnsigned;
 }
 
 export function isWorkerProofResp(data: unknown): data is WorkerProofResp {
