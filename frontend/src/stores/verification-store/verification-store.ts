@@ -56,7 +56,12 @@ export class VerificationStore {
 
 export type VerificationStoreInitArgs = {
   proposalURL: string,
-  sdid: string,
+}
+
+export function verificationStoreInitArgsFrom(
+  { proposalURL }: Partial<{ proposalURL: string }>,
+): VerificationStoreInitArgs | undefined {
+  return proposalURL ? { proposalURL: proposalURL } : undefined;
 }
 
 export type VerificationInitData = {

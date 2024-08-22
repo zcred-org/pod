@@ -10,7 +10,7 @@ import { web3modal } from '@/config/wagmi-config.ts';
 import { useWagmiConnector } from '@/hooks/web3/ethereum/useWagmiConnector.ts';
 import { $isWalletAndDidConnected, $isWalletConnected } from '@/stores/other.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
-import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
+import { VerificationStore, verificationStoreInitArgsFrom } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
@@ -23,19 +23,20 @@ export const Route = createFileRoute('/')({
   validateSearch: z.object({
     redirect: z.string().catch('/').optional(),
     proposalURL: z.string().optional(),
-    sdid: z.string().optional(),
   }),
   beforeLoad: () => ({ title: 'Sign In' }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { proposalURL, sdid } }) => {
-    const proveArgs = proposalURL && sdid ? { proposalURL, sdid } : undefined;
-    if (proveArgs) await VerificationInitActions.init(proveArgs);
+  loader: async ({ deps: { proposalURL } }) => {
+    const verificationInitArgs = verificationStoreInitArgsFrom({ proposalURL });
+    if (verificationInitArgs) {
+      await VerificationInitActions.init(verificationInitArgs);
+    }
     const { requiredId, verifierHost } = VerificationStore.$initDataAsync.peek().data || {};
     return {
       verifierHost,
       requiredId,
       requiredWallet: requiredId ? subjectTypeToWalletEnum(requiredId.type) : undefined,
-      proveArgs,
+      proveArgs: verificationInitArgs,
     };
   },
 });
