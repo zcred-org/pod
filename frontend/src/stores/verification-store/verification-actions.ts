@@ -1,6 +1,6 @@
-import type { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { CredentialValidIntervalModal } from '@/components/modals/CredentialValidIntervalModal.tsx';
+import { WebhookCallError } from '@/service/external/verifier/errors.ts';
 import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
 import { zCredStore } from '@/service/external/zcred-store';
 import { zCredProver } from '@/service/o1js-zcred-prover';
@@ -146,13 +146,17 @@ export class VerificationActions {
     if (!proof) throw new Error('Proof is not signed');
     /** Perform logic **/
     VerificationStore.$proofSendAsync.loading();
-    const [res, error] = await go<AxiosError>()(VerifierApi.proofSend({ verifierURL, proof }));
+    const [res, error] = await go<Error>()(VerifierApi.proofSend({ verifierURL, proof }));
     if (!error) {
       await VerificationTerminateActions.resolve(res?.redirectURL);
       VerificationStore.$proofSendAsync.resolve();
     } else {
       VerificationStore.$proofSendAsync.reject(error);
-      await VerificationErrorActions.proofSendCatch({ error, verifierHost });
+      if (error instanceof WebhookCallError) {
+        await VerificationTerminateActions.verificationFailed();
+      } else {
+        await VerificationErrorActions.proofSendCatch({ error, verifierHost });
+      }
       throw error;
     }
   }

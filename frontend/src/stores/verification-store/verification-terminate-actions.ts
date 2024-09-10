@@ -47,6 +47,16 @@ export abstract class VerificationTerminateActions {
     });
   }
 
+  public static async verificationFailed() {
+    return await VerificationTerminateActions.reject({
+      ui: {
+        status: IconStatusEnum.Error,
+        message: 'Verification failed',
+      },
+      isSkipVerifierReq: true,
+    });
+  }
+
   public static async rejectNoCredsAndNoIssuer(issuerHost: string) {
     const issuerError = VerificationStore.$issuerError.peek();
     return await VerificationTerminateActions.reject({

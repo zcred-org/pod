@@ -1,7 +1,7 @@
 import type { SVGProps } from 'react';
+import IconErrorSvg from '@/assets/error.svg?react';
 import IconOkSvg from '@/assets/ok.svg?react';
 import IconWarnSvg from '@/assets/warn.svg?react';
-import IconErrorSvg from '@/assets/error.svg?react';
 
 export enum IconStatusEnum {
   Ok = 'Ok',

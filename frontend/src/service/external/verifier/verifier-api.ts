@@ -1,7 +1,14 @@
 import { type JsonZcredException, VerifierException, VEC, isJsonVerifierException } from '@zcredjs/core';
 import axios, { type AxiosError } from 'axios';
 import { createChallengeRejectJWS } from '@/service/external/verifier/create-challenge-reject-jws.ts';
-import { type ProvingResult, type VerifierResponse, type Proposal, isProposal } from '@/service/external/verifier/types.ts';
+import { WebhookCallError } from '@/service/external/verifier/errors.ts';
+import {
+  type ProvingResult,
+  type VerificationRejectResponse,
+  type Proposal,
+  isProposal,
+  type VerificationResponse,
+} from '@/service/external/verifier/types.ts';
 import type { ZCredStore } from '@/service/external/zcred-store/api-specification.ts';
 import { checkProposalValidity } from '@/util/helpers.ts';
 
@@ -22,18 +29,27 @@ export class VerifierApi {
   public static async proposalReject(args: {
     proposal: Proposal,
     error: JsonZcredException,
-  }): Promise<VerifierResponse> {
+  }): Promise<VerificationRejectResponse> {
     const jws = await createChallengeRejectJWS(args.proposal.challenge.message);
-    const res = await axios.post<VerifierResponse>(args.proposal.verifierURL, args.error, {
+    const res = await axios.post<VerificationRejectResponse>(args.proposal.verifierURL, args.error, {
       headers: { Authorization: `Bearer ${jws}` },
     }).catch(VerifierApi.#catchVerifierException);
     return res.data;
   }
 
-  public static async proofSend(args: { verifierURL: string, proof: ProvingResult }): Promise<VerifierResponse> {
-    const res = await axios.post<VerifierResponse>(args.verifierURL, args.proof)
+  public static async proofSend(args: { verifierURL: string, proof: ProvingResult }): Promise<VerificationResponse> {
+    const res = await axios.post<VerificationResponse>(args.verifierURL, args.proof)
+      .then(res => res.data)
       .catch(VerifierApi.#catchVerifierException);
-    return res.data;
+    if (res.webhookURL) {
+      await axios.post(res.webhookURL, res.sendBody, {
+        headers: { Authorization: `Bearer ${res.jws}` },
+      }).catch((e: AxiosError) => {
+        console.error('Webhook call error:', e);
+        throw new WebhookCallError(e.message);
+      });
+    }
+    return res;
   }
 
   static #catchVerifierException(res: AxiosError): never {
