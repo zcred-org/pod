@@ -19,7 +19,6 @@ export const Route = createFileRoute('/prove')({
   component: () => <RequireWalletAndDidHoc><ProveComponent /></RequireWalletAndDidHoc>,
   validateSearch: z.object({
     proposalURL: z.string(),
-    sdid: z.string(),
   }),
   pendingComponent: PendingComponent,
   beforeLoad: ({ search, cause }) => {
