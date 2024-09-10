@@ -1,4 +1,4 @@
-import { Button, Divider, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@nextui-org/react';
+import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Divider, cn } from '@nextui-org/react';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactNode } from 'react';
 import { toast } from 'sonner';
@@ -9,13 +9,19 @@ import { DidStore } from '@/stores/did.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { AuroErrorCodeEnum } from '@/types/auro-error-code.enum.ts';
 import { addressShort } from '@/util/helpers.ts';
+import { SiwxMessage } from '@/util/siwx.ts';
 
-const messageText = 'WARNING! Make sure you are on zcred.me domain. If not, you are being phished!';
 
 export function DidModal(): ReactNode {
   const wallet = WalletStore.$wallet.value;
 
-  const onConfirm = () => signMessage({ message: messageText });
+  const siwxMessage = wallet ? new SiwxMessage({
+    blockchain: wallet.type,
+    accountAddress: wallet.address,
+    chainId: wallet.chainId,
+  }) : null;
+
+  const onConfirm = () => signMessage({ message: siwxMessage!.toString() });
   const onCancel = () => useDisconnect.signOutBase();
 
   const { mutate: signMessage, isPending } = useMutation({
@@ -35,7 +41,7 @@ export function DidModal(): ReactNode {
 
   return (
     <RequireWalletHoc>
-      <Modal isOpen backdrop="blur" placement="center" hideCloseButton>
+      <Modal isOpen backdrop="blur" placement="center" hideCloseButton size="lg">
         <ModalContent>
           <ModalHeader>
             <p>Sign In</p>
@@ -49,7 +55,11 @@ export function DidModal(): ReactNode {
           <ModalBody>
             <p>Sign the message to log in to your account:</p>
             <Divider />
-            <p>{messageText}</p>
+            <p className="text-wrap text-justify whitespace-pre-wrap">
+              {siwxMessage?.splitByWarning().map((line, i) => (
+                <span key={i} className={cn({ 'font-bold text-orange-500 dark:text-warning': i == 1 })}>{line}</span>
+              ))}
+            </p>
             <Divider />
           </ModalBody>
           <ModalFooter className="flex items-center">
