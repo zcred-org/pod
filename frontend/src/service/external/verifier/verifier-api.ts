@@ -1,5 +1,6 @@
 import { type JsonZcredException, VerifierException, VEC, isJsonVerifierException } from '@zcredjs/core';
 import axios, { type AxiosError } from 'axios';
+import { createChallengeRejectJWS } from '@/service/external/verifier/create-challenge-reject-jws.ts';
 import { type ProvingResult, type VerifierResponse, type Proposal, isProposal } from '@/service/external/verifier/types.ts';
 import type { ZCredStore } from '@/service/external/zcred-store/api-specification.ts';
 import { checkProposalValidity } from '@/util/helpers.ts';
@@ -18,9 +19,14 @@ export class VerifierApi {
     return res.data;
   }
 
-  public static async proposalReject(args: { verifierURL: string, error: JsonZcredException }): Promise<VerifierResponse> {
-    const res = await axios.post<VerifierResponse>(args.verifierURL, args.error)
-      .catch(VerifierApi.#catchVerifierException);
+  public static async proposalReject(args: {
+    proposal: Proposal,
+    error: JsonZcredException,
+  }): Promise<VerifierResponse> {
+    const jws = await createChallengeRejectJWS(args.proposal.challenge.message);
+    const res = await axios.post<VerifierResponse>(args.proposal.verifierURL, args.error, {
+      headers: { Authorization: `Bearer ${jws}` },
+    }).catch(VerifierApi.#catchVerifierException);
     return res.data;
   }
 

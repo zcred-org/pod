@@ -7,12 +7,6 @@ import { VerificationStore, type VerificationTerminateErr } from '@/stores/verif
 
 
 export abstract class VerificationTerminateActions {
-  static get #verifierURL() {
-    const verifierURL = VerificationStore.$initDataAsync.peek().data?.proposal.verifierURL;
-    if (!verifierURL) throw new Error('VerificationStore is not initialized');
-    return verifierURL;
-  }
-
   public static async resolve(redirectURL?: string) {
     VerificationStore.$terminateAsync.resolve({
       ui: {
@@ -81,10 +75,14 @@ Please check back later.
     let redirectURLFromVerifier: string | undefined;
     if (!isSkipVerifierReq) {
       VerificationStore.$terminateAsync.loading();
-      redirectURLFromVerifier = await VerifierApi.proposalReject({
-        verifierURL: VerificationTerminateActions.#verifierURL,
-        error,
-      }).then(res => res?.redirectURL).catch(() => undefined);
+      try {
+        const proposal = VerificationStore.$initDataAsync.peek().data?.proposal;
+        if (!proposal) throw new Error('VerificationStore is not initialized');
+        redirectURLFromVerifier = await VerifierApi.proposalReject({ proposal, error })
+          .then(res => res?.redirectURL);
+      } catch (e) {
+        console.error('Failed to reject the proposal', e);
+      }
     }
     console.debug('Verification rejected', { ui, error, redirectURLFromVerifier });
     VerificationStore.$terminateAsync.resolve({
