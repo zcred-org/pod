@@ -114,20 +114,20 @@ export class VerificationActions {
     /** Read state **/
     const wallet = WalletStore.$wallet.peek();
     const proposal = VerificationStore.$initDataAsync.peek().data?.proposal;
-    const proof = VerificationStore.$proofCreateAsync.peek().data;
+    const proofUnsigned = VerificationStore.$proofCreateAsync.peek().data;
     /** Perform checks **/
-    if (!proof || !wallet || !proposal) {
+    if (!proofUnsigned || !wallet || !proposal) {
       const errors: string[] = [];
       if (!wallet) errors.push('Wallet is not connected');
       if (!proposal) errors.push('VerificationStore is not initialized');
-      if (!proof) errors.push('Proof is not created');
+      if (!proofUnsigned) errors.push('Proof is not created');
       throw new Error(`Can't sign proof: ${errors.join(', ')}`);
     }
     /** Perform logic **/
     VerificationStore.$proofSignAsync.loading();
     const [signature, error] = await go<Error>()(wallet.adapter.sign({ message: proposal.challenge.message }));
     if (signature) {
-      VerificationStore.$proofSignAsync.resolve({ ...proof, signature });
+      VerificationStore.$proofSignAsync.resolve({ ...proofUnsigned, signature, message: proposal.challenge.message });
       VerificationActions.proofSend().then();
     } else {
       VerificationStore.$proofSignAsync.reject(error!);

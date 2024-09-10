@@ -70,13 +70,13 @@ type Json = boolean | number | string | { [key: string]: Json };
 export type ProvingResult = {
   proof: string;
   signature: string;
-  publicInput?: Json
+  message: string; // Proposal.challenge.message
   publicOutput?: Json
   verificationKey?: string;
   provingKey?: string;
 }
 
-export type ProvingResultUnsigned = Omit<ProvingResult, 'signature'>;
+export type ProvingResultUnsigned = Omit<ProvingResult, 'signature' | 'message'>;
 
 export type VerifierResponse = undefined | {
   redirectURL?: string
