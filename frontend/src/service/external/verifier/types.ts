@@ -58,7 +58,10 @@ export function isProposal(obj: unknown): obj is Proposal {
 
 export type Proposal = {
   verifierURL: string;
-  challenge: { message: string; }
+  challenge: {
+    message: string;
+    exceptionDifficulty?: number; // use 5 by default
+  };
   program: JalProgram;
   selector: Selector;
   verificationKey?: string;

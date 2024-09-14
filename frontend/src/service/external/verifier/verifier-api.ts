@@ -28,7 +28,7 @@ export class VerifierApi {
     proposal: Proposal,
     error: JsonZcredException,
   }): Promise<VerificationRejectResponse> {
-    const jws = await createChallengeRejectJWS(args.proposal.challenge.message);
+    const jws = await createChallengeRejectJWS(args.proposal.challenge);
     const res = await axios.post<VerificationRejectResponse>(args.proposal.verifierURL, args.error, {
       headers: { Authorization: `Bearer ${jws}` },
     }).catch(VerifierApi.#catchVerifierException);
