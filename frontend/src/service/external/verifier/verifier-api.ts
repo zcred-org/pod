@@ -1,5 +1,6 @@
 import { type JsonZcredException, VerifierException, VEC, isJsonVerifierException } from '@zcredjs/core';
 import axios, { type AxiosError } from 'axios';
+import { queryClient } from '@/config/query-client.ts';
 import { createChallengeRejectJWS } from '@/service/external/verifier/create-challenge-reject-jws.ts';
 import { WebhookCallError } from '@/service/external/verifier/errors.ts';
 import {
@@ -40,11 +41,15 @@ export class VerifierApi {
       .then(res => res.data)
       .catch(VerifierApi.#catchVerifierException);
     if (res.webhookURL) {
-      await axios.post(res.webhookURL, res.sendBody, {
-        headers: { Authorization: `Bearer ${res.jws}` },
-      }).catch((e: AxiosError) => {
-        console.error('Webhook call error:', e);
-        throw new WebhookCallError(e.message);
+      await queryClient.fetchQuery({
+        queryKey: ['webhook', res.webhookURL],
+        queryFn: () => axios.post(res.webhookURL!, res.sendBody, {
+          headers: { Authorization: `Bearer ${res.jws}` },
+        }).catch((e: AxiosError) => {
+          console.error('Webhook call error:', e);
+          throw new WebhookCallError(e.message);
+        }),
+        retry: 2,
       });
     }
     return res;
