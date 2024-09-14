@@ -1,5 +1,7 @@
 import type { JalProgram } from '@jaljs/core';
 import { isHttpURL, isObject } from '@zcredjs/core';
+import type { JsonZcredException } from '@zcredjs/core';
+
 
 export type Selector = {
   meta: {
@@ -28,7 +30,7 @@ function isSelector(obj: unknown): obj is Selector {
     && 'subject' in obj.attributes && isObject(obj.attributes.subject)
     && 'id' in obj.attributes.subject && isObject(obj.attributes.subject.id)
     && 'type' in obj.attributes.subject.id && typeof obj.attributes.subject.id.type === 'string'
-    && 'key' in obj.attributes.subject.id && typeof obj.attributes.subject.id.key === 'string'
+    && 'key' in obj.attributes.subject.id && typeof obj.attributes.subject.id.key === 'string';
 }
 
 function isJalProgram(obj: unknown): obj is JalProgram {
@@ -38,7 +40,7 @@ function isJalProgram(obj: unknown): obj is JalProgram {
     && 'private' in obj.inputSchema && isObject(obj.inputSchema.private)
     && ('public' in obj.inputSchema ? isObject(obj.inputSchema.public) : true)
     && 'commands' in obj && Array.isArray(obj.commands)
-    && ('options' in obj ? isObject(obj.options) : true)
+    && ('options' in obj ? isObject(obj.options) : true);
 }
 
 export function isProposal(obj: unknown): obj is Proposal {
@@ -56,7 +58,10 @@ export function isProposal(obj: unknown): obj is Proposal {
 
 export type Proposal = {
   verifierURL: string;
-  challenge: { message: string; }
+  challenge: {
+    message: string;
+    exceptionDifficulty?: number; // use 5 by default
+  };
   program: JalProgram;
   selector: Selector;
   verificationKey?: string;
@@ -68,16 +73,43 @@ export type Proposal = {
 type Json = boolean | number | string | { [key: string]: Json };
 
 export type ProvingResult = {
-  proof: string;
   signature: string;
-  publicInput?: Json
-  publicOutput?: Json
+  message: string; // Proposal.challenge.message
+  proof: string;
+  publicInput: {
+    credential: {
+      attributes: {
+        subject: {
+          id: {
+            type: string;
+            key: string;
+          }
+        }
+      }
+    }
+  };
+  publicOutput?: Json;
   verificationKey?: string;
   provingKey?: string;
 }
 
-export type ProvingResultUnsigned = Omit<ProvingResult, 'signature'>;
+export type ProvingResultUnsigned = Omit<ProvingResult, 'signature' | 'message'>;
 
-export type VerifierResponse = undefined | {
+export type VerificationRejectResponse = undefined | {
   redirectURL?: string
 }
+
+export type VerificationResponse = {
+  webhookURL?: string;
+  redirectURL: string;
+  sendBody: {
+    status: 'exception' | 'success';
+    sessionId: string;
+    jalId: string;
+    jalURL: string;
+    result: ProvingResult | JsonZcredException;
+    verificationResultId: string;
+    verificationResultURL: string;
+  } & { [key: string]: unknown };
+  jws: string;
+} & { [key: string]: unknown };

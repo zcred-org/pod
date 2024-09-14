@@ -1,6 +1,6 @@
-import type { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { CredentialValidIntervalModal } from '@/components/modals/CredentialValidIntervalModal.tsx';
+import { WebhookCallError } from '@/service/external/verifier/errors.ts';
 import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
 import { zCredStore } from '@/service/external/zcred-store';
 import { zCredProver } from '@/service/o1js-zcred-prover';
@@ -114,20 +114,20 @@ export class VerificationActions {
     /** Read state **/
     const wallet = WalletStore.$wallet.peek();
     const proposal = VerificationStore.$initDataAsync.peek().data?.proposal;
-    const proof = VerificationStore.$proofCreateAsync.peek().data;
+    const proofUnsigned = VerificationStore.$proofCreateAsync.peek().data;
     /** Perform checks **/
-    if (!proof || !wallet || !proposal) {
+    if (!proofUnsigned || !wallet || !proposal) {
       const errors: string[] = [];
       if (!wallet) errors.push('Wallet is not connected');
       if (!proposal) errors.push('VerificationStore is not initialized');
-      if (!proof) errors.push('Proof is not created');
+      if (!proofUnsigned) errors.push('Proof is not created');
       throw new Error(`Can't sign proof: ${errors.join(', ')}`);
     }
     /** Perform logic **/
     VerificationStore.$proofSignAsync.loading();
     const [signature, error] = await go<Error>()(wallet.adapter.sign({ message: proposal.challenge.message }));
     if (signature) {
-      VerificationStore.$proofSignAsync.resolve({ ...proof, signature });
+      VerificationStore.$proofSignAsync.resolve({ ...proofUnsigned, signature, message: proposal.challenge.message });
       VerificationActions.proofSend().then();
     } else {
       VerificationStore.$proofSignAsync.reject(error!);
@@ -146,13 +146,17 @@ export class VerificationActions {
     if (!proof) throw new Error('Proof is not signed');
     /** Perform logic **/
     VerificationStore.$proofSendAsync.loading();
-    const [res, error] = await go<AxiosError>()(VerifierApi.proofSend({ verifierURL, proof }));
+    const [res, error] = await go<Error>()(VerifierApi.proofSend({ verifierURL, proof }));
     if (!error) {
       await VerificationTerminateActions.resolve(res?.redirectURL);
       VerificationStore.$proofSendAsync.resolve();
     } else {
       VerificationStore.$proofSendAsync.reject(error);
-      await VerificationErrorActions.proofSendCatch({ error, verifierHost });
+      if (error instanceof WebhookCallError) {
+        await VerificationTerminateActions.verificationFailed();
+      } else {
+        await VerificationErrorActions.proofSendCatch({ error, verifierHost });
+      }
       throw error;
     }
   }

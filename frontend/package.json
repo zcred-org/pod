@@ -33,6 +33,7 @@
     "deepsignal": "^1.5.0",
     "dids": "^5.0.2",
     "framer-motion": "^11.3.21",
+    "jose": "^5.8.0",
     "jwt-decode": "^4.0.0",
     "key-did-provider-ed25519": "^4.0.2",
     "key-did-resolver": "^4.0.0",
