@@ -11,6 +11,7 @@ RUN rm -r ./zcred-store
 RUN rm -r ./zkapp-hub
 RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile
+RUN export NODE_OPTIONS="--max-old-space-size=8192"
 RUN pnpm run build
 RUN rm -r ./frontend/src
 
