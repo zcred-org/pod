@@ -1,26 +1,43 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { InputTransformer, type JalProgram } from '@jaljs/core';
-import { ZkProgramInputTransformer, ZkProgramTranslator } from '@jaljs/o1js';
-import * as o1js from 'o1js';
-import { O1TrGraph } from 'o1js-trgraph';
-import { config } from '@/config';
-import { codeToURL, type JalSetup, toJalSetup } from '@/util/index.ts';
+import { InputTransformer, type JalProgram } from "@jaljs/core";
+import { ZkProgramInputTransformer, ZkProgramTranslator } from "@jaljs/o1js";
+import type {
+  Bool,
+  CircuitString,
+  Field,
+  JsonProof,
+  PrivateKey,
+  PublicKey,
+  Signature,
+  UInt64,
+  VerificationKey
+} from "o1js";
+import * as o1js from "o1js";
+import { O1TrGraph } from "o1js-trgraph";
+import { config } from "@/config";
+import { codeToURL, type JalSetup, toJalSetup } from "@/util/index.ts";
+
 import {
   isWorkerInitReq,
   isWorkerMessage,
   isWorkerProofReq,
+  isWorkerVerifyProofReq,
   type O1JSZkProgramModule,
   type WorkerError,
   type WorkerInitResp,
   type WorkerProofReq,
   type WorkerProofResp,
   type WorkerReq,
-} from './types.ts';
+  type WorkerVerifyProofReq,
+  type WorkerVerifyProofResp
+} from "./types.ts";
+import sortKeys from "sort-keys";
 
 const programInputTransformer = new ZkProgramInputTransformer(o1js);
-const mjsTranslator = new ZkProgramTranslator(o1js, 'module');
-const cjsTranslator = new ZkProgramTranslator(o1js, 'commonjs');
+const mjsTranslator = new ZkProgramTranslator(o1js, "module");
+const cjsTranslator = new ZkProgramTranslator(o1js, "commonjs");
 const trGraph = new O1TrGraph(o1js);
+type O1Type = Field | UInt64 | Signature | PublicKey | Bool | PrivateKey | CircuitString
 
 
 async function createZkProof({
@@ -29,16 +46,7 @@ async function createZkProof({
   jalProgram,
 }: WorkerProofReq): Promise<WorkerProofResp | WorkerError> {
   try {
-    const args = config.isDev
-      ? [/\.cjs$/, '.mjs'] as const
-      : [/\.mjs$/, '.cjs'] as const;
-    jalProgram.target = jalProgram.target.replace(args[0], args[1]);
-    const translator = jalProgram.target.endsWith('.cjs') ? cjsTranslator : mjsTranslator;
-    const code = translator.translate(jalProgram);
-    const url = codeToURL(code);
-    const module: O1JSZkProgramModule = await import(/* @vite-ignore */ url);
-    const { zkProgram, PublicInput } = module.initialize(o1js);
-    const { verificationKey } = await zkProgram.compile();
+    const { verificationKey, PublicInput, zkProgram } = await initializeZkProgram(jalProgram);
     const setup = toJalSetup(credential);
     const programInput = toProgramInput(setup, jalProgram);
     const proof = await zkProgram.execute(
@@ -46,10 +54,10 @@ async function createZkProof({
       ...programInput.private,
     );
     const jsonProof = proof.toJSON();
-    const originInput = toOriginIniput(setup, jalProgram);
+    const originInput = toOriginInput(setup, jalProgram);
     return {
       id: reqId,
-      type: 'proof-resp',
+      type: "proof-resp",
       result: {
         proof: jsonProof.proof,
         verificationKey: verificationKey.data,
@@ -59,27 +67,73 @@ async function createZkProof({
   } catch (e) {
     return {
       id: reqId,
-      type: 'error',
+      type: "error",
       message: (e as any).message,
     };
   }
+}
+
+async function verifyZkResult(req: WorkerVerifyProofReq): Promise<WorkerVerifyProofResp | WorkerError> {
+  try {
+    const { verificationKey } = await initializeZkProgram(req.jalProgram);
+    const publicInput = new InputTransformer(req.jalProgram.inputSchema, trGraph)
+      .transformPublicInput<{}, O1Type[]>({ public: sortKeys(req.zkpResult.publicInput, { deep: true }) })
+      .linear
+      .flatMap((it) => it.toFields().map((it) => it.toJSON()));
+    const jsonProof: JsonProof = {
+      publicInput: publicInput,
+      publicOutput: [],
+      proof: req.zkpResult.proof,
+      maxProofsVerified: 0
+    };
+    const isVerified = await o1js.verify(jsonProof, verificationKey as VerificationKey);
+    return {
+      id: req.id,
+      type: "verify-resp",
+      result: isVerified
+    };
+  } catch (e) {
+    return {
+      id: req.id,
+      type: "error",
+      message: (e as any).message
+    };
+  }
+}
+
+async function initializeZkProgram(jalProgram: JalProgram) {
+  const args = config.isDev
+    ? [/\.cjs$/, ".mjs"] as const
+    : [/\.mjs$/, ".cjs"] as const;
+  jalProgram.target = jalProgram.target.replace(args[0], args[1]);
+  const translator = jalProgram.target.endsWith(".cjs") ? cjsTranslator : mjsTranslator;
+  const code = translator.translate(jalProgram);
+  const url = codeToURL(code);
+  const module: O1JSZkProgramModule = await import(/* @vite-ignore */ url);
+  const { zkProgram, PublicInput } = module.initialize(o1js);
+  const { verificationKey } = await zkProgram.compile();
+  return { zkProgram, PublicInput, verificationKey };
 }
 
 function toProgramInput(setup: JalSetup, program: JalProgram) {
   return programInputTransformer.transform(setup, program.inputSchema);
 }
 
-function toOriginIniput(setup: JalSetup, program: JalProgram): { public: any } {
+function toOriginInput(setup: JalSetup, program: JalProgram): { public: any } {
   return new InputTransformer(program.inputSchema, trGraph).toInput(setup) as { public: any };
 }
 
-addEventListener('message', async ({ data }: MessageEvent<WorkerReq>) => {
+addEventListener("message", async ({ data }: MessageEvent<WorkerReq>) => {
   if (isWorkerInitReq(data)) {
     const resp: WorkerInitResp = {
       id: data.id,
-      type: 'init-resp',
+      type: "init-resp",
       initialized: true,
     };
+    postMessage(resp);
+  }
+  if (isWorkerVerifyProofReq(data)) {
+    const resp = await verifyZkResult(data);
     postMessage(resp);
   }
   if (isWorkerProofReq(data)) {
@@ -88,7 +142,7 @@ addEventListener('message', async ({ data }: MessageEvent<WorkerReq>) => {
   } else if (isWorkerMessage(data)) {
     postMessage({
       id: data.id,
-      type: 'error',
+      type: "error",
       message: `Invalid worker request`,
     }satisfies WorkerError);
   }
@@ -96,6 +150,6 @@ addEventListener('message', async ({ data }: MessageEvent<WorkerReq>) => {
 
 postMessage({
   id: 0,
-  type: 'init-resp',
+  type: "init-resp",
   initialized: true,
 } satisfies WorkerInitResp);

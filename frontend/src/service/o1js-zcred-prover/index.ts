@@ -1,19 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { type JalProgram } from '@jaljs/core';
-import { type ZkCredential } from '@zcredjs/core';
-import { config } from '@/config';
+import { type JalProgram } from "@jaljs/core";
+import { type ZkCredential } from "@zcredjs/core";
+import { config } from "@/config";
 import {
   isWorkerError,
   isWorkerInitResp,
   isWorkerProofResp,
   isWorkerResp,
+  isWorkerVerifyProofResp,
   type WorkerError,
   type WorkerInitReq,
   type WorkerProofReq,
   type WorkerProofResp,
   type WorkerResp,
-} from './types.ts';
-import type { ProvingResult } from '../external/verifier/types.ts';
+  WorkerVerifyProofReq,
+  WorkerVerifyProofResp,
+} from "./types.ts";
+import type { ProvingResult } from "../external/verifier/types.ts";
 
 type CreateProofInput = {
   credential: ZkCredential;
@@ -35,11 +38,11 @@ export class O1JSZCredProver {
     this.workerInitialize = new Promise((resolve, reject) => {
       this.promises[0] = { resolve, reject };
     });
-    this.worker = new Worker(new URL(`./worker.ts`, import.meta.url), { type: 'module' });
+    this.worker = new Worker(new URL(`./worker.ts`, import.meta.url), { type: "module" });
     this.worker.onmessage = ({ data }: MessageEvent<WorkerResp>) => {
       if (isWorkerResp(data)) {
         if (isWorkerInitResp(data) && config.isDev) {
-          console.log('DEV: Worker initialized');
+          console.log("DEV: Worker initialized");
         }
         this.promises[data.id].resolve(data);
         delete this.promises[data.id];
@@ -48,9 +51,9 @@ export class O1JSZCredProver {
   }
 
   async createProof({
-  credential,
-  jalProgram,
-}: CreateProofInput): Promise<Omit<ProvingResult, 'signature'>> {
+    credential,
+    jalProgram,
+  }: CreateProofInput): Promise<Omit<ProvingResult, "signature">> {
     await this.workerInitialize;
     const workerResp = await new Promise<
       WorkerProofResp | WorkerError
@@ -58,7 +61,7 @@ export class O1JSZCredProver {
       this.promises[this.idCount] = { resolve, reject };
       const workerReq: WorkerProofReq = {
         id: this.idCount,
-        type: 'proof-req',
+        type: "proof-req",
         credential: credential,
         jalProgram: jalProgram,
       };
@@ -69,6 +72,26 @@ export class O1JSZCredProver {
     if (isWorkerError(workerResp)) throw new Error(workerResp.message);
     throw new Error(`Invalid worker response`);
   }
+
+  async verifyZkProof(input: Pick<WorkerVerifyProofReq, "zkpResult" | "jalProgram">) {
+    const workerResp = await new Promise<
+      WorkerVerifyProofResp | WorkerError
+    >((resolve, reject) => {
+      this.promises[this.idCount] = { resolve, reject };
+      const workerReq = {
+        id: this.idCount,
+        type: "verify-req",
+        jalProgram: input.jalProgram,
+        zkpResult: input.zkpResult
+      } satisfies WorkerVerifyProofReq;
+      this.idCount++;
+      this.worker.postMessage(workerReq);
+    });
+    if (isWorkerVerifyProofResp(workerResp)) workerResp.result;
+    if (isWorkerError(workerResp)) throw new Error(workerResp.message);
+    throw new Error("Invalid worker response");
+  }
 }
+
 
 export const zCredProver = new O1JSZCredProver();
