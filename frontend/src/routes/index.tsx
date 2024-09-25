@@ -1,4 +1,4 @@
-import { Button, Progress } from '@nextui-org/react';
+import { Button, Progress, Spinner } from '@nextui-org/react';
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { useWeb3ModalState } from '@web3modal/wagmi/react';
 import { z } from 'zod';
@@ -118,9 +118,17 @@ function SignInComponent() {
 
 
 function PendingComponent() {
+  const isProposal = !!Route.useSearch().proposalURL;
+
   return (
     <PageContainer className="grow justify-center">
-      <Progress isIndeterminate label="Loading proposal..." />
+      {isProposal ? (
+        <Progress
+          isIndeterminate
+          label="Loading proposal..."
+          classNames={{ label: 'mx-auto' }}
+        />
+      ) : <Spinner size="lg" className="w-40" />}
     </PageContainer>
   );
 }

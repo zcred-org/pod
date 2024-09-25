@@ -82,7 +82,7 @@ export abstract class VerificationCredentialsActions {
       VerificationCredentialsActions.#credentialSort(credentials);
       batch(() => {
         VerificationStore.$credentialsAsync.resolve(credentials);
-        if (provableCount === 1) { // Auto-select if only one provable
+        if (provableCount) { // Auto-select first item
           VerificationStore.$credential.value = credentials.at(0) || null;
         } else { // Deselect if (selected not found in store) or (not provable)
           const credentialSelected = VerificationStore.$credential.peek();

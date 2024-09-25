@@ -101,14 +101,83 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({
-  IndexRoute,
-  ProveRouteRoute,
-  CredentialIssueRoute,
-  CredentialsRoute,
-  TerminateRoute,
-  CredentialIdRoute,
-})
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/prove': typeof ProveRouteRoute
+  '/credential-issue': typeof CredentialIssueRoute
+  '/credentials': typeof CredentialsRoute
+  '/terminate': typeof TerminateRoute
+  '/credential/$id': typeof CredentialIdRoute
+}
+
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/prove': typeof ProveRouteRoute
+  '/credential-issue': typeof CredentialIssueRoute
+  '/credentials': typeof CredentialsRoute
+  '/terminate': typeof TerminateRoute
+  '/credential/$id': typeof CredentialIdRoute
+}
+
+export interface FileRoutesById {
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/prove': typeof ProveRouteRoute
+  '/credential-issue': typeof CredentialIssueRoute
+  '/credentials': typeof CredentialsRoute
+  '/terminate': typeof TerminateRoute
+  '/credential/$id': typeof CredentialIdRoute
+}
+
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/prove'
+    | '/credential-issue'
+    | '/credentials'
+    | '/terminate'
+    | '/credential/$id'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/prove'
+    | '/credential-issue'
+    | '/credentials'
+    | '/terminate'
+    | '/credential/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/prove'
+    | '/credential-issue'
+    | '/credentials'
+    | '/terminate'
+    | '/credential/$id'
+  fileRoutesById: FileRoutesById
+}
+
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  ProveRouteRoute: typeof ProveRouteRoute
+  CredentialIssueRoute: typeof CredentialIssueRoute
+  CredentialsRoute: typeof CredentialsRoute
+  TerminateRoute: typeof TerminateRoute
+  CredentialIdRoute: typeof CredentialIdRoute
+}
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  ProveRouteRoute: ProveRouteRoute,
+  CredentialIssueRoute: CredentialIssueRoute,
+  CredentialsRoute: CredentialsRoute,
+  TerminateRoute: TerminateRoute,
+  CredentialIdRoute: CredentialIdRoute,
+}
+
+export const routeTree = rootRoute
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* prettier-ignore-end */
 

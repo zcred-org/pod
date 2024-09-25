@@ -1,9 +1,8 @@
 import type { HttpCredential } from '@zcredjs/core';
 import type { CredentialsApiGetManyArgs } from '@/service/external/zcred-store/types/credentials-api.types.ts';
 import type { CredentialDecoded, CredentialsDecodedDto } from '@/service/external/zcred-store/types/credentials.types.ts';
-import { DidStore } from '@/stores/did.store.ts';
-import { type ZCredStore, ZCredStoreCredentialByIdRoute, ZCredStoreCredentialsRoute, ZCredStoreCredentialUpsertRoute } from './api-specification.ts';
-import type { ZCredStoreApi } from './index.ts';
+import { type ZCredStore, ZCredStoreCredentialByIdRoute, ZCredStoreCredentialsRoute, ZCredStoreCredentialUpsertRoute } from '../api-specification.ts';
+import type { ZCredStoreApi } from '../index.ts';
 
 
 export class CredentialsApi {
@@ -21,7 +20,7 @@ export class CredentialsApi {
     });
     return {
       ...res.data,
-      data: await DidStore.decrypt<HttpCredential>(res.data.data),
+      data: await this.context.didStore.decrypt<HttpCredential>(res.data.data),
     };
   }
 
@@ -43,7 +42,7 @@ export class CredentialsApi {
       // TODO: hangup???!
       credentials: await Promise.all(result.credentials.map(async credential => ({
         ...credential,
-        data: await DidStore.decrypt<HttpCredential>(credential.data),
+        data: await this.context.didStore.decrypt<HttpCredential>(credential.data),
       }))),
     };
   }
@@ -51,7 +50,7 @@ export class CredentialsApi {
   public async credentialUpsert(credential: HttpCredential, id?: string): Promise<CredentialDecoded> {
     const body: ZCredStore['CredentialUpsertRoute']['body'] = {
       id,
-      data: await DidStore.encrypt(credential),
+      data: await this.context.didStore.encrypt(credential),
       issuer: credential.meta.issuer,
       subjectId: credential.attributes.subject.id,
     };
@@ -61,7 +60,7 @@ export class CredentialsApi {
     });
     return {
       ...res.data,
-      data: await DidStore.decrypt<HttpCredential>(res.data.data),
+      data: await this.context.didStore.decrypt<HttpCredential>(res.data.data),
     };
   }
 }

@@ -1003,6 +1003,265 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/zkp-result-cache": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Create a new ZkpResultCache */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ZkpResultCacheCreateDto"];
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            not?: unknown;
+                        };
+                    };
+                };
+                /** @description Error returned when the client payload is either invalid, malformed or has logical validation errors. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 400
+                             * @enum {number}
+                             */
+                            statusCode: 400;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            error: "Bad Request";
+                            /**
+                             * @description The error message
+                             * @example Bad Request.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            code?: "Bad Request";
+                            errors?: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description The validation errors in the client payload. */
+                            failedValidations?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Error returned when client does not provide any valid authorization. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 401
+                             * @enum {number}
+                             */
+                            statusCode: 401;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            error: "Unauthorized";
+                            /**
+                             * @description The error message
+                             * @example Unauthorized.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            code?: "Unauthorized";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/zkp-result-cache/{jalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Find ZkpResultCache by jalId */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    jalId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ZkpResultCacheDto"];
+                    };
+                };
+                /** @description Error returned when the client payload is either invalid, malformed or has logical validation errors. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 400
+                             * @enum {number}
+                             */
+                            statusCode: 400;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            error: "Bad Request";
+                            /**
+                             * @description The error message
+                             * @example Bad Request.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Bad Request
+                             * @enum {string}
+                             */
+                            code?: "Bad Request";
+                            errors?: {
+                                [key: string]: unknown;
+                            }[];
+                            /** @description The validation errors in the client payload. */
+                            failedValidations?: {
+                                [key: string]: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Error returned when client does not provide any valid authorization. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 401
+                             * @enum {number}
+                             */
+                            statusCode: 401;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            error: "Unauthorized";
+                            /**
+                             * @description The error message
+                             * @example Unauthorized.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Unauthorized
+                             * @enum {string}
+                             */
+                            code?: "Unauthorized";
+                        };
+                    };
+                };
+                /** @description Error returned when the requested resource is not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description The error HTTP status code
+                             * @example 404
+                             * @enum {number}
+                             */
+                            statusCode: 404;
+                            /**
+                             * @description The error HTTP status description
+                             * @example Not Found
+                             * @enum {string}
+                             */
+                            error: "Not Found";
+                            /**
+                             * @description The error message
+                             * @example Not Found.
+                             */
+                            message: string;
+                            /**
+                             * @description The error code
+                             * @example Not Found
+                             * @enum {string}
+                             */
+                            code?: "Not Found";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1079,6 +1338,19 @@ export interface components {
             issuerAccessToken?: string;
         } & {
             [key: string]: unknown;
+        };
+        /** @description ZkpResultCache object */
+        ZkpResultCacheDto: {
+            id: string;
+            jalId: string;
+            data: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description ZkpResultCache create object */
+        ZkpResultCacheCreateDto: {
+            jalId: string;
+            data: string;
         };
     };
     responses: never;

@@ -63,8 +63,11 @@ function CredentialsComponent() {
 function PendingComponent() {
   return (
     <PageContainer>
-      <p>Loading credentials...</p>
-      <Progress isIndeterminate />
+      <Progress
+        isIndeterminate
+        label="Loading credentials..."
+        classNames={{ label: 'mx-auto' }}
+      />
     </PageContainer>
   );
 }

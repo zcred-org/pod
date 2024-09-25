@@ -11,6 +11,7 @@ export function ProvePageButtons() {
     $isIssuanceRequired,
     $credential,
 
+    $proofCacheAsync,
     $proofCreateAsync,
     $proofSignAsync,
     $proofSendAsync,
@@ -46,8 +47,8 @@ export function ProvePageButtons() {
       {!$isIssuanceRequired.value && !$proofCreateAsync.value.isSuccess && <Button
         className="grow"
         color="success"
-        isLoading={$proofCreateAsync.value.isLoading || $credentialsAsync.value.isLoading}
-        isDisabled={!$credential.value}
+        isLoading={$proofCacheAsync.value.isLoading || $proofCreateAsync.value.isLoading}
+        isDisabled={!$credential.value || $credentialsAsync.value.isLoading}
         onClick={VerificationActions.proofCreate}
       >Create proof</Button>}
 

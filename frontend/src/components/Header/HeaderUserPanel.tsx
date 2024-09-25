@@ -46,7 +46,7 @@ export function HeaderUserPanel(): ReactNode {
         ])} />
         <DropdownSection showDivider>
           <DropdownItem
-            isReadOnly
+            closeOnSelect={false}
             onClick={ThemeStore.toggle}
             endContent={<Switch
               isSelected={ThemeStore.$isDark.value}
@@ -61,7 +61,6 @@ export function HeaderUserPanel(): ReactNode {
         </DropdownSection>
         <DropdownItem
           onClick={signOut}
-          // className="text-warning"
           color="danger"
           endContent={<LogOut size={14} />}
         >Logout</DropdownItem>

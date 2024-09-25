@@ -1,5 +1,6 @@
+import type { ZCredStoreApi } from '@/service/external/zcred-store';
 import { type ZCredStore, ZCredStoreAuthRoute, ZCredStoreWantAuthRoute } from '@/service/external/zcred-store/api-specification.ts';
-import type { ZCredStoreApi } from '@/service/external/zcred-store/index.ts';
+
 
 export class AuthApi {
   constructor(private readonly context: ZCredStoreApi['context']) {

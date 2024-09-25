@@ -29,7 +29,10 @@ export const Route = createFileRoute('/prove')({
     return { title: `Prove for ${verifierHost}` };
   },
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) => await VerificationInitActions.init(deps),
+  loader: async ({ deps }) => {
+    await VerificationInitActions.init(deps);
+    VerificationInitActions.postInitAfterLogin().then();
+  },
   onEnter: VerificationInitActions.subscriptionsEnable,
   onLeave: VerificationInitActions.subscriptionsDisable,
 });
@@ -65,6 +68,7 @@ function ProveComponent() {
         {computed(() => $holyCrapWhatsLoadingNow.value ? <Progress
           isIndeterminate
           label={$holyCrapWhatsLoadingNow.value}
+          classNames={{ label: 'mx-auto' }}
         /> : null)}
       </div>
       <div className="flex gap-3">

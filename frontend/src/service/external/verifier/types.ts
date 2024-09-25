@@ -1,6 +1,6 @@
 import type { JalProgram } from '@jaljs/core';
-import { isHttpURL, isObject } from '@zcredjs/core';
 import type { JsonZcredException } from '@zcredjs/core';
+import { isHttpURL, isObject } from '@zcredjs/core';
 
 
 export type Selector = {
@@ -76,7 +76,7 @@ export type ProvingResult = {
   signature: string;
   message: string; // Proposal.challenge.message
   proof: string;
-  publicInput: {
+  publicInput: Json & {
     credential: {
       attributes: {
         subject: {
@@ -94,6 +94,19 @@ export type ProvingResult = {
 }
 
 export type ProvingResultUnsigned = Omit<ProvingResult, 'signature' | 'message'>;
+
+// TODO: Maybe better to use already existing ProvingResultUnsigned, since these two types are identical and exclude signature and message?
+export type ZkpResult = Pick<ProvingResult, 'publicInput' | 'publicOutput' | 'proof' | 'verificationKey' | 'provingKey'>;
+
+export function zkpResultFrom(provingResult: ProvingResultUnsigned): ZkpResult {
+  return {
+    publicInput: provingResult.publicInput,
+    publicOutput: provingResult.publicOutput,
+    proof: provingResult.proof,
+    verificationKey: provingResult.verificationKey,
+    provingKey: provingResult.provingKey,
+  };
+}
 
 export type VerificationRejectResponse = undefined | {
   redirectURL?: string

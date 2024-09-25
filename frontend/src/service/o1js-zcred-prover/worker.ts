@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { InputTransformer, type JalProgram } from "@jaljs/core";
 import { ZkProgramInputTransformer, ZkProgramTranslator } from "@jaljs/o1js";
+import type { Bool, Field, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
+import * as o1js from "o1js";
 import { O1TrGraph } from "o1js-trgraph";
+import sortKeys from "sort-keys";
 import { codeToURL, type JalSetup, toJalSetup } from "@/util/index.ts";
-
 import {
   isWorkerInitReq,
   isWorkerMessage,
@@ -16,11 +18,9 @@ import {
   type WorkerProofResp,
   type WorkerReq,
   type WorkerVerifyProofReq,
-  type WorkerVerifyProofResp
+  type WorkerVerifyProofResp,
+  type WorkerMessage,
 } from "./types.ts";
-import type { Bool, Field, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
-import * as o1js from "o1js";
-import sortKeys from "sort-keys";
 
 
 const programInputTransformer = new ZkProgramInputTransformer(o1js);
@@ -74,7 +74,7 @@ async function verifyZkResult(req: WorkerVerifyProofReq): Promise<WorkerVerifyPr
   try {
     const { verificationKey } = await initializeZkProgram(req.jalProgram);
     const publicInput = new InputTransformer(req.jalProgram.inputSchema, trGraph)
-      .transformPublicInput<{}, O1Type[]>({ public: sortKeys(req.zkpResult.publicInput, { deep: true }) })
+      .transformPublicInput<Record<string, any>, O1Type[]>({ public: sortKeys(req.zkpResult.publicInput, { deep: true }) })
       .linear
       .flatMap((it) => it.toFields().map((it) => it.toJSON()));
     const jsonProof = {
@@ -119,26 +119,21 @@ async function toOriginInput(setup: JalSetup, program: JalProgram): Promise<{ pu
 
 addEventListener("message", async ({ data }: MessageEvent<WorkerReq>) => {
   if (isWorkerInitReq(data)) {
-    const resp: WorkerInitResp = {
+    postMessage({
       id: data.id,
       type: "init-resp",
       initialized: true,
-    };
-    postMessage(resp);
-  }
-  if (isWorkerVerifyProofReq(data)) {
-    const resp = await verifyZkResult(data);
-    postMessage(resp);
-  }
-  if (isWorkerProofReq(data)) {
-    const resp = await createZkProof(data);
-    postMessage(resp);
+    } satisfies WorkerInitResp);
+  } else if (isWorkerVerifyProofReq(data)) {
+    postMessage(await verifyZkResult(data));
+  } else if (isWorkerProofReq(data)) {
+    postMessage(await createZkProof(data));
   } else if (isWorkerMessage(data)) {
     postMessage({
-      id: data.id,
+      id: (data as WorkerMessage).id,
       type: "error",
-      message: `Invalid worker request`,
-    }satisfies WorkerError);
+      message: "Invalid worker request",
+    } satisfies WorkerError);
   }
 });
 

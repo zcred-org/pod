@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 import { CredentialValidIntervalModal } from '@/components/modals/CredentialValidIntervalModal.tsx';
 import { WebhookCallError } from '@/service/external/verifier/errors.ts';
+import { zkpResultFrom } from '@/service/external/verifier/types.ts';
 import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
 import { zCredStore } from '@/service/external/zcred-store';
 import { zCredProver } from '@/service/o1js-zcred-prover';
@@ -95,15 +96,17 @@ export class VerificationActions {
     if (!credential.isProvable) throw new Error('Selected credential is not provable');
     /** Perform logic **/
     VerificationStore.$proofCreateAsync.loading();
-    console.time('createProof');
     const [proof, error] = await go<Error>()(zCredProver.createProof({
       credential: credential.data,
       jalProgram: initData.proposal.program,
     }));
-    console.timeEnd('createProof');
     if (proof) {
       VerificationStore.$proofCreateAsync.resolve(proof);
       VerificationActions.proofSign().then();
+      zCredStore.zkpResultCache.save({
+        zkpResult: zkpResultFrom(proof),
+        jalId: initData.jalId,
+      }).then();
     } else {
       VerificationStore.$proofCreateAsync.reject(error);
       throw error;

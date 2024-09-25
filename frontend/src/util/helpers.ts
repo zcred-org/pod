@@ -26,6 +26,10 @@ export function toJWTPayload(obj: object): string {
   return u8a.toString(u8a.fromString(JSON.stringify(obj)), 'base64url');
 }
 
+export const base64UrlEncode = (string: string): string => {
+  return u8a.toString(u8a.fromString(string, 'utf-8'), 'base64url');
+}
+
 export const base64UrlDecode = (base64string: string) => {
   return u8a.toString(u8a.fromString(base64string, 'base64url'), 'utf-8');
 };

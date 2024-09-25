@@ -24,6 +24,7 @@ export class VerificationStore {
 
   public static $credentialIssueAsync = signalAsync()({ name: `${StoreName}.async.credentialIssue` });
 
+  public static $proofCacheAsync = signalAsync()({ name: `${StoreName}.async.proofCached` });
   public static $proofCreateAsync = signalAsync<ProvingResultUnsigned>()({
     staleDataOnLoading: true,
     name: `${StoreName}.async.proofCreate`,
@@ -46,11 +47,12 @@ export class VerificationStore {
     return isWalledAndDidConnected && credentials.isSuccess && !credentials.data.at(0)?.isProvable;
   }, `${StoreName}.computed.isIssuanceRequired`);
   public static $holyCrapWhatsLoadingNow = computed<string | null>(() => {
-    return VerificationStore.$credentialsAsync.value.isLoading ? 'Loading credentials...'
-      : VerificationStore.$proofCreateAsync.value.isLoading ? 'Creating a proof...'
-        : VerificationStore.$proofSendAsync.value.isLoading ? 'Sending the created proof...'
-          : VerificationStore.$terminateAsync.value.isLoading ? 'Terminating the verification...'
-            : null;
+    return VerificationStore.$proofCacheAsync.value.isLoading ? 'Loading & verifying cached proof...'
+      : VerificationStore.$credentialsAsync.value.isLoading ? 'Loading credentials...'
+        : VerificationStore.$proofCreateAsync.value.isLoading ? 'Creating a proof...'
+          : VerificationStore.$proofSendAsync.value.isLoading ? 'Sending the proof...'
+            : VerificationStore.$terminateAsync.value.isLoading ? 'Terminating the verification...'
+              : null;
   });
 }
 
@@ -67,6 +69,7 @@ export function verificationStoreInitArgsFrom(
 export type VerificationInitData = {
   initArgs: VerificationStoreInitArgs,
   proposal: Proposal,
+  jalId: string,
   httpIssuer: HttpIssuer
   issuerInfo: Info | undefined,
   credentialFilter: O1JSCredentialFilter,

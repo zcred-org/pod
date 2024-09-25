@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { type JalProgram } from "@jaljs/core";
-import { type ZkCredential } from "@zcredjs/core";
-import type { Proof } from "o1js";
-import { type ProvingResult } from "../external/verifier/types.ts";
+import { type JalProgram } from '@jaljs/core';
+import { type ZkCredential } from '@zcredjs/core';
+import type { Proof } from 'o1js';
+import { type ProvingResultUnsigned, type ZkpResult } from '../external/verifier/types.ts';
+
 
 export type WorkerMessage = {
   id: number;
@@ -79,8 +80,7 @@ export function isWorkerProofReq(data: unknown): data is WorkerProofReq {
 
 export type WorkerProofResp = WorkerMessage & {
   type: "proof-resp";
-  result: Omit<ProvingResult, "signature" | "message">;
-
+  result: ProvingResultUnsigned;
 }
 
 export function isWorkerProofResp(data: unknown): data is WorkerProofResp {
@@ -98,12 +98,7 @@ export function isWorkerProofResp(data: unknown): data is WorkerProofResp {
 export type WorkerVerifyProofReq = WorkerMessage & {
   type: "verify-req";
   jalProgram: JalProgram;
-  zkpResult: {
-    publicInput: Record<string, any>;
-    publicOutput?: Record<string, any>;
-    proof: string;
-    verificationKey?: string;
-  }
+  zkpResult: ZkpResult;
 }
 
 export function isWorkerVerifyProofReq(data: unknown): data is WorkerVerifyProofReq {
@@ -135,17 +130,13 @@ export function isWorkerVerifyProofResp(data: unknown): data is WorkerVerifyProo
 export type WorkerReq = WorkerInitReq | WorkerProofReq | WorkerVerifyProofReq;
 
 export function isWorkerReq(data: unknown): data is WorkerReq {
-  return (
-    isWorkerInitReq(data) || isWorkerProofReq(data) || isWorkerVerifyProofReq(data)
-  );
+  return isWorkerInitReq(data) || isWorkerProofReq(data) || isWorkerVerifyProofReq(data);
 }
 
-export type WorkerResp = WorkerInitResp | WorkerProofResp | WorkerError;
+export type WorkerResp = WorkerInitResp | WorkerProofResp | WorkerError | WorkerVerifyProofResp;
 
 export function isWorkerResp(data: unknown): data is WorkerResp {
-  return (
-    isWorkerInitResp(data) || isWorkerProofResp(data) || isWorkerError(data)
-  );
+  return isWorkerError(data) || isWorkerInitResp(data) || isWorkerProofResp(data) || isWorkerVerifyProofResp(data);
 }
 
 export type O1JSZkProgramModule = {

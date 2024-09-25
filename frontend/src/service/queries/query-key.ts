@@ -15,6 +15,11 @@ export const queryKey = {
     get: (args?: CredentialsGetManySearchArgs) => [...queryKey.credentials.ROOT, args] as const,
   },
 
+  zkpResult: {
+    ROOT: ['zkpResult'] as const,
+    get: (jalId: string) => [...queryKey.zkpResult.ROOT, jalId] as const,
+  },
+
   proposal: {
     ROOT: ['proposal'] as const,
     get: (args: VerificationStoreInitArgs) => [...queryKey.proposal.ROOT, args] as const,
@@ -27,7 +32,8 @@ export const queryKey = {
   },
 };
 
-export type CredentialsQueryKey = ReturnType<typeof queryKey['credentials']['get']>;
 export type CredentialQueryKey = ReturnType<typeof queryKey['credential']['get']>;
+export type CredentialsQueryKey = ReturnType<typeof queryKey['credentials']['get']>;
+export type ZkpResultQueryKey = ReturnType<typeof queryKey['zkpResult']['get']>;
 export type ProposalQueryKey = ReturnType<typeof queryKey['proposal']['get']>;
 export type IssuerInfoQueryKey = ReturnType<typeof queryKey['issuer']['info']>;
