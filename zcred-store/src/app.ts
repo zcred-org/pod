@@ -9,15 +9,21 @@ import { AuthService } from './services/auth.service.js';
 import { AuthController } from './controllers/auth/auth.controller.js';
 import { SecretDataController } from './controllers/secret-data/secret-data.controller.js';
 import { CacheManager } from './backbone/cache-manager.js';
+import { ZkpResultCacheStore } from './stores/zkp-result-cache.store.js';
+import { ZkpResultCacheController } from './controllers/zkp-result-cache/zkp-result-cache.controller.js';
 
 export type AppContext = {
   config: Config,
   httpServer: HttpServer,
   dbClient: DbClient,
-  credentialService: CredentialService,
-  credentialStore: CredentialStore,
-  authService: AuthService,
   cacheManager: CacheManager,
+
+  authService: AuthService,
+
+  credentialStore: CredentialStore,
+  credentialService: CredentialService,
+
+  zkpResultCacheStore: ZkpResultCacheStore,
 }
 
 export class App {
@@ -44,9 +50,10 @@ export class App {
       .provideClass('dbClient', DbClient)
       .provideClass('cacheManager', CacheManager)
       .provideClass('httpServer', HttpServer)
+      .provideClass('authService', AuthService)
       .provideClass('credentialStore', CredentialStore)
       .provideClass('credentialService', CredentialService)
-      .provideClass('authService', AuthService);
+      .provideClass('zkpResultCacheStore', ZkpResultCacheStore);
 
     // register services
     await app.context.resolve('httpServer').register();
@@ -56,6 +63,7 @@ export class App {
     CredentialController(app.context);
     AuthController(app.context);
     SecretDataController(app.context);
+    ZkpResultCacheController(app.context);
 
     return app;
   }

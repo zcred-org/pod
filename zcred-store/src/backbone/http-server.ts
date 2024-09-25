@@ -21,6 +21,8 @@ import { SecretDataDto } from '../controllers/secret-data/dtos/secret-data.dto.j
 import { originToHostnames } from '../util/index.js';
 import { CredentialsDto } from '../controllers/credential/dtos/credentials.dto.js';
 import { CredentialsSearchParamsDto } from '../controllers/credential/dtos/credentials-search-params.dto.js';
+import { ZkpResultCacheDto } from '../controllers/zkp-result-cache/dtos/zkp-result-cache.dto.js';
+import { ZkpResultCacheCreateDto } from '../controllers/zkp-result-cache/dtos/zkp-result-cache-create.dto.js';
 
 
 export class HttpServer implements Disposable {
@@ -99,6 +101,8 @@ export class HttpServer implements Disposable {
     this.fastify.addSchema(IssuerDto);
     this.fastify.addSchema(JwtPayloadDto);
     this.fastify.addSchema(SecretDataDto);
+    this.fastify.addSchema(ZkpResultCacheDto);
+    this.fastify.addSchema(ZkpResultCacheCreateDto);
   }
 
   async listen(): Promise<void> {
