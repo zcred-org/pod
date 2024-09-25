@@ -4,15 +4,15 @@ import { useEffect, useMemo } from 'react';
 import { IconStatusEnum, IconStatus } from '@/components/icons/IconStatus.tsx';
 import { computed, signal } from '@/util/signals/signals-dev-tools.ts';
 
+
 type Props = {
   status: IconStatusEnum;
   redirectURL?: string;
   message?: string;
 };
 
-
 export function VerificationTerminatedCard(props: Props) {
-  const redirector = useMemo(() => props.redirectURL ? new Redirector(props.redirectURL) : null, [props.redirectURL]);
+  const redirector = useMemo(() => props.redirectURL ? new Redirector(props.redirectURL, props.status) : null, [props.redirectURL, props.status]);
 
   useEffect(() => {
     redirector?.restart();
@@ -51,7 +51,7 @@ export function VerificationTerminatedCard(props: Props) {
                   <span>Redirecting to {redirector.host}...</span>
                   {computed(() => <Progress
                     size="sm"
-                    value={redirector.$progress.value}
+                    value={redirector.$progressMs.value}
                     minValue={0}
                     maxValue={redirector.totalDelayMs}
                     disableAnimation
@@ -69,25 +69,27 @@ export function VerificationTerminatedCard(props: Props) {
 }
 
 class Redirector {
-  public readonly totalDelayMs = 5e3;
-  readonly #intervalMs = 1e3 / 30;
+  readonly host: string;
+  readonly totalDelayMs: number;
 
   #intervalId: ReturnType<typeof setInterval> | undefined;
   readonly #$isRedirected = signal(false);
-  readonly #$progress = signal(this.totalDelayMs);
+  readonly #$progressMs = signal(0);
   readonly #$isTicking = signal(false);
-  public readonly host: string | undefined;
+  readonly #intervalMs = 1e3 / 30; // 30 FPS
 
-  get $progress(): ReadonlySignal<number> {
-    return this.#$progress;
+  get $progressMs(): ReadonlySignal<number> {
+    return this.#$progressMs;
   }
 
   get $isTicking(): ReadonlySignal<boolean> {
     return this.#$isTicking;
   }
 
-  constructor(private readonly redirectURL: string) {
+  constructor(private readonly redirectURL: string, status: IconStatusEnum) {
     this.host = new URL(redirectURL).host;
+    this.totalDelayMs = status === IconStatusEnum.Ok ? 1e3 : 3e3;
+
     this.restart = this.restart.bind(this);
     this.redirect = this.redirect.bind(this);
     this.clear = this.clear.bind(this);
@@ -102,9 +104,9 @@ class Redirector {
     let past = Date.now();
     this.#intervalId = setInterval(() => {
       const now = Date.now();
-      this.#$progress.value += now - past;
+      this.#$progressMs.value += now - past;
       past = now;
-      if (this.#$progress.peek() >= this.totalDelayMs) {
+      if (this.#$progressMs.peek() >= this.totalDelayMs) {
         this.redirect();
       }
     }, this.#intervalMs);
@@ -114,14 +116,13 @@ class Redirector {
     clearInterval(this.#intervalId);
     batch(() => {
       this.#$isTicking.value = false;
-      this.#$progress.value = -300;
+      this.#$progressMs.value = -300;
     });
   }
 
   redirect() {
     this.clear();
     window.location.href = this.redirectURL;
-    // toast.info(`Redirected to ${this.host}!`);
     this.#$isRedirected.value = true;
   }
 }
