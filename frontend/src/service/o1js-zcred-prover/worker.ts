@@ -19,13 +19,14 @@ import {
   type WorkerVerifyProofReq,
   type WorkerVerifyProofResp
 } from "./types.ts";
+import * as o1js from "o1js";
 import sortKeys from "sort-keys";
 
-let __programInputTransformer: ZkProgramInputTransformer | null = null;
-let __mjsTranslator: ZkProgramTranslator | null = null;
-let __cjsTranslator: ZkProgramTranslator | null = null;
-let __trGraph: O1TrGraph | null = null;
-let __o1js: null | typeof import("o1js") = null;
+
+const programInputTransformer = new ZkProgramInputTransformer(o1js);
+const trGraph = new O1TrGraph(o1js);
+const cjsTranslator = new ZkProgramTranslator(o1js, "commonjs");
+const mjsTranslator = new ZkProgramTranslator(o1js, "module");
 
 type O1Type = any;
 
@@ -34,23 +35,6 @@ type ZKJsonProof = {
   proof: string;
   publicOutput: never[];
   maxProofsVerified: number;
-}
-
-async function initializeO1JS() {
-  if (!__o1js || !__trGraph || !__cjsTranslator || !__mjsTranslator || !__programInputTransformer) {
-    __o1js = await import("o1js");
-    __trGraph = new O1TrGraph(__o1js);
-    __cjsTranslator = new ZkProgramTranslator(__o1js, "commonjs");
-    __mjsTranslator = new ZkProgramTranslator(__o1js, "module");
-    __programInputTransformer = new ZkProgramInputTransformer(__o1js);
-  }
-  return {
-    o1js: __o1js,
-    trGraph: __trGraph,
-    cjsTranslator: __cjsTranslator,
-    mjsTranslator: __mjsTranslator,
-    programInputTransformer: __programInputTransformer
-  };
 }
 
 async function createZkProof({
@@ -88,7 +72,6 @@ async function createZkProof({
 
 async function verifyZkResult(req: WorkerVerifyProofReq): Promise<WorkerVerifyProofResp | WorkerError> {
   try {
-    const { trGraph } = await initializeO1JS();
     const { verificationKey } = await initializeZkProgram(req.jalProgram);
     const publicInput = new InputTransformer(req.jalProgram.inputSchema, trGraph)
       .transformPublicInput<{}, O1Type[]>({ public: sortKeys(req.zkpResult.publicInput, { deep: true }) })
@@ -103,7 +86,6 @@ async function verifyZkResult(req: WorkerVerifyProofReq): Promise<WorkerVerifyPr
       proof: req.zkpResult.proof,
       maxProofsVerified: 0
     } satisfies ZKJsonProof;
-    const { o1js } = await initializeO1JS();
     const isVerified = await o1js.verify(jsonProof as any, verificationKey as any);
     return {
       id: req.id,
@@ -120,7 +102,6 @@ async function verifyZkResult(req: WorkerVerifyProofReq): Promise<WorkerVerifyPr
 }
 
 async function initializeZkProgram(jalProgram: JalProgram) {
-  const { cjsTranslator, mjsTranslator, o1js } = await initializeO1JS();
   const args = config.isDev
     ? [/\.cjs$/, ".mjs"] as const
     : [/\.mjs$/, ".cjs"] as const;
@@ -135,12 +116,10 @@ async function initializeZkProgram(jalProgram: JalProgram) {
 }
 
 async function toProgramInput(setup: JalSetup, program: JalProgram) {
-  const { programInputTransformer } = await initializeO1JS();
   return programInputTransformer.transform(setup, program.inputSchema);
 }
 
 async function toOriginInput(setup: JalSetup, program: JalProgram): Promise<{ public: any }> {
-  const { trGraph } = await initializeO1JS();
   return new InputTransformer(program.inputSchema, trGraph).toInput(setup) as { public: any };
 }
 
