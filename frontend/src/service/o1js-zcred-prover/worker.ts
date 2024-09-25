@@ -2,7 +2,6 @@
 import { InputTransformer, type JalProgram } from "@jaljs/core";
 import { ZkProgramInputTransformer, ZkProgramTranslator } from "@jaljs/o1js";
 import { O1TrGraph } from "o1js-trgraph";
-import { config } from "@/config";
 import { codeToURL, type JalSetup, toJalSetup } from "@/util/index.ts";
 
 import {
@@ -19,6 +18,7 @@ import {
   type WorkerVerifyProofReq,
   type WorkerVerifyProofResp
 } from "./types.ts";
+import type { Bool, Field, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
 import * as o1js from "o1js";
 import sortKeys from "sort-keys";
 
@@ -28,7 +28,7 @@ const trGraph = new O1TrGraph(o1js);
 const cjsTranslator = new ZkProgramTranslator(o1js, "commonjs");
 const mjsTranslator = new ZkProgramTranslator(o1js, "module");
 
-type O1Type = any;
+type O1Type = PrivateKey | PublicKey | Signature | Bool | Field | UInt64
 
 type ZKJsonProof = {
   publicInput: any[];
@@ -76,10 +76,7 @@ async function verifyZkResult(req: WorkerVerifyProofReq): Promise<WorkerVerifyPr
     const publicInput = new InputTransformer(req.jalProgram.inputSchema, trGraph)
       .transformPublicInput<{}, O1Type[]>({ public: sortKeys(req.zkpResult.publicInput, { deep: true }) })
       .linear
-      .flatMap(
-        // @ts-expect-error
-        (it) => it.toFields().map((it) => it.toJSON())
-      );
+      .flatMap((it) => it.toFields().map((it) => it.toJSON()));
     const jsonProof = {
       publicInput: publicInput,
       publicOutput: [],
@@ -102,17 +99,14 @@ async function verifyZkResult(req: WorkerVerifyProofReq): Promise<WorkerVerifyPr
 }
 
 async function initializeZkProgram(jalProgram: JalProgram) {
-  const args = config.isDev
-    ? [/\.cjs$/, ".mjs"] as const
-    : [/\.mjs$/, ".cjs"] as const;
-  jalProgram.target = jalProgram.target.replace(args[0], args[1]);
+  jalProgram.target = jalProgram.target.replace(/\.cjs$/, ".mjs");
   const translator = jalProgram.target.endsWith(".cjs") ? cjsTranslator : mjsTranslator;
   const code = translator.translate(jalProgram);
   const url = codeToURL(code);
   const module: O1JSZkProgramModule = await import(/* @vite-ignore */ url);
   const { zkProgram, PublicInput } = module.initialize(o1js);
   const { verificationKey } = await zkProgram.compile();
-  return { zkProgram, PublicInput, verificationKey };
+  return { PublicInput, zkProgram, verificationKey };
 }
 
 async function toProgramInput(setup: JalSetup, program: JalProgram) {
