@@ -8,15 +8,17 @@ type SiwxMessageArgs = {
   uri: string,
   version: string,
   statement: string,
-  chainId: string,
 }
 
-/** @source https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-122.md */
+/**
+ * @source https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-122.md
+ * @warn Incompatible because chainId is optional instead of mandatory
+ */
 export class SiwxMessage {
   readonly #args: SiwxMessageArgs;
   readonly #warning: string;
 
-  constructor(args: Pick<SiwxMessageArgs, 'blockchain' | 'accountAddress' | 'chainId'>) {
+  constructor(args: Pick<SiwxMessageArgs, 'blockchain' | 'accountAddress'>) {
     const domain = config.domain; // TODO: location.hostname ???;
     this.#warning = [
       `Warning: Ensure you sign this message only on the ${domain} domain,`,
@@ -51,7 +53,6 @@ ${this.#args.statement}
 
 URI: ${(this.#args.uri)}
 Version: ${(this.#args.version)}
-Chain ID: ${(this.#args.chainId)}
     `.trim();
   }
 }

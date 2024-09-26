@@ -18,7 +18,6 @@ export function DidModal(): ReactNode {
   const siwxMessage = wallet ? new SiwxMessage({
     blockchain: wallet.type,
     accountAddress: wallet.address,
-    chainId: wallet.chainId,
   }) : null;
 
   const onConfirm = () => signMessage({ message: siwxMessage!.toString() });
