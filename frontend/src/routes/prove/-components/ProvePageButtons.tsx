@@ -57,7 +57,7 @@ export function ProvePageButtons() {
         color="success"
         isLoading={$proofSignAsync.value.isLoading}
         onClick={VerificationActions.proofSign}
-      >Sign challenge</Button>}
+      >Send proof</Button>}
 
       {$proofSignAsync.value.isSuccess && <Button
         className="grow"

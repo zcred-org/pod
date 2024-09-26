@@ -3,6 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { createFileRoute, type ErrorComponentProps, Link } from '@tanstack/react-router';
 import { AxiosError } from 'axios';
 import { FileSearch2 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { CredentialCard } from '@/components/CredentialCard.tsx';
 import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
@@ -40,21 +41,23 @@ function CredentialsComponent() {
   if (isError) return <ErrorComponent error={error} />;
 
   const credentials = data.pages.flatMap(p => p.credentials);
+  const isHasCredentials = !!credentials.length;
+
+  const Credentials = (): ReactNode[] => credentials.map((credential) => (
+    <Link key={credential.id} to={`/credential/$id`} params={{ id: credential.id }}>
+      <CredentialCard credential={credential} />
+    </Link>
+  ));
+
+  const EmptyPage = (): ReactNode => (
+    <div className="flex gap-3 justify-center">
+      <FileSearch2 /><span>You have no credentials</span>
+    </div>
+  );
 
   return (
-    <PageContainer>
-      {credentials.length ? credentials.map((credential) => (
-          <Link key={credential.id} to={`/credential/$id`} params={{ id: credential.id }}>
-            <CredentialCard credential={credential} />
-          </Link>
-        ))
-        : (
-          <div className="flex gap-3 justify-center">
-            <FileSearch2 />
-            <p>You have no credentials</p>
-          </div>
-        )
-      }
+    <PageContainer yCenter={!isHasCredentials}>
+      {isHasCredentials ? <Credentials /> : <EmptyPage />}
       {isFetchingNextPage && <Progress isIndeterminate />}
     </PageContainer>
   );

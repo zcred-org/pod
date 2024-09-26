@@ -47,8 +47,8 @@ export class VerificationStore {
     return isWalledAndDidConnected && credentials.isSuccess && !credentials.data.at(0)?.isProvable;
   }, `${StoreName}.computed.isIssuanceRequired`);
   public static $holyCrapWhatsLoadingNow = computed<string | null>(() => {
-    return VerificationStore.$proofCacheAsync.value.isLoading ? 'Loading & verifying cached proof...'
-      : VerificationStore.$credentialsAsync.value.isLoading ? 'Loading credentials...'
+    return VerificationStore.$credentialsAsync.value.isLoading ? 'Loading credentials...'
+      : VerificationStore.$proofCacheAsync.value.isLoading ? 'Searching for existing proofs...'
         : VerificationStore.$proofCreateAsync.value.isLoading ? 'Creating a proof...'
           : VerificationStore.$proofSendAsync.value.isLoading ? 'Sending the proof...'
             : VerificationStore.$terminateAsync.value.isLoading ? 'Terminating the verification...'

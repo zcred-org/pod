@@ -15,7 +15,7 @@ function ProveOverComponent() {
   if (!state) return <Navigate to={'/'} />;
 
   return (
-    <PageContainer className="grow justify-center">
+    <PageContainer yCenter>
       <VerificationTerminatedCard {...state.ui} />
     </PageContainer>
   );

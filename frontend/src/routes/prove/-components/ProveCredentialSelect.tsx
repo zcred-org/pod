@@ -6,6 +6,7 @@ import { CredentialCard } from '@/components/CredentialCard.tsx';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
 import { VerificationCredentialsActions } from '@/stores/verification-store/verification-credentials-actions.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
+import { tryToLocalDateTime } from '@/util/helpers.ts';
 
 
 const {
@@ -58,7 +59,8 @@ export const ProveCredentialSelect: FC = () => {
         ? 'You do not have any suitable credentials'
         : undefined}
       classNames={{ helperWrapper: 'pb-0' }}
-      renderValue={([item]) => item?.data?.id}
+      renderValue={([item]) => !item?.data ? undefined
+        : `${item.data.data.attributes.type} from ${new URL(item.data.data.meta.issuer.uri).host} (${tryToLocalDateTime(item.data.data.attributes.issuanceDate)})`}
       onOpenChange={setIsOpen}
       scrollRef={scrollRef}
     >{item => (

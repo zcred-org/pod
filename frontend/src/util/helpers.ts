@@ -1,5 +1,5 @@
 import type { HttpCredential, Identifier } from '@zcredjs/core';
-import { omit } from 'lodash-es';
+import { omit, transform } from 'lodash-es';
 import sortKeys from 'sort-keys';
 import * as u8a from 'uint8arrays';
 import type { Proposal } from '@/service/external/verifier/types.ts';
@@ -28,7 +28,7 @@ export function toJWTPayload(obj: object): string {
 
 export const base64UrlEncode = (string: string): string => {
   return u8a.toString(u8a.fromString(string, 'utf-8'), 'base64url');
-}
+};
 
 export const base64UrlDecode = (base64string: string) => {
   return u8a.toString(u8a.fromString(base64string, 'base64url'), 'utf-8');
@@ -88,4 +88,30 @@ export async function gopher<TRes, TErr = unknown>(
   } catch (err) {
     return [undefined, err as TErr] as const;
   }
+}
+
+export function tryToLocalDateTime<T>(something: T): T | string {
+  const isIso = isISOString(something);
+  const date = isIso ? new Date(something) : null;
+  const isHasTime = date && date.getHours() && date.getMinutes() && date.getSeconds() && date.getMilliseconds();
+  return date ? (isHasTime ? date.toLocaleString() : date.toLocaleDateString()) : something;
+}
+
+export function isISOString(str: unknown): str is string {
+  try {
+    return typeof str === 'string' && new Date(str).toISOString() === str;
+  } catch {
+    return false;
+  }
+}
+
+export function flattenObject(obj: object, parentKey = '', result = {}): object {
+  return transform(obj, (res, value, key) => {
+    const newKey = parentKey ? `${parentKey}.${key}` : key;
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      flattenObject(value, newKey as never, res);
+    } else {
+      res[newKey as never] = value as never;
+    }
+  }, result);
 }

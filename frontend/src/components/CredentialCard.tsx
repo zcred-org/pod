@@ -1,9 +1,8 @@
-import { Card, CardBody, type CardProps, Divider } from '@nextui-org/react';
-import dayjs from 'dayjs';
+import { Card, CardBody, type CardProps, Divider, CardHeader } from '@nextui-org/react';
+import Avvvatar from 'avvvatars-react';
 import { type ReactNode, useMemo } from 'react';
-import { config } from '@/config';
-import { useColored } from '@/hooks/useColored.ts';
 import type { CredentialDecoded } from '@/service/external/zcred-store/types/credentials.types.ts';
+import { tryToLocalDateTime } from '@/util/helpers.ts';
 
 
 type CredentialCardProps = {
@@ -14,31 +13,33 @@ type CredentialCardProps = {
 export function CredentialCard(
   { credential, onClick, ...cardProps }: CredentialCardProps,
 ): ReactNode {
-  const title = credential.data.attributes.type;
+  const type = credential.data.attributes.type;
   const { issuanceDate, validFrom, validUntil } = useMemo(() => ({
-    issuanceDate: dayjs(credential.data.attributes.issuanceDate).format('YYYY-MM-DD'),
-    validFrom: dayjs(credential.data.attributes.validFrom).format('YYYY-MM-DD'),
-    validUntil: dayjs(credential.data.attributes.validUntil).format('YYYY-MM-DD'),
+    issuanceDate: tryToLocalDateTime(credential.data.attributes.issuanceDate),
+    validFrom: tryToLocalDateTime(credential.data.attributes.validFrom),
+    validUntil: tryToLocalDateTime(credential.data.attributes.validUntil),
   }), [credential]);
-
-  const { 1: idColor } = useColored(credential.id);
+  const issuerHost = new URL(credential.data.meta.issuer.uri).host;
 
   return (
     <Card className="w-full" isPressable={!!onClick} onClick={() => onClick?.(credential)} {...cardProps}>
-      <CardBody>
-        <p className="text-xl font-bold">{title}</p>
-        <Divider className="mt-3 mb-1" />
+      <CardHeader className="text-xl py-2 justify-between">
         <p>
-          <span className="font-bold">{'Issuance date: '}</span>
+          <strong>{type}</strong>
+          <span>{` from ${issuerHost}`}</span>
+        </p>
+        <Avvvatar value={credential.id} style="shape" radius={8} />
+      </CardHeader>
+      <Divider className="" />
+      <CardBody className="py-2">
+        <p>
+          <span className="font-bold">{'Issued: '}</span>
           {issuanceDate}
         </p>
         <p>
           <span className="font-bold">{'Valid: '}</span>
           {validFrom}{' - '}{validUntil}
         </p>
-        {config.isDev ? <p style={{ color: idColor }} className="text-small">
-          {credential.id}
-        </p> : null}
       </CardBody>
     </Card>
   );

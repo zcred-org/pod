@@ -59,7 +59,7 @@ function SignInComponent() {
     // const isMinaVisible = !requiredWallet || requiredWallet === WalletTypeEnum.Auro;
 
     return (
-      <PageContainer className="grow items-center justify-center">
+      <PageContainer isCenter>
         {requiredId ? (<>
           <p>
             {'To create a proof for '}
@@ -121,7 +121,7 @@ function PendingComponent() {
   const isProposal = !!Route.useSearch().proposalURL;
 
   return (
-    <PageContainer className="grow justify-center">
+    <PageContainer isCenter>
       {isProposal ? (
         <Progress
           isIndeterminate
