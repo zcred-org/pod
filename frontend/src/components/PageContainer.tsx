@@ -13,7 +13,7 @@ export function PageContainer(
 ): ReactNode {
   return (
     <div className={cn(
-      'flex flex-col sm:self-center sm:min-w-[30rem] px-4 gap-3 py-10',
+      'flex flex-col sm:self-center sm:min-w-[30rem] px-4 gap-3 sm:py-10 py-4',
       { 'grow justify-center': yCenter || isCenter },
       { 'items-center': xCenter || isCenter },
       className,

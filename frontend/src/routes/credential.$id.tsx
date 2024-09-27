@@ -12,6 +12,7 @@ import {
   CardHeader,
   Divider,
   Link,
+  cn,
 } from '@nextui-org/react';
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, type ErrorComponentProps, useRouter } from '@tanstack/react-router';
@@ -58,28 +59,26 @@ function CredentialComponent() {
     const description: string = get(attributesDefinitions, args.key).toString();
     const isPrivate = description.includes('private');
     const valueMapped = tryToLocalDateTime(args.value);
-    // TODO: make text-wrap for long values & small screens
     return (
       <TableRow key={args.key}>
         <TableCell>{description}</TableCell>
-        <TableCell>{isPrivate ? <PrivateField value={valueMapped} /> : valueMapped}</TableCell>
+        <TableCell className={cn({ 'break-all': !valueMapped.includes(' ') })}>
+          {isPrivate ? <PrivateField value={valueMapped} /> : valueMapped}
+        </TableCell>
       </TableRow>
     );
   };
 
   return (
-    <PageContainer className="gap-5">
+    <PageContainer className="gap-5 pb-10">
       <Card>
-        <CardHeader className="text-2xl justify-between items-center">
-          <p>
-            <strong>{type}</strong>
-            <span>{` from ${issuerHost}`}</span>
-          </p>
+        <CardHeader className="text-2xl justify-between items-center [&>:last-child]:shrink-0">
+          <p><strong>{type}</strong><span>{` from ${issuerHost}`}</span></p>
           <Avvvatar value={zCred.id} style="shape" radius={8} />
         </CardHeader>
         <Divider />
-        <CardBody>
-          <Table removeWrapper>
+        <CardBody className="p-0">
+          <Table isStriped className="" classNames={{ wrapper: 'rounded-none p-0', th: '!rounded-none', td: 'before:!rounded-none' }}>
             <TableHeader>
               <TableColumn>Attribute</TableColumn>
               <TableColumn>Value</TableColumn>
