@@ -5,7 +5,6 @@ import * as chains from 'wagmi/chains';
 import { config } from '@/config/index.ts';
 
 
-const projectId = '210e2cdbd47e9ccfd099225022759a11';
 const metadata = {
   name: 'zCred',
   description: 'zCred website',
@@ -22,7 +21,7 @@ const allChains = Object.values(chains).filter((chain: unknown): chain is chains
 }) as unknown as [chains.Chain, ...chains.Chain[]];
 
 export const wagmiConfig = defaultWagmiConfig({
-  projectId, metadata,
+  metadata, projectId: config.walletConnectProjectId,
   chains: allChains,
   auth: {
     socials: [],
@@ -32,7 +31,7 @@ export const wagmiConfig = defaultWagmiConfig({
 });
 
 export const web3modal = createWeb3Modal({
-  projectId, metadata,
+  metadata, projectId: config.walletConnectProjectId,
   wagmiConfig,
   themeVariables: { '--w3m-border-radius-master': '2px' },
   allowUnsupportedChain: true,
