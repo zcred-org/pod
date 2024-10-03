@@ -6,6 +6,7 @@ import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
 import { VerificationStore, type VerificationTerminateErr } from '@/stores/verification-store/verification-store.ts';
 
 
+// TODO: abort all background actions on rejectByUser etc.
 export abstract class VerificationTerminateActions {
   public static async resolve(redirectURL?: string) {
     VerificationStore.$terminateAsync.resolve({
@@ -82,6 +83,7 @@ Please check back later.
       isSkipVerifierReq: true,
     }),
   ) {
+    if (!VerificationStore.$terminateAsync.peek().isIdle) return;
     let redirectURLFromVerifier: string | undefined;
     if (!isSkipVerifierReq) {
       VerificationStore.$terminateAsync.loading();

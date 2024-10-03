@@ -45,7 +45,11 @@ function CredentialsComponent() {
 
   const Credentials = (): ReactNode[] => credentials.map((credential) => (
     <Link key={credential.id} to={`/credential/$id`} params={{ id: credential.id }}>
-      <CredentialCard credential={credential} />
+      <CredentialCard
+        credential={credential}
+        className="rounded-none sm:rounded-large"
+        classNames={{ header: 'px-8 sm:px-3', body: 'px-8 sm:px-3' }}
+      />
     </Link>
   ));
 
@@ -56,7 +60,7 @@ function CredentialsComponent() {
   );
 
   return (
-    <PageContainer yCenter={!isHasCredentials}>
+    <PageContainer className="px-0" yCenter={!isHasCredentials}>
       {isHasCredentials ? <Credentials /> : <EmptyPage />}
       {isFetchingNextPage && <Progress isIndeterminate />}
     </PageContainer>

@@ -1,6 +1,7 @@
 import { Select, SelectItem } from '@nextui-org/react';
 import { useInfiniteScroll } from '@nextui-org/use-infinite-scroll';
 import { computed } from '@preact/signals-react';
+import Avvvatar from 'avvvatars-react';
 import { type FC, useState } from 'react';
 import { CredentialCard } from '@/components/CredentialCard.tsx';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
@@ -47,20 +48,23 @@ export const ProveCredentialSelect: FC = () => {
       color={$credential.value ? undefined : 'warning'}
       variant={$credential.value ? 'faded' : undefined}
       selectedKeys={$credential.value ? [$credential.value.id] : []}
-      label="Credential"
+      label={$credential.value ? 'Credential will be used:' : 'Select a credential:'}
+      labelPlacement="outside"
       disabledKeys={$credentialsNotProvableIds.value}
-      placeholder="Select a credential"
+      placeholder="Please select one from the list"
       isLoading={$credentialsAsync.value.isLoading}
       isDisabled={$proofCreateAsync.value.isLoading || $proofCreateAsync.value.isSuccess || !$terminateAsync.value.isIdle}
       description={!$credential.value && $credentialsAsync.value.data.at(0)?.isProvable && $credentialsAsync.value.data.at(1)?.isProvable
         ? 'You have more than one suitable credential, please specify which one you would like to use'
-        : undefined}
+        : $credential.value
+          ? `from ${new URL($credential.value.data.meta.issuer.uri).host}, ${tryToLocalDateTime($credential.value.data.attributes.issuanceDate)}`
+          : undefined}
       errorMessage={!$credentialsAsync.value.data.at(0)?.isProvable
         ? 'You do not have any suitable credentials'
         : undefined}
       classNames={{ helperWrapper: 'pb-0' }}
-      renderValue={([item]) => !item?.data ? undefined
-        : `${item.data.data.attributes.type} from ${new URL(item.data.data.meta.issuer.uri).host} (${tryToLocalDateTime(item.data.data.attributes.issuanceDate)})`}
+      renderValue={([item]) => !item?.data ? null : item.data.data.attributes.type}
+      endContent={$credential.value ? <Avvvatar value={$credential.value.id} style="shape" radius={6} size={20} /> : null}
       onOpenChange={setIsOpen}
       scrollRef={scrollRef}
     >{item => (

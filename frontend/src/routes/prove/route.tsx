@@ -1,17 +1,18 @@
 import { Button, Card, CardBody, CardHeader, Divider, Progress, Skeleton, Textarea } from '@nextui-org/react';
 import { computed } from '@preact/signals-react';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute, redirect, useBlocker } from '@tanstack/react-router';
 import { z } from 'zod';
 import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
+import { promptModal } from '@/components/modals/PromptModals.tsx';
 import { SwitchToRequiredIdModal } from '@/components/modals/SwitchToRequiredIdModal.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
 import { ProveCredentialSelect } from '@/routes/prove/-components/ProveCredentialSelect.tsx';
-import { ProveFriendlyJAL } from '@/routes/prove/-components/ProveFriendlyJAL.tsx';
+import { ProveDescription } from '@/routes/prove/-components/ProveDescription.tsx';
 import { ProvePageButtons } from '@/routes/prove/-components/ProvePageButtons.tsx';
-import { ProveTitleText } from '@/routes/prove/-components/ProveTitleText.tsx';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
+import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 
 
@@ -25,8 +26,7 @@ export const Route = createFileRoute('/prove')({
     if (!$isWalletAndDidConnected.value && cause !== 'preload') {
       throw redirect({ to: '/', search });
     }
-    const verifierHost = new URL(search.proposalURL).host;
-    return { title: `Prove for ${verifierHost}` };
+    return { title: `Verification` };
   },
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
@@ -42,8 +42,26 @@ function ProveComponent() {
     $initDataAsync,
     $isSubjectMatch,
     $holyCrapWhatsLoadingNow,
+    $terminateAsync,
   } = VerificationStore;
   const wallet = WalletStore.$wallet.value;
+
+  useBlocker({
+    blockerFn: async () => {
+      const terminateState = $terminateAsync.peek();
+      if (terminateState.isSuccess || terminateState.isError) return true;
+      const res = await promptModal({
+        title: 'Are you sure?',
+        text: 'Leaving this page will reject verification',
+        actions: [
+          { label: 'Reject verification', value: 'Reject', variant: 'light', color: 'danger' },
+          { label: 'Continue verification', value: 'Cancel', variant: 'shadow', color: 'success' },
+        ],
+      });
+      if (res === 'Reject') VerificationTerminateActions.rejectByUser().then();
+      return false;
+    },
+  });
 
   if ($initDataAsync.value.isLoading) return <PendingComponent />;
   if (!$isSubjectMatch.value) return (
@@ -54,16 +72,17 @@ function ProveComponent() {
   );
 
   return (
-    <PageContainer>
-      <ProveTitleText />
-      <ProveFriendlyJAL />
-      <ProveCredentialSelect />
+    <PageContainer className="sm:max-w-xl">
+      <ProveDescription />
+      <Divider />
       {$initDataAsync.value.data?.proposal.comment ? <Textarea
-        label="Comment"
-        defaultValue={$initDataAsync.value.data.proposal.comment}
+        label="Comment:"
+        labelPlacement="outside"
+        value={$initDataAsync.value.data.proposal.comment}
         isReadOnly isRequired
         minRows={1}
       /> : null}
+      <ProveCredentialSelect />
       <div className="grow">
         {computed(() => $holyCrapWhatsLoadingNow.value ? <Progress
           isIndeterminate

@@ -47,11 +47,11 @@ export class VerificationStore {
     return isWalledAndDidConnected && credentials.isSuccess && !credentials.data.at(0)?.isProvable;
   }, `${StoreName}.computed.isIssuanceRequired`);
   public static $holyCrapWhatsLoadingNow = computed<string | null>(() => {
-    return VerificationStore.$credentialsAsync.value.isLoading ? 'Loading credentials...'
-      : VerificationStore.$proofCacheAsync.value.isLoading ? 'Searching for existing proofs...'
+    return VerificationStore.$terminateAsync.value.isLoading ? 'Terminating the verification...'
+      : VerificationStore.$proofSendAsync.value.isLoading ? 'Sending the proof...'
         : VerificationStore.$proofCreateAsync.value.isLoading ? 'Creating a proof...'
-          : VerificationStore.$proofSendAsync.value.isLoading ? 'Sending the proof...'
-            : VerificationStore.$terminateAsync.value.isLoading ? 'Terminating the verification...'
+          : VerificationStore.$credentialsAsync.value.isLoading ? 'Loading credentials...'
+            : VerificationStore.$proofCacheAsync.value.isLoading ? 'Searching for existing proofs...'
               : null;
   });
 }

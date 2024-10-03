@@ -56,7 +56,7 @@ export function DidModal(): ReactNode {
             <Divider />
             <p className="text-wrap text-justify whitespace-pre-wrap">
               {siwxMessage?.splitByWarning().map((line, i) => (
-                <span key={i} className={cn({ 'font-bold text-orange-500 dark:text-warning': i == 1 })}>{line}</span>
+                <span key={i} className={cn('break-words', { 'font-bold text-orange-500 dark:text-warning': i == 1 })}>{line}</span>
               ))}
             </p>
             <Divider />
