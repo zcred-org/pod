@@ -1,17 +1,14 @@
-import { Button } from '@nextui-org/react';
+import { Button, type ButtonProps } from '@nextui-org/react';
+import type { ReactNode } from 'react';
 import { VerificationActions } from '@/stores/verification-store/verification-actions.ts';
-import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
+import { VerificationStore, HolyCrapWhatsLoadingNow } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 
 
-export function ProvePageButtons() {
+export function ProvePageButtons(): ReactNode {
   const {
-    $credentialsAsync,
     $credentialIssueAsync,
-    $isIssuanceRequired,
-    $credential,
 
-    $proofCacheAsync,
     $proofCreateAsync,
     $proofSignAsync,
     $proofSendAsync,
@@ -19,53 +16,56 @@ export function ProvePageButtons() {
     $terminateAsync,
   } = VerificationStore;
 
+  return (
+    <div className="flex gap-3 [&>*]:grow">
+      <Button
+        variant="light"
+        color="danger"
+        onClick={VerificationTerminateActions.rejectByUser}
+        isLoading={$terminateAsync.value.isLoading}
+        isDisabled={
+          $credentialIssueAsync.value.isLoading
+          || $proofCreateAsync.value.isLoading
+          || $proofSignAsync.value.isLoading
+          || $proofSendAsync.value.isLoading
+        }
+      >Reject</Button>
+      {$terminateAsync.value.isIdle && <MainButton />}
+    </div>
+  );
+}
 
-  return (<>
-    <Button
-      className="grow"
-      variant="light"
-      color="danger"
-      onClick={VerificationTerminateActions.rejectByUser}
-      isLoading={$terminateAsync.value.isLoading}
-      isDisabled={
-        $credentialsAsync.value.isLoading
-        || $credentialIssueAsync.value.isLoading
-        || $proofCreateAsync.value.isLoading
-        || $proofSignAsync.value.isLoading
-        || $proofSendAsync.value.isLoading
-      }
-    >Reject</Button>
+function MainButton(): ReactNode {
+  const {
+    $credentialsAsync, $credential, $isIssuanceRequired, $credentialIssueAsync,
+    $proofCacheAsync, $proofCreateAsync, $proofSignAsync, $proofSendAsync,
+    $holyCrapWhatsLoadingNow,
+  } = VerificationStore;
 
-    {$terminateAsync.value.isIdle && (<>
-      {$isIssuanceRequired.value && <Button
-        className="grow"
-        color="success"
-        isLoading={$credentialIssueAsync.value.isLoading}
-        onClick={VerificationActions.credentialIssue}
-      >Issue credential</Button>}
+  const propsOnLoading: ButtonProps | undefined = ({
+    [HolyCrapWhatsLoadingNow.Terminate]: undefined,
+    [HolyCrapWhatsLoadingNow.ProofSend]: { isLoading: true, children: 'Sending...' },
+    [HolyCrapWhatsLoadingNow.ProofCreate]: { isLoading: true, children: 'Creating...' },
+    [HolyCrapWhatsLoadingNow.Credentials]: { isLoading: true, children: 'Searching...' },
+    [HolyCrapWhatsLoadingNow.ProofCache]: { isLoading: true, children: 'Searching...' },
+    'default': undefined,
+  })[$holyCrapWhatsLoadingNow.value?.value ?? 'default'];
 
-      {!$isIssuanceRequired.value && !$proofCreateAsync.value.isSuccess && <Button
-        className="grow"
-        color="success"
-        isLoading={$proofCacheAsync.value.isLoading || $proofCreateAsync.value.isLoading}
-        isDisabled={!$credential.value || $credentialsAsync.value.isLoading}
-        onClick={VerificationActions.proofCreate}
-      >Create proof</Button>}
+  const props: ButtonProps = propsOnLoading || ($isIssuanceRequired.value ? {
+    children: 'Get credential', onClick: VerificationActions.credentialIssue,
+    isLoading: $credentialIssueAsync.value.isLoading,
+  } : !$proofCreateAsync.value.isSuccess ? {
+    children: 'Prove', onClick: VerificationActions.proofCreate,
+    isLoading: $proofCacheAsync.value.isLoading || $proofCreateAsync.value.isLoading,
+    isDisabled: !$credential.value || $credentialsAsync.value.isLoading,
+  } : !$proofSignAsync.value.isSuccess ? {
+    children: 'Send proof', onClick: VerificationActions.proofSign,
+    isLoading: $proofSignAsync.value.isLoading,
+  } : /*$proofSignAsync.value.isSuccess ?*/ {
+    children: 'Send proof', onClick: VerificationActions.proofSend,
+    isLoading: $proofSendAsync.value.isLoading,
+    isDisabled: $proofSendAsync.value.isSuccess,
+  });
 
-      {$proofCreateAsync.value.isSuccess && !$proofSignAsync.value.isSuccess && <Button
-        className="grow"
-        color="success"
-        isLoading={$proofSignAsync.value.isLoading}
-        onClick={VerificationActions.proofSign}
-      >Send proof</Button>}
-
-      {$proofSignAsync.value.isSuccess && <Button
-        className="grow"
-        color="success"
-        isLoading={$proofSendAsync.value.isLoading}
-        onClick={VerificationActions.proofSend}
-        isDisabled={$proofSendAsync.value.isSuccess}
-      >Send proof</Button>}
-    </>)}
-  </>);
+  return <Button color="success" {...props} />;
 }

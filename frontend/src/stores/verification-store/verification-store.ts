@@ -46,14 +46,19 @@ export class VerificationStore {
     /** Body **/
     return isWalledAndDidConnected && credentials.isSuccess && !credentials.data.at(0)?.isProvable;
   }, `${StoreName}.computed.isIssuanceRequired`);
-  public static $holyCrapWhatsLoadingNow = computed<string | null>(() => {
-    return VerificationStore.$terminateAsync.value.isLoading ? 'Terminating the verification...'
-      : VerificationStore.$proofSendAsync.value.isLoading ? 'Sending the proof...'
-        : VerificationStore.$proofCreateAsync.value.isLoading ? 'Creating a proof...'
-          : VerificationStore.$credentialsAsync.value.isLoading ? 'Loading credentials...'
-            : VerificationStore.$proofCacheAsync.value.isLoading ? 'Searching for existing proofs...'
+  public static $holyCrapWhatsLoadingNow = computed(() => {
+    return VerificationStore.$terminateAsync.value.isLoading
+      ? { text: 'Terminating the verification...', value: HolyCrapWhatsLoadingNow.Terminate } as const
+      : VerificationStore.$proofSendAsync.value.isLoading
+        ? { text: 'Sending the proof...', value: HolyCrapWhatsLoadingNow.ProofSend } as const
+        : VerificationStore.$proofCreateAsync.value.isLoading
+          ? { text: 'Creating a proof...', value: HolyCrapWhatsLoadingNow.ProofCreate } as const
+          : VerificationStore.$credentialsAsync.value.isLoading
+            ? { text: 'Loading credentials...', value: HolyCrapWhatsLoadingNow.Credentials } as const
+            : VerificationStore.$proofCacheAsync.value.isLoading
+              ? { text: 'Searching for existing proofs...', value: HolyCrapWhatsLoadingNow.ProofCache } as const
               : null;
-  });
+  }, `${StoreName}.computed.holyCrapWhatsLoadingNow`);
 }
 
 export type VerificationStoreInitArgs = {
@@ -77,6 +82,14 @@ export type VerificationInitData = {
   issuerHost: string,
   verifierHost: string,
 };
+
+export enum HolyCrapWhatsLoadingNow {
+  Terminate = 'Terminate',
+  ProofSend = 'ProofSend',
+  ProofCreate = 'ProofCreate',
+  Credentials = 'Credentials',
+  ProofCache = 'ProofCache',
+}
 
 type VerificationTerminateOk = {
   ui: {

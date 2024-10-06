@@ -22,7 +22,7 @@ export const router = createRouter({
   routeTree,
   defaultPreload: 'intent',
   context: {
-    title: 'ZCred App',
+    title: appName,
   },
 });
 // @ts-expect-error - globalThis is not defined in the types

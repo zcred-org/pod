@@ -9,7 +9,7 @@ const metadata = {
   name: 'zCred',
   description: 'zCred website',
   url: location.origin, // origin must match your domain & subdomain
-  icons: ['https://avatars.githubusercontent.com/u/37784886'],
+  icons: [new URL('logo.svg', location.origin).href],
 };
 
 const allChains = Object.values(chains).filter((chain: unknown): chain is chains.Chain => {

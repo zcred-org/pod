@@ -69,7 +69,7 @@ function CredentialsComponent() {
 
 function PendingComponent() {
   return (
-    <PageContainer>
+    <PageContainer yCenter>
       <Progress
         isIndeterminate
         label="Loading credentials..."

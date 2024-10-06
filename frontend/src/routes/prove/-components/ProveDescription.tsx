@@ -31,7 +31,7 @@ const $credentialFriendlyJal = computed<ReactNode | undefined>(() => {
 });
 
 export const ProveDescription: FC = () => (<>
-  <div className="text-xl">
+  <div>
     {$isIssuanceRequired.value ? (
       <p>
         <u>{$initDataAsync.value?.data?.verifierHost}</u>

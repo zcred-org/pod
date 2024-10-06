@@ -86,13 +86,11 @@ function ProveComponent() {
       <div className="grow">
         {computed(() => $holyCrapWhatsLoadingNow.value ? <Progress
           isIndeterminate
-          label={$holyCrapWhatsLoadingNow.value}
+          label={$holyCrapWhatsLoadingNow.value.text}
           classNames={{ label: 'mx-auto' }}
         /> : null)}
       </div>
-      <div className="flex gap-3">
-        <ProvePageButtons />
-      </div>
+      <ProvePageButtons />
     </PageContainer>
   );
 }
@@ -117,8 +115,8 @@ function PendingComponent() {
       </CardBody>
     </Card>
     <div className="flex gap-3">
-      <Button className="grow" variant="light" color="danger" disabled isLoading>Reject</Button>
-      <Button className="grow" color="success" disabled isLoading>Create proof</Button>
+      <Button className="grow" variant="light" color="danger" disabled>Reject</Button>
+      <Button className="grow" color="success" disabled>Create proof</Button>
     </div>
   </PageContainer>;
 }
