@@ -5,6 +5,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import { WagmiProvider } from 'wagmi';
+import { appName } from '@/config/constants.ts';
 import { queryClient } from './config/query-client.ts';
 import { wagmiConfig } from './config/wagmi-config.ts';
 import { routeTree } from './routeTree.gen.ts';
