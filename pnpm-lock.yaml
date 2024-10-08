@@ -50,8 +50,8 @@ importers:
         specifier: 1.1.3
         version: 1.1.3
       '@zcredjs/ethereum':
-        specifier: 0.0.7
-        version: 0.0.7
+        specifier: 0.0.9
+        version: 0.0.9
       '@zcredjs/mina':
         specifier: 1.0.4
         version: 1.0.4
@@ -4056,14 +4056,11 @@ packages:
   '@zcredjs/core@1.0.0':
     resolution: {integrity: sha512-rtdaMTe0VxikAs5YbOTLsoaN5lDLJz4tc77d15KDJMXqNMH96l3IOoxdz9gPNuz4j8abW9/xg6u+poHwnZy30w==}
 
-  '@zcredjs/core@1.0.2':
-    resolution: {integrity: sha512-myRcZuT8JxTaTwYtV1UDvYG0jd/tzylZ+w8joK21A4r43NPDpyZi3Z2zY5sx+tp61123UoomrUufrmKFeb2j1g==}
-
   '@zcredjs/core@1.1.3':
     resolution: {integrity: sha512-pwPpVPQjtU6N1Ar9j2NN/d4oLxDLLeTLbw402bY/t9TgUagMC9wbCH0HX8tpDHOwWv17DPghBpYWWoQX+afH+A==}
 
-  '@zcredjs/ethereum@0.0.7':
-    resolution: {integrity: sha512-fC9hgIx3jiRFsQBjqq3ElVgQ9PPZq56QInkux5LsR5xGKlq9Ty86QXVDmUHFqZZVshIXn3a2ZUBi2xNr+uVUkQ==}
+  '@zcredjs/ethereum@0.0.9':
+    resolution: {integrity: sha512-pSTgC+cZ2cg8yvpUiCMd7DgWV5ZcWv6UuIcslxX7NwrK4wZlrqylsS7dY9g77QRkEbOwNz0daALTb7mpQTvV7Q==}
 
   '@zcredjs/mina@1.0.4':
     resolution: {integrity: sha512-3sz51W2GRFS+kkK6oeNqH9QEIhg4OjiKX9Sa+5X8M4enC/4uXX1N7IkLCud8h3ZqzYXJyTUSbw81BXcZIVUleA==}
@@ -13803,15 +13800,13 @@ snapshots:
 
   '@zcredjs/core@1.0.0': {}
 
-  '@zcredjs/core@1.0.2': {}
-
   '@zcredjs/core@1.1.3':
     dependencies:
       uuid-random: 1.3.2
 
-  '@zcredjs/ethereum@0.0.7':
+  '@zcredjs/ethereum@0.0.9':
     dependencies:
-      '@zcredjs/core': 1.0.2
+      '@zcredjs/core': 1.1.3
       uint8arrays: 4.0.3
 
   '@zcredjs/mina@1.0.4':

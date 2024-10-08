@@ -26,7 +26,7 @@
     "@wagmi/core": "2.13.7",
     "@web3modal/wagmi": "5.1.9",
     "@zcredjs/core": "1.1.3",
-    "@zcredjs/ethereum": "0.0.7",
+    "@zcredjs/ethereum": "0.0.9",
     "@zcredjs/mina": "1.0.4",
     "avvvatars-react": "^0.4.2",
     "axios": "1.7.7",
