@@ -4,8 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test": "pnpm run -r test",
     "dev": "pnpm run -r dev",
-    "build": "pnpm run -r build"
+    "build": "pnpm run -r build",
+    "docker:zcred-store:build": "docker build -t zcred-store -f Dockerfile.zcred-store .",
+    "docker:zcred-store:run": "docker run --env-file ./zcred-store/.env zcred-store"
   },
   "keywords": [],
   "author": "",

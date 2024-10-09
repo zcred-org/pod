@@ -5,6 +5,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import { WagmiProvider } from 'wagmi';
+import { appName } from '@/config/constants.ts';
 import { queryClient } from './config/query-client.ts';
 import { wagmiConfig } from './config/wagmi-config.ts';
 import { routeTree } from './routeTree.gen.ts';
@@ -22,20 +23,22 @@ export const router = createRouter({
   routeTree,
   defaultPreload: 'intent',
   context: {
-    title: 'ZCred App',
+    title: appName,
   },
 });
+// @ts-expect-error - globalThis is not defined in the types
+globalThis.appRouter = router;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={wagmiConfig}>
         <NextUIProvider className="flex flex-col min-h-screen" navigate={navigate}>
           <HelmetProvider>
             <RouterProvider router={router} />
           </HelmetProvider>
         </NextUIProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   </StrictMode>,
 );

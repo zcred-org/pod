@@ -1,0 +1,15 @@
+/zcred-store/test
+/zcred-store/.gitignore
+/zcred-store/README.md
+/zcred-store/vitest.config.ts
+/zcred-store/.env*
+/zcred-store/node_modules
+/frontend/.gitignore
+/frontend/.env*
+/frontend/README.md
+/frontend/node_modules
+/zkapp-hub/test
+/zkapp-hub/.env*
+/zkapp-hub/.gitignore
+/node_modules
+.idea

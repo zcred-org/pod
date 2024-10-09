@@ -19,6 +19,11 @@ import type { Ajv } from 'ajv';
 import * as HTTP from 'http-errors-enhanced';
 import { SecretDataDto } from '../controllers/secret-data/dtos/secret-data.dto.js';
 import { originToHostnames } from '../util/index.js';
+import { CredentialsDto } from '../controllers/credential/dtos/credentials.dto.js';
+import { CredentialsSearchParamsDto } from '../controllers/credential/dtos/credentials-search-params.dto.js';
+import { ZkpResultCacheDto } from '../controllers/zkp-result-cache/dtos/zkp-result-cache.dto.js';
+import { ZkpResultCacheCreateDto } from '../controllers/zkp-result-cache/dtos/zkp-result-cache-create.dto.js';
+
 
 export class HttpServer implements Disposable {
   readonly fastify;
@@ -36,7 +41,7 @@ export class HttpServer implements Disposable {
     this.fastify.register(cors, { origin: '*' });
     this.fastify.decorate('frontendOnly', async (req: FastifyRequest/*, reply: FastifyReply*/) => {
       const hostnames = req.headers.origin ? await originToHostnames(req.headers.origin) : [];
-      if (!hostnames.includes(this.config.frontendURL.origin)) {
+      if (!this.config.frontendURLs.some(frontendURL => hostnames.includes(frontendURL.origin))) {
         // throw new HTTP.ForbiddenError(`"${hostnames.join(',')}" not include "${this.config.frontendURL.origin}"`);
         throw new HTTP.ForbiddenError('You do not have permission to access this resource.');
       }
@@ -88,12 +93,16 @@ export class HttpServer implements Disposable {
 
   private addSchemas() {
     this.fastify.addSchema(CredentialDto);
+    this.fastify.addSchema(CredentialsDto);
+    this.fastify.addSchema(CredentialsSearchParamsDto);
     this.fastify.addSchema(CredentialIdDto);
     this.fastify.addSchema(CredentialUpsertDto);
     this.fastify.addSchema(IdentifierDto);
     this.fastify.addSchema(IssuerDto);
     this.fastify.addSchema(JwtPayloadDto);
     this.fastify.addSchema(SecretDataDto);
+    this.fastify.addSchema(ZkpResultCacheDto);
+    this.fastify.addSchema(ZkpResultCacheCreateDto);
   }
 
   async listen(): Promise<void> {

@@ -15,6 +15,13 @@
       "when": 1719757016726,
       "tag": "0001_cooing_sheva_callister",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1727281892496,
+      "tag": "0002_pale_william_stryker",
+      "breakpoints": true
     }
   ]
 }

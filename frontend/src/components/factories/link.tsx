@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Link, type LinkProps, type RegisteredRouter, type AnyRouter, type RoutePaths } from '@tanstack/react-router';
+import { Link, type LinkProps, type RegisteredRouter, type AnyRouter } from '@tanstack/react-router';
 import { forwardRef } from 'react';
 
 /**
@@ -12,12 +12,13 @@ import { forwardRef } from 'react';
  *                       ^ type is "any" and without checking
  */
 export const link = <
+  TComp = 'a',
   TRouter extends AnyRouter = RegisteredRouter,
-  TFrom extends RoutePaths<TRouter['routeTree']> | string = string,
-  TTo extends string = '',
-  TMaskFrom extends RoutePaths<TRouter['routeTree']> | string = TFrom,
-  TMaskTo extends string = '',
->(props0: LinkProps<TRouter, TFrom, TTo, TMaskFrom, TMaskTo>) => {
+  TFrom extends string = string,
+  TTo extends string | undefined = '.',
+  TMaskFrom extends string = TFrom,
+  TMaskTo extends string = '.',
+>(props0: LinkProps<TComp, TRouter, TFrom, TTo, TMaskFrom, TMaskTo>) => {
   return forwardRef<typeof Link, typeof props0>(({ ...props }, ref) => {
     return <Link ref={ref} {...props} {...props0 as any} />;
   });

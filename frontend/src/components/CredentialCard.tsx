@@ -1,43 +1,43 @@
-import { Card, CardBody, type CardProps, Divider } from '@nextui-org/react';
-import dayjs from 'dayjs';
+import { Card, CardBody, type CardProps, Divider, CardHeader, cn } from '@nextui-org/react';
+import Avvvatar from 'avvvatars-react';
 import { type ReactNode, useMemo } from 'react';
-import { config } from '@/config';
-import { useColored } from '@/hooks/useColored.ts';
-import type { ZCredStore } from '@/service/external/zcred-store/api-specification.ts';
+import type { CredentialDecoded } from '@/service/external/zcred-store/types/credentials.types.ts';
+import { tryToLocalDateTime } from '@/util/helpers.ts';
+
 
 type CredentialCardProps = {
-  credential: ZCredStore['CredentialDecoded'],
-  onClick?: (credential: ZCredStore['CredentialDecoded']) => void | Promise<void>,
+  credential: CredentialDecoded,
+  onClick?: (credential: CredentialDecoded) => void | Promise<void>,
 } & CardProps;
 
 export function CredentialCard(
-  { credential, onClick, ...cardProps }: CredentialCardProps,
+  { credential, onClick, className, classNames, ...cardProps }: CredentialCardProps,
 ): ReactNode {
-  const title = credential.data.attributes.type;
+  const type = credential.data.attributes.type;
   const { issuanceDate, validFrom, validUntil } = useMemo(() => ({
-    issuanceDate: dayjs(credential.data.attributes.issuanceDate).format('YYYY-MM-DD'),
-    validFrom: dayjs(credential.data.attributes.validFrom).format('YYYY-MM-DD'),
-    validUntil: dayjs(credential.data.attributes.validUntil).format('YYYY-MM-DD'),
+    issuanceDate: tryToLocalDateTime(credential.data.attributes.issuanceDate),
+    validFrom: tryToLocalDateTime(credential.data.attributes.validFrom),
+    validUntil: tryToLocalDateTime(credential.data.attributes.validUntil),
   }), [credential]);
-
-  const { 1: idColor } = useColored(credential.id);
+  const issuerHost = new URL(credential.data.meta.issuer.uri).host;
 
   return (
-    <Card className="w-full" isPressable={!!onClick} onClick={() => onClick?.(credential)} {...cardProps}>
-      <CardBody>
-        <p className="text-xl font-bold">{title}</p>
-        <Divider className="mt-3 mb-1" />
-        <p>
-          <span className="font-bold">{'Issuance date: '}</span>
-          {issuanceDate}
-        </p>
-        <p>
-          <span className="font-bold">{'Valid: '}</span>
-          {validFrom}{' - '}{validUntil}
-        </p>
-        {config.isDev ? <p style={{ color: idColor }} className="text-small">
-          {credential.id}
-        </p> : null}
+    <Card
+      className={cn('w-full', className)}
+      isPressable={!!onClick}
+      classNames={classNames}
+      onClick={() => onClick?.(credential)}
+      {...cardProps}
+    >
+      <CardHeader className="text-xl text-start py-2 justify-between [&>:last-child]:shrink-0">
+        <strong>{type}</strong>
+        <Avvvatar value={credential.id} style="shape" radius={8} />
+      </CardHeader>
+      <Divider className="" />
+      <CardBody className="py-2">
+        <p><span className="font-bold">{'Issuer: '}</span>{issuerHost}</p>
+        <p><span className="font-bold">{'Issued: '}</span>{issuanceDate}</p>
+        <p><span className="font-bold">{'Valid: '}</span>{validFrom}{' - '}{validUntil}</p>
       </CardBody>
     </Card>
   );

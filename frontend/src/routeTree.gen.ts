@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as TerminateImport } from './routes/terminate'
 import { Route as CredentialsImport } from './routes/credentials'
 import { Route as CredentialIssueImport } from './routes/credential-issue'
 import { Route as ProveRouteImport } from './routes/prove/route'
@@ -18,6 +19,11 @@ import { Route as IndexImport } from './routes/index'
 import { Route as CredentialIdImport } from './routes/credential.$id'
 
 // Create/Update Routes
+
+const TerminateRoute = TerminateImport.update({
+  path: '/terminate',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const CredentialsRoute = CredentialsImport.update({
   path: '/credentials',
@@ -76,6 +82,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CredentialsImport
       parentRoute: typeof rootRoute
     }
+    '/terminate': {
+      id: '/terminate'
+      path: '/terminate'
+      fullPath: '/terminate'
+      preLoaderRoute: typeof TerminateImport
+      parentRoute: typeof rootRoute
+    }
     '/credential/$id': {
       id: '/credential/$id'
       path: '/credential/$id'
@@ -88,13 +101,83 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({
-  IndexRoute,
-  ProveRouteRoute,
-  CredentialIssueRoute,
-  CredentialsRoute,
-  CredentialIdRoute,
-})
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/prove': typeof ProveRouteRoute
+  '/credential-issue': typeof CredentialIssueRoute
+  '/credentials': typeof CredentialsRoute
+  '/terminate': typeof TerminateRoute
+  '/credential/$id': typeof CredentialIdRoute
+}
+
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/prove': typeof ProveRouteRoute
+  '/credential-issue': typeof CredentialIssueRoute
+  '/credentials': typeof CredentialsRoute
+  '/terminate': typeof TerminateRoute
+  '/credential/$id': typeof CredentialIdRoute
+}
+
+export interface FileRoutesById {
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/prove': typeof ProveRouteRoute
+  '/credential-issue': typeof CredentialIssueRoute
+  '/credentials': typeof CredentialsRoute
+  '/terminate': typeof TerminateRoute
+  '/credential/$id': typeof CredentialIdRoute
+}
+
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/prove'
+    | '/credential-issue'
+    | '/credentials'
+    | '/terminate'
+    | '/credential/$id'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/prove'
+    | '/credential-issue'
+    | '/credentials'
+    | '/terminate'
+    | '/credential/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/prove'
+    | '/credential-issue'
+    | '/credentials'
+    | '/terminate'
+    | '/credential/$id'
+  fileRoutesById: FileRoutesById
+}
+
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  ProveRouteRoute: typeof ProveRouteRoute
+  CredentialIssueRoute: typeof CredentialIssueRoute
+  CredentialsRoute: typeof CredentialsRoute
+  TerminateRoute: typeof TerminateRoute
+  CredentialIdRoute: typeof CredentialIdRoute
+}
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  ProveRouteRoute: ProveRouteRoute,
+  CredentialIssueRoute: CredentialIssueRoute,
+  CredentialsRoute: CredentialsRoute,
+  TerminateRoute: TerminateRoute,
+  CredentialIdRoute: CredentialIdRoute,
+}
+
+export const routeTree = rootRoute
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* prettier-ignore-end */
 
@@ -108,6 +191,7 @@ export const routeTree = rootRoute.addChildren({
         "/prove",
         "/credential-issue",
         "/credentials",
+        "/terminate",
         "/credential/$id"
       ]
     },
@@ -122,6 +206,9 @@ export const routeTree = rootRoute.addChildren({
     },
     "/credentials": {
       "filePath": "credentials.tsx"
+    },
+    "/terminate": {
+      "filePath": "terminate.tsx"
     },
     "/credential/$id": {
       "filePath": "credential.$id.tsx"

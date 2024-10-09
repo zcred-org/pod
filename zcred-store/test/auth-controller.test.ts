@@ -7,7 +7,7 @@ import { jwtDecode } from 'jwt-decode';
 describe('AuthController', async (test) => {
   const { pgContainer, app } = await testAppStart();
   const fastify = app.context.resolve('httpServer').fastify;
-  const frontendOrigin = app.context.resolve('config').frontendURL.origin;
+  const frontendOrigin = app.context.resolve('config').frontendURLs[0]!.origin;
   const { nonceCache } = app.context.resolve('cacheManager');
   const did = await didFromSeed('user1');
 

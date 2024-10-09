@@ -1,22 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { InputTransformer, type JalProgram } from "@jaljs/core";
 import { ZkProgramInputTransformer, ZkProgramTranslator } from "@jaljs/o1js";
-import type {
-  Bool,
-  CircuitString,
-  Field,
-  JsonProof,
-  PrivateKey,
-  PublicKey,
-  Signature,
-  UInt64,
-  VerificationKey
-} from "o1js";
+import type { Bool, Field, PrivateKey, PublicKey, Signature, UInt64 } from "o1js";
 import * as o1js from "o1js";
 import { O1TrGraph } from "o1js-trgraph";
-import { config } from "@/config";
+import sortKeys from "sort-keys";
 import { codeToURL, type JalSetup, toJalSetup } from "@/util/index.ts";
-
 import {
   isWorkerInitReq,
   isWorkerMessage,
@@ -29,16 +18,24 @@ import {
   type WorkerProofResp,
   type WorkerReq,
   type WorkerVerifyProofReq,
-  type WorkerVerifyProofResp
+  type WorkerVerifyProofResp,
+  type WorkerMessage,
 } from "./types.ts";
-import sortKeys from "sort-keys";
+
 
 const programInputTransformer = new ZkProgramInputTransformer(o1js);
-const mjsTranslator = new ZkProgramTranslator(o1js, "module");
-const cjsTranslator = new ZkProgramTranslator(o1js, "commonjs");
 const trGraph = new O1TrGraph(o1js);
-type O1Type = Field | UInt64 | Signature | PublicKey | Bool | PrivateKey | CircuitString
+const cjsTranslator = new ZkProgramTranslator(o1js, "commonjs");
+const mjsTranslator = new ZkProgramTranslator(o1js, "module");
 
+type O1Type = PrivateKey | PublicKey | Signature | Bool | Field | UInt64
+
+type ZKJsonProof = {
+  publicInput: any[];
+  proof: string;
+  publicOutput: never[];
+  maxProofsVerified: number;
+}
 
 async function createZkProof({
   id: reqId,
@@ -48,13 +45,13 @@ async function createZkProof({
   try {
     const { verificationKey, PublicInput, zkProgram } = await initializeZkProgram(jalProgram);
     const setup = toJalSetup(credential);
-    const programInput = toProgramInput(setup, jalProgram);
+    const programInput = await toProgramInput(setup, jalProgram);
     const proof = await zkProgram.execute(
       new PublicInput(programInput.public),
       ...programInput.private,
     );
     const jsonProof = proof.toJSON();
-    const originInput = toOriginInput(setup, jalProgram);
+    const originInput = await toOriginInput(setup, jalProgram);
     return {
       id: reqId,
       type: "proof-resp",
@@ -77,16 +74,16 @@ async function verifyZkResult(req: WorkerVerifyProofReq): Promise<WorkerVerifyPr
   try {
     const { verificationKey } = await initializeZkProgram(req.jalProgram);
     const publicInput = new InputTransformer(req.jalProgram.inputSchema, trGraph)
-      .transformPublicInput<{}, O1Type[]>({ public: sortKeys(req.zkpResult.publicInput, { deep: true }) })
+      .transformPublicInput<Record<string, any>, O1Type[]>({ public: sortKeys(req.zkpResult.publicInput, { deep: true }) })
       .linear
       .flatMap((it) => it.toFields().map((it) => it.toJSON()));
-    const jsonProof: JsonProof = {
+    const jsonProof = {
       publicInput: publicInput,
       publicOutput: [],
       proof: req.zkpResult.proof,
       maxProofsVerified: 0
-    };
-    const isVerified = await o1js.verify(jsonProof, verificationKey as VerificationKey);
+    } satisfies ZKJsonProof;
+    const isVerified = await o1js.verify(jsonProof as any, verificationKey as any);
     return {
       id: req.id,
       type: "verify-resp",
@@ -102,49 +99,41 @@ async function verifyZkResult(req: WorkerVerifyProofReq): Promise<WorkerVerifyPr
 }
 
 async function initializeZkProgram(jalProgram: JalProgram) {
-  const args = config.isDev
-    ? [/\.cjs$/, ".mjs"] as const
-    : [/\.mjs$/, ".cjs"] as const;
-  jalProgram.target = jalProgram.target.replace(args[0], args[1]);
+  jalProgram.target = jalProgram.target.replace(/\.cjs$/, ".mjs");
   const translator = jalProgram.target.endsWith(".cjs") ? cjsTranslator : mjsTranslator;
   const code = translator.translate(jalProgram);
   const url = codeToURL(code);
   const module: O1JSZkProgramModule = await import(/* @vite-ignore */ url);
   const { zkProgram, PublicInput } = module.initialize(o1js);
   const { verificationKey } = await zkProgram.compile();
-  return { zkProgram, PublicInput, verificationKey };
+  return { PublicInput, zkProgram, verificationKey };
 }
 
-function toProgramInput(setup: JalSetup, program: JalProgram) {
+async function toProgramInput(setup: JalSetup, program: JalProgram) {
   return programInputTransformer.transform(setup, program.inputSchema);
 }
 
-function toOriginInput(setup: JalSetup, program: JalProgram): { public: any } {
+async function toOriginInput(setup: JalSetup, program: JalProgram): Promise<{ public: any }> {
   return new InputTransformer(program.inputSchema, trGraph).toInput(setup) as { public: any };
 }
 
 addEventListener("message", async ({ data }: MessageEvent<WorkerReq>) => {
   if (isWorkerInitReq(data)) {
-    const resp: WorkerInitResp = {
+    postMessage({
       id: data.id,
       type: "init-resp",
       initialized: true,
-    };
-    postMessage(resp);
-  }
-  if (isWorkerVerifyProofReq(data)) {
-    const resp = await verifyZkResult(data);
-    postMessage(resp);
-  }
-  if (isWorkerProofReq(data)) {
-    const resp = await createZkProof(data);
-    postMessage(resp);
+    } satisfies WorkerInitResp);
+  } else if (isWorkerVerifyProofReq(data)) {
+    postMessage(await verifyZkResult(data));
+  } else if (isWorkerProofReq(data)) {
+    postMessage(await createZkProof(data));
   } else if (isWorkerMessage(data)) {
     postMessage({
-      id: data.id,
+      id: (data as WorkerMessage).id,
       type: "error",
-      message: `Invalid worker request`,
-    }satisfies WorkerError);
+      message: "Invalid worker request",
+    } satisfies WorkerError);
   }
 });
 

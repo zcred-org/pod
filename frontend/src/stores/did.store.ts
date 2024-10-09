@@ -35,7 +35,7 @@ export class DidStore {
   }
 
   static async encrypt<T>(data: T) {
-    const did = DidStore.#$did.value;
+    const did = DidStore.#$did.peek();
     if (!did) throw new Error('Cannot encrypt without a DID');
     const binary = u8a.fromString(JSON.stringify(data));
     const jwe = await did.createJWE(binary, [did.id]);
@@ -43,7 +43,7 @@ export class DidStore {
   }
 
   static async decrypt<T>(data: string): Promise<T> {
-    const did = DidStore.#$did.value;
+    const did = DidStore.#$did.peek();
     if (!did) throw new Error('Cannot decrypt without a DID');
     const decrypted = await did.decryptJWE(JSON.parse(data));
     return JSON.parse(u8a.toString(decrypted));
@@ -51,7 +51,7 @@ export class DidStore {
 }
 
 WalletStore.$wallet.subscribe(wallet => {
-  const addressOfOwner = _$addressOfOwner.value;
+  const addressOfOwner = _$addressOfOwner.peek();
   if (addressOfOwner && addressOfOwner !== wallet?.address) {
     DidStore.reset();
   }

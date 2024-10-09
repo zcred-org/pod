@@ -1,0 +1,48 @@
+name: for-all
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup docker compose
+        uses: ndeloof/install-compose-action@v0.0.1
+
+      # https://pnpm.io/continuous-integration#github-actions
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        id: pnpm-install
+        with:
+          version: 9
+
+      # https://docs.github.com/en/actions/use-cases-and-examples/building-and-testing/building-and-testing-nodejs#example-caching-dependencies
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'pnpm'
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        env:
+          NODE_OPTIONS: "--max_old_space_size=8192"
+        run: pnpm run build
+
+      - name: Test
+        run: pnpm run test

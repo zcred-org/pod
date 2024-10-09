@@ -1,10 +1,6 @@
-import type { HttpCredential } from '@zcredjs/core';
 import type { components, paths } from './generated';
 
 export type ZCredStore = components['schemas'] & {
-  CredentialDecoded: Omit<components['schemas']['CredentialDto'], 'data'> & {
-    data: HttpCredential;
-  },
   CredentialByIdRoute: {
     path: paths['/api/v1/credential/{id}']['get']['parameters']['path'];
     200: paths['/api/v1/credential/{id}']['get']['responses']['200']['content']['application/json'];
@@ -28,7 +24,15 @@ export type ZCredStore = components['schemas'] & {
   SecretDataByIdRoute: {
     query: paths['/api/v1/secret-data/{id}']['get']['parameters']['path'];
     200: paths['/api/v1/secret-data/{id}']['get']['responses']['200']['content']['application/json'];
-  }
+  },
+  ZkpResultCacheSaveRoute: {
+    body: NonNullable<paths['/api/v1/zkp-result-cache']['post']['requestBody']>['content']['application/json'];
+    200: paths['/api/v1/zkp-result-cache']['post']['responses']['200']['content']['application/json'];
+  },
+  ZkpResultCacheGetRoute: {
+    query: paths['/api/v1/zkp-result-cache/{jalId}']['get']['parameters']['path'];
+    200: paths['/api/v1/zkp-result-cache/{jalId}']['get']['responses']['200']['content']['application/json'];
+  },
 };
 
 type Route<Url extends keyof paths, Method extends keyof paths[Url]> = {
@@ -36,32 +40,42 @@ type Route<Url extends keyof paths, Method extends keyof paths[Url]> = {
   method: Method;
 }
 
-export const ZCredStoreCredentialByIdRoute = {
+export const ZCredStoreCredentialByIdRoute: Route<'/api/v1/credential/{id}', 'get'> = {
   url: '/api/v1/credential/{id}',
   method: 'get',
-} satisfies Route<'/api/v1/credential/{id}', 'get'>;
+};
 
-export const ZCredStoreCredentialUpsertRoute = {
-  url: '/api/v1/credential',
-  method: 'post',
-} satisfies Route<'/api/v1/credential', 'post'>;
-
-export const ZCredStoreCredentialsRoute = {
+export const ZCredStoreCredentialsRoute: Route<'/api/v1/credentials', 'get'> = {
   url: '/api/v1/credentials',
   method: 'get',
-} satisfies Route<'/api/v1/credentials', 'get'>;
+};
 
-export const ZCredStoreWantAuthRoute = {
+export const ZCredStoreCredentialUpsertRoute: Route<'/api/v1/credential', 'post'> = {
+  url: '/api/v1/credential',
+  method: 'post',
+};
+
+export const ZCredStoreWantAuthRoute: Route<'/api/v1/want-auth', 'post'> = {
   url: '/api/v1/want-auth',
   method: 'post',
-} satisfies Route<'/api/v1/want-auth', 'post'>;
+};
 
-export const ZCredStoreAuthRoute = {
+export const ZCredStoreAuthRoute: Route<'/api/v1/auth', 'post'> = {
   url: '/api/v1/auth',
   method: 'post',
-} satisfies Route<'/api/v1/auth', 'post'>;
+};
 
-export const ZCredStoreSecretDataByIdRoute = {
+export const ZCredStoreSecretDataByIdRoute: Route<'/api/v1/secret-data/{id}', 'get'> = {
   url: '/api/v1/secret-data/{id}',
   method: 'get',
-} satisfies Route<'/api/v1/secret-data/{id}', 'get'>;
+};
+
+export const ZCredStoreZkpResultCacheSaveRoute: Route<'/api/v1/zkp-result-cache', 'post'> = {
+  url: '/api/v1/zkp-result-cache',
+  method: 'post',
+};
+
+export const ZCredStoreZkpResultCacheGetRoute: Route<'/api/v1/zkp-result-cache/{jalId}', 'get'> = {
+  url: '/api/v1/zkp-result-cache/{jalId}',
+  method: 'get',
+};
