@@ -5,7 +5,8 @@ import type { Bool, Field, PrivateKey, PublicKey, Signature, UInt64 } from "o1js
 import * as o1js from "o1js";
 import { O1TrGraph } from "o1js-trgraph";
 import sortKeys from "sort-keys";
-import { codeToURL, type JalSetup, toJalSetup } from "@/util/index.ts";
+import { codeToURL } from "@/util/index.ts";
+import { jalSetupFrom, type JalSetup } from '@/util/jal-setup.ts';
 import {
   isWorkerInitReq,
   isWorkerMessage,
@@ -44,7 +45,7 @@ async function createZkProof({
 }: WorkerProofReq): Promise<WorkerProofResp | WorkerError> {
   try {
     const { verificationKey, PublicInput, zkProgram } = await initializeZkProgram(jalProgram);
-    const setup = toJalSetup(credential);
+    const setup = jalSetupFrom(credential);
     const programInput = await toProgramInput(setup, jalProgram);
     const proof = await zkProgram.execute(
       new PublicInput(programInput.public),

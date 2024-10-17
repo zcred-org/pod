@@ -1,85 +1,16 @@
-import { toast } from 'sonner';
-import { CredentialValidIntervalModal } from '@/components/modals/CredentialValidIntervalModal.tsx';
 import { WebhookCallError } from '@/service/external/verifier/errors.ts';
 import { zkpResultFrom } from '@/service/external/verifier/types.ts';
 import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
 import { zCredStore } from '@/service/external/zcred-store';
 import { zCredProver } from '@/service/o1js-zcred-prover';
-import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
-import { VerificationCredentialsActions } from '@/stores/verification-store/verification-credentials-actions.ts';
 import { VerificationErrorActions } from '@/stores/verification-store/verification-error-actions.tsx';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { dateIntervalFieldsFrom, isDateIntervalMatched } from '@/types/date-interval.ts';
-import { DetailedError, RejectedByUserError } from '@/util/errors.ts';
-import { verifyCredentialJWS, go } from '@/util/helpers.ts';
+import { go } from '@/util';
 
 
-export class VerificationActions {
-  public static async credentialIssue(): Promise<void> {
-    /** Read state **/
-    const initData = VerificationStore.$initDataAsync.peek().data;
-    const wallet = WalletStore.$wallet.peek();
-    /** Perform checks **/
-    if (!initData || !wallet) {
-      const errors: string[] = [];
-      if (!initData) errors.push('VerificationStore is not initialized');
-      if (!wallet) errors.push('Wallet connection is required');
-      throw new Error(`Credential upsert failed: ${errors.join(', ')}`);
-    }
-    const { credentialFilter, issuerInfo, httpIssuer, issuerHost } = initData;
-    if (!issuerInfo) {
-      await VerificationTerminateActions.rejectNoCredsAndNoIssuer(issuerHost);
-      throw new Error('Issuer info is required for credential issuance');
-    }
-    /** Perform logic **/
-    VerificationStore.$credentialIssueAsync.loading();
-    try {
-      const validInterval = await CredentialValidIntervalModal.open(dateIntervalFieldsFrom(issuerInfo)).catch(error => {
-        if (error instanceof RejectedByUserError) toast.warning('You need to set the validity period to continue');
-        throw error;
-      });
-      if (!isDateIntervalMatched(validInterval, dateIntervalFieldsFrom(issuerInfo))) {
-        throw new Error('Valid interval does not match issuer info');
-      }
-      if (!httpIssuer.browserIssue) throw new Error('Issuer does not support credential issuance');
-      const credentialNew = await httpIssuer.browserIssue({
-        challengeReq: {
-          subject: { id: wallet.subjectId },
-          options: { chainId: wallet.chainId },
-          validFrom: validInterval?.from?.toISOString(),
-          validUntil: validInterval?.to?.toISOString(),
-        },
-        sign: wallet.adapter.sign,
-        windowOptions: { target: '_blank' },
-      }).catch(error => {
-        VerificationErrorActions.credentialIssueCatch({ error, issuerHost });
-        throw error;
-      });
-      // Verify JWS
-      await verifyCredentialJWS(credentialNew, issuerInfo.protection.jws.kid).catch(error => {
-        // TODO: Verification must be terminated?
-        throw new DetailedError('Credential issuance failed', error);
-      });
-      // Store credential
-      await zCredStore.credential.credentialUpsert(credentialNew);
-      VerificationStore.$credentialIssueAsync.resolve();
-      // // @ts-expect-error In DEV, we can break the credential
-      // credentialNew.attributes.subject.firstName = 'FirstName123';
-      const isProvable = credentialFilter.execute(credentialNew);
-      if (!isProvable) {
-        await VerificationTerminateActions.rejectAttributesNotMatch();
-      } else {
-        credentialsInfiniteQuery.invalidateROOT();
-        VerificationCredentialsActions.$refetchNoWait();
-      }
-    } catch (error) {
-      VerificationStore.$credentialIssueAsync.reject(error as Error);
-      throw error;
-    }
-  }
-
+export class VerificationProofActions {
   public static async proofCreate(): Promise<void> {
     /** Read state **/
     const wallet = WalletStore.$wallet.peek();
@@ -102,7 +33,7 @@ export class VerificationActions {
     }));
     if (proof) {
       VerificationStore.$proofCreateAsync.resolve(proof);
-      VerificationActions.proofSign().then();
+      VerificationProofActions.proofSign().then();
       zCredStore.zkpResultCache.save({
         zkpResult: zkpResultFrom(proof),
         jalId: initData.jalId,
@@ -131,7 +62,7 @@ export class VerificationActions {
     const [signature, error] = await go<Error>()(wallet.adapter.sign({ message: proposal.challenge.message }));
     if (signature) {
       VerificationStore.$proofSignAsync.resolve({ ...proofUnsigned, signature, message: proposal.challenge.message });
-      VerificationActions.proofSend().then();
+      VerificationProofActions.proofSend().then();
     } else {
       VerificationStore.$proofSignAsync.reject(error!);
     }

@@ -122,7 +122,7 @@ class Redirector {
 
   redirect() {
     this.clear();
-    window.location.href = this.redirectURL;
+    window.location.replace(this.redirectURL);
     this.#$isRedirected.value = true;
   }
 }

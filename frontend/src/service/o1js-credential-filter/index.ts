@@ -3,7 +3,9 @@ import { JsProgramInputTransformer, JsProgramTranslator } from "@jaljs/o1js";
 import type { ZkCredential } from "@zcredjs/core";
 import * as o1js from "o1js";
 import type { FilterModule } from "@/service/o1js-credential-filter/types.ts";
-import { codeToURL, toJalSetup } from "@/util/index.ts";
+import { codeToURL } from "@/util/index.ts";
+import { jalSetupFrom } from '@/util/jal-setup.ts';
+
 
 const mjsProgramTranslator = new JsProgramTranslator(o1js, "module");
 const cjsProgramTranslator = new JsProgramTranslator(o1js, "commonjs");
@@ -28,7 +30,7 @@ export class O1JSCredentialFilter {
   }
 
   execute(credential: ZkCredential): boolean {
-    const setup = toJalSetup(credential);
+    const setup = jalSetupFrom(credential);
     const input = inputTransformer.transform(setup, this.jalProgram.inputSchema);
     return this.program.execute(input);
   }

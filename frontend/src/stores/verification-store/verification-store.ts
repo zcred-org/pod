@@ -5,7 +5,7 @@ import type { CredentialMarked } from '@/service/external/zcred-store/types/cred
 import type { O1JSCredentialFilter } from '@/service/o1js-credential-filter';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { isSubjectIdsEqual } from '@/util/helpers.ts';
+import { isSubjectIdsEqual } from '@/util';
 import { signalAsync } from '@/util/signals/signal-async.ts';
 import { signal, computed } from '@/util/signals/signals-dev-tools.ts';
 

@@ -10,7 +10,7 @@ import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
 import { DidStore } from '@/stores/did.store.ts';
 import { ThemeStore } from '@/stores/theme.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { addressShort } from '@/util/helpers.ts';
+import { addressShort } from '@/util';
 
 
 export function HeaderUserPanel(): ReactNode {

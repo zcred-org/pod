@@ -4,7 +4,7 @@ import { CircleUserRound, ShieldAlert } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { IconByWalletType } from '@/components/icons/icons.tsx';
 import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
-import { addressShort, subjectTypeToWalletEnum } from '@/util/helpers.ts';
+import { addressShort, subjectTypeToWalletEnum } from '@/util';
 
 export function SwitchToRequiredIdModal(
   { requiredId, subjectId }: { requiredId: Identifier; subjectId: Identifier },

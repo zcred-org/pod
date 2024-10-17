@@ -10,7 +10,7 @@ import {
   isProposal,
   type VerificationResponse,
 } from '@/service/external/verifier/types.ts';
-import { checkProposalValidity } from '@/util/helpers.ts';
+import { checkProposalValidity } from '@/util';
 
 
 export class VerifierApi {

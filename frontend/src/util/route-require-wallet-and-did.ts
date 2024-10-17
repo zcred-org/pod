@@ -1,4 +1,5 @@
 import { type ParsedLocation, redirect } from '@tanstack/react-router';
+import { Route as ProveRoute } from '@/routes/prove/route.tsx';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
 
 
@@ -8,6 +9,9 @@ import { $isWalletAndDidConnected } from '@/stores/other.ts';
  */
 export const routeRequireWalletAndDid = (location: ParsedLocation) => {
   if (!$isWalletAndDidConnected.peek()) {
-    throw redirect({ to: '/', search: { redirect: location.href } });
+    const search = location.pathname === ProveRoute.fullPath
+      ? location.search
+      : { redirect: location.href };
+    throw redirect({ to: '/', search });
   }
 };

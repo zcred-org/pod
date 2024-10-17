@@ -2,7 +2,7 @@ import { Card, CardBody, type CardProps, Divider, CardHeader, cn } from '@nextui
 import Avvvatar from 'avvvatars-react';
 import { type ReactNode, useMemo } from 'react';
 import type { CredentialDecoded } from '@/service/external/zcred-store/types/credentials.types.ts';
-import { tryToLocalDateTime } from '@/util/helpers.ts';
+import { tryToLocalDateTime } from '@/util';
 
 
 type CredentialCardProps = {

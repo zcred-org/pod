@@ -1,6 +1,8 @@
 import { Button, type ButtonProps } from '@nextui-org/react';
 import type { ReactNode } from 'react';
-import { VerificationActions } from '@/stores/verification-store/verification-actions.ts';
+import { SessionPersistedStore } from '@/stores/session-persisted.store.ts';
+import { VerificationIssueActions } from '@/stores/verification-store/verification-issue-actions.ts';
+import { VerificationProofActions } from '@/stores/verification-store/verification-proof-actions.ts';
 import { VerificationStore, HolyCrapWhatsLoadingNow } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 
@@ -41,6 +43,7 @@ function MainButton(): ReactNode {
     $proofCacheAsync, $proofCreateAsync, $proofSignAsync, $proofSendAsync,
     $holyCrapWhatsLoadingNow,
   } = VerificationStore;
+  const challenge = SessionPersistedStore.session.value?.challenge;
 
   const propsOnLoading: ButtonProps | undefined = ({
     [HolyCrapWhatsLoadingNow.Terminate]: undefined,
@@ -52,17 +55,18 @@ function MainButton(): ReactNode {
   })[$holyCrapWhatsLoadingNow.value?.value ?? 'default'];
 
   const props: ButtonProps = propsOnLoading || ($isIssuanceRequired.value ? {
-    children: 'Get credential', onClick: VerificationActions.credentialIssue,
+    children: 'Get credential',
+    onClick: challenge ? () => VerificationIssueActions.finish(challenge) : VerificationIssueActions.start,
     isLoading: $credentialIssueAsync.value.isLoading,
   } : !$proofCreateAsync.value.isSuccess ? {
-    children: 'Prove', onClick: VerificationActions.proofCreate,
+    children: 'Prove', onClick: VerificationProofActions.proofCreate,
     isLoading: $proofCacheAsync.value.isLoading || $proofCreateAsync.value.isLoading,
     isDisabled: !$credential.value || $credentialsAsync.value.isLoading,
   } : !$proofSignAsync.value.isSuccess ? {
-    children: 'Send proof', onClick: VerificationActions.proofSign,
+    children: 'Send proof', onClick: VerificationProofActions.proofSign,
     isLoading: $proofSignAsync.value.isLoading,
   } : /*$proofSignAsync.value.isSuccess ?*/ {
-    children: 'Send proof', onClick: VerificationActions.proofSend,
+    children: 'Send proof', onClick: VerificationProofActions.proofSend,
     isLoading: $proofSendAsync.value.isLoading,
     isDisabled: $proofSendAsync.value.isSuccess,
   });

@@ -26,7 +26,7 @@ import { IconVisibility } from '@/components/icons/IconVisibility.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
 import { credentialQuery } from '@/service/queries/credential.query.ts';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
-import { tryToLocalDateTime, flattenObject } from '@/util/helpers.ts';
+import { flattenObject, tryToLocalDateTime } from '@/util';
 import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
 
 
@@ -71,7 +71,7 @@ function CredentialComponent() {
 
   return (
     <PageContainer className="gap-5 px-0 pb-10">
-      <Card className='rounded-none sm:rounded-large'>
+      <Card className="rounded-none sm:rounded-large">
         <CardHeader className="text-2xl justify-between items-center [&>:last-child]:shrink-0">
           <p><strong>{type}</strong><span>{` from ${issuerHost}`}</span></p>
           <Avvvatar value={zCred.id} style="shape" radius={8} />

@@ -1,8 +1,8 @@
 import { cn } from '@nextui-org/react';
-import type { ComponentProps, PropsWithChildren, ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 
-type PageContainerProps = PropsWithChildren<ComponentProps<'div'>> & {
+type PageContainerProps = ComponentProps<'div'> & {
   isCenter?: boolean;
   yCenter?: boolean;
   xCenter?: boolean;

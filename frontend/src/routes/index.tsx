@@ -8,13 +8,14 @@ import { SwitchToRequiredIdModal } from '@/components/modals/SwitchToRequiredIdM
 import { PageContainer } from '@/components/PageContainer.tsx';
 import { web3modal } from '@/config/wagmi-config.ts';
 import { useWagmiConnector } from '@/hooks/web3/ethereum/useWagmiConnector.ts';
-import { $isWalletAndDidConnected, $isWalletConnected } from '@/stores/other.ts';
+import { $isWalletAndDidConnected } from '@/stores/other.ts';
+import { SessionPersistedStore } from '@/stores/session-persisted.store.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
 import { VerificationStore, verificationStoreInitArgsFrom } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
-import { addressShort, isSubjectIdsEqual, subjectTypeToWalletEnum } from '@/util/helpers.ts';
+import { addressShort, isSubjectIdsEqual, subjectTypeToWalletEnum } from '@/util';
 
 
 export const Route = createFileRoute('/')({
@@ -23,14 +24,16 @@ export const Route = createFileRoute('/')({
   validateSearch: z.object({
     redirect: z.string().catch('/').optional(),
     proposalURL: z.string().optional(),
+    zcredSessionId: z.string().optional(),
   }),
   beforeLoad: () => ({ title: 'Sign In' }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { proposalURL } }) => {
+  loader: async ({ deps: { proposalURL, zcredSessionId } }) => {
     const verificationInitArgs = verificationStoreInitArgsFrom({ proposalURL });
     if (verificationInitArgs) {
       await VerificationInitActions.init(verificationInitArgs);
     }
+    if (zcredSessionId) SessionPersistedStore.init(zcredSessionId);
     const { requiredId, verifierHost } = VerificationStore.$initDataAsync.peek().data || {};
     return {
       verifierHost,
@@ -44,12 +47,12 @@ export const Route = createFileRoute('/')({
 function SignInComponent() {
   const search = Route.useSearch();
   const { requiredWallet, proveArgs, requiredId, verifierHost } = Route.useLoaderData();
-  const { open: isEthConnecting } = useWeb3ModalState();
+  const { open: isWeb3ModalOpened } = useWeb3ModalState();
   const { connector: wagmiConnector, account: wagmiAccount } = useWagmiConnector();
   const wallet = WalletStore.$wallet.value;
 
-  if (!$isWalletConnected.value) {
-    const isEthLoading = isEthConnecting || wagmiConnector.isFetching || !!wagmiAccount.address;
+  if (!WalletStore.$isConnected.value) {
+    const isEthLoading = isWeb3ModalOpened || wagmiConnector.isFetching || !!wagmiAccount.address;
     // const isMinaLoading = AuroStore.$isConnecting.value;
 
     const isEthDisabled = VerificationStore.$terminateAsync.value.isLoading /*|| isMinaLoading */;
@@ -106,13 +109,17 @@ function SignInComponent() {
     />
   );
 
-  if (!$isWalletAndDidConnected.value) {
-    return <DidModal />;
-  }
+  if (search.zcredSessionId && !$isWalletAndDidConnected.value) return (
+    // Wait for DidStore autologin
+    <PageContainer isCenter>
+      <Spinner size="lg" className="w-40" />
+    </PageContainer>
+  );
 
-  if (proveArgs) {
-    return <Navigate to={'/prove'} search={proveArgs} />;
-  }
+  if (!$isWalletAndDidConnected.value) return <DidModal />;
+
+  if (proveArgs) return <Navigate to={'/prove'} search={proveArgs} />;
+
   return <Navigate to={search.redirect || '/credentials'} />;
 }
 

@@ -4,12 +4,15 @@ import { DID } from 'dids';
 import { Ed25519Provider } from 'key-did-provider-ed25519';
 import { getResolver } from 'key-did-resolver';
 import * as u8a from 'uint8arrays';
+import { SessionPersistedStore } from '@/stores/session-persisted.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { signal } from '@/util/signals/signals-dev-tools.ts';
+
 
 const _$addressOfOwner = signal<string | null>(null, 'DidStore.addressOfOwner');
 
 export class DidStore {
+  static seed: string | null = null;
   static #$did = signal<DID | null>(null, 'DidStore.did');
 
   static get $did(): ReadonlySignal<DID | null> {
@@ -22,6 +25,7 @@ export class DidStore {
     const did = new DID({ provider, resolver: getResolver() });
     await did.authenticate();
     batch(() => {
+      DidStore.seed = seed;
       DidStore.#$did.value = did;
       _$addressOfOwner.value = addressOfOwner;
     });
@@ -29,6 +33,7 @@ export class DidStore {
 
   static reset() {
     batch(() => {
+      DidStore.seed = null;
       DidStore.#$did.value = null;
       _$addressOfOwner.value = null;
     });
@@ -51,6 +56,11 @@ export class DidStore {
 }
 
 WalletStore.$wallet.subscribe(wallet => {
+  const session = SessionPersistedStore.session.peek();
+  if (session && session.subjectId.key === wallet?.address) {
+    return void DidStore.authenticate(session.didPrivateKey, session.subjectId.key).then();
+  }
+
   const addressOfOwner = _$addressOfOwner.peek();
   if (addressOfOwner && addressOfOwner !== wallet?.address) {
     DidStore.reset();

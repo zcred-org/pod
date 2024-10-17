@@ -3,7 +3,8 @@ import { Button, type ButtonProps, Modal, ModalBody, ModalContent, ModalFooter, 
 import { signal } from '@preact/signals-react';
 import type { ReactNode } from 'react';
 import type { SetOptional } from 'type-fest';
-import { getId } from '@/util/helpers.ts';
+import { getId } from '@/util';
+
 
 type TAction<Action extends string = string> = Action | {
   label?: string;

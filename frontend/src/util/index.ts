@@ -1,31 +1,127 @@
-import type { ZkCredential } from '@zcredjs/core';
+import type { HttpCredential, Identifier } from '@zcredjs/core';
+import { transform, omit } from 'lodash-es';
+import sortKeys from 'sort-keys';
 import * as u8a from 'uint8arrays';
+import type { Proposal } from '@/service/external/verifier/types.ts';
+import type { Nillable } from '@/types';
+import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
+import { didPublic } from '@/util/did-public.ts';
+
 
 export function codeToURL(code: string): string {
   const decodedProgram = u8a.toString(u8a.fromString(code), 'base64');
   return `data:application/javascript;base64,${decodedProgram}`;
 }
 
-export type JalSetup = {
-  private: {
-    credential: ZkCredential;
+const didKeyBegin = 'did:key:';
+const hexAddressBegin = '0x';
+
+export const addressShort = (address: string) => {
+  if (address.startsWith(didKeyBegin)) {
+    // did:key:000000000000000000000000000000000000000000000000
+    return `${address.slice(didKeyBegin.length, didKeyBegin.length + 4)}...${address.slice(-4)}`;
+  } else if (address.startsWith(hexAddressBegin)) {
+    // 0x0000000000000000000000000000000000000000
+    return `${address.slice(0, hexAddressBegin.length + 4)}...${address.slice(-4)}`;
+  } else {
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
   }
-  public: {
-    context: {
-      now: string;
+};
+
+export function toJWTPayload(obj: object): string {
+  return u8a.toString(u8a.fromString(JSON.stringify(obj)), 'base64url');
+}
+
+export const verifyCredentialJWS = async (credential: HttpCredential, issuerKid: string) => {
+  const { 0: jwsHeader, 2: jwsSignature } = credential.protection.jws.split('.');
+  if ((JSON.parse(base64UrlDecode(jwsHeader || '')) as Record<string, string>).kid !== issuerKid) {
+    throw new Error('JWS kid does not match');
+  }
+  const jwsPayload = toJWTPayload(sortKeys(omit(credential, ['protection']), { deep: true }));
+  await didPublic.verifyJWS(`${jwsHeader}.${jwsPayload}.${jwsSignature}`);
+};
+
+
+export const base64UrlEncode = (string: string): string => {
+  return u8a.toString(u8a.fromString(string, 'utf-8'), 'base64url');
+};
+export const base64UrlDecode = (base64string: string) => {
+  return u8a.toString(u8a.fromString(base64string, 'base64url'), 'utf-8');
+};
+
+export function getId() {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
+
+export const subjectTypeToWalletEnum = (subjectType: string): WalletTypeEnum => {
+  if (subjectType === 'ethereum:address') {
+    return WalletTypeEnum.Ethereum;
+  }
+  if (subjectType === 'mina:publickey') {
+    return WalletTypeEnum.Auro;
+  }
+  throw new Error(`Unknown subject type: ${subjectType}`);
+};
+export const checkProposalValidity = (proposal: Proposal): boolean => {
+  const recipientDomain = /(?<=recipient url: ).*?(?=\n)/i.exec(proposal?.challenge.message ?? '')?.[0];
+  return Boolean(recipientDomain && proposal.verifierURL.startsWith(recipientDomain));
+};
+export const isSubjectIdsEqual = (a: Nillable<Identifier>, b: Nillable<Identifier>): boolean => {
+  return !!a && !!b && a.type === b.type && a.key === b.key;
+};
+
+export function go<TErr>() {
+  return async <TRes>(
+    promise: Promise<TRes>,
+  ): Promise<[TRes, undefined] | [undefined, TErr]> => {
+    try {
+      return [await promise, undefined] as const;
+    } catch (err) {
+      return [undefined, err as TErr] as const;
     }
+  };
+}
+
+export async function gopher<TRes, TErr = unknown>(
+  func: Promise<TRes>,
+): Promise<[TRes, undefined] | [undefined, TErr]> {
+  try {
+    return [await func, undefined] as const;
+  } catch (err) {
+    return [undefined, err as TErr] as const;
   }
 }
 
-export function toJalSetup(credential: ZkCredential): JalSetup {
-  return {
-    private: {
-      credential: credential,
-    },
-    public: {
-      context: {
-        now: new Date().toISOString(),
-      },
-    },
-  };
+export function JSONParse<T>(str: string): [T, undefined] | [undefined, Error] {
+  try {
+    return [JSON.parse(str), undefined];
+  } catch (err) {
+    return [undefined, err as Error];
+  }
+}
+
+export function tryToLocalDateTime<T>(something: T): T | string {
+  const isIso = isISOString(something);
+  const date = isIso ? new Date(something) : null;
+  const isHasTime = date && date.getHours() && date.getMinutes() && date.getSeconds() && date.getMilliseconds();
+  return date ? (isHasTime ? date.toLocaleString() : date.toLocaleDateString()) : something;
+}
+
+export function isISOString(str: unknown): str is string {
+  try {
+    return typeof str === 'string' && new Date(str).toISOString() === str;
+  } catch {
+    return false;
+  }
+}
+
+export function flattenObject(obj: object, parentKey = '', result = {}): object {
+  return transform(obj, (res, value, key) => {
+    const newKey = parentKey ? `${parentKey}.${key}` : key;
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      flattenObject(value, newKey as never, res);
+    } else {
+      res[newKey as never] = value as never;
+    }
+  }, result);
 }

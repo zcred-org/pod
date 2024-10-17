@@ -4,7 +4,7 @@ import { EIP1193Adapter } from '@zcredjs/ethereum';
 import { AuroWalletAdapter } from '@zcredjs/mina';
 import { getConnectorClient } from '@/config/wagmi-config.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
-import { signal } from '@/util/signals/signals-dev-tools.ts';
+import { signal, computed } from '@/util/signals/signals-dev-tools.ts';
 
 export type WalletStoreState = {
   adapter: IWalletAdapter,
@@ -15,7 +15,8 @@ export type WalletStoreState = {
 };
 
 export class WalletStore {
-  static #$wallet = signal<WalletStoreState | null>(null, 'WalletStore');
+  static #$wallet = signal<WalletStoreState | null>(null, `${WalletStore.name}.wallet`);
+  public static $isConnected = computed(() => !!WalletStore.$wallet.value, `${WalletStore.name}.isConnected`);
   static #nextWallet: WalletStoreState | undefined | null;
 
   static get $wallet(): ReadonlySignal<WalletStoreState | null> {

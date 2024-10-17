@@ -7,7 +7,7 @@ import {
   ZCredStoreZkpResultCacheGetRoute,
   ZCredStoreZkpResultCacheSaveRoute,
 } from '@/service/external/zcred-store/api-specification.ts';
-import { base64UrlEncode, base64UrlDecode } from '@/util/helpers.ts';
+import { base64UrlDecode, base64UrlEncode } from '@/util';
 
 
 export class ZkpResultCacheApi {

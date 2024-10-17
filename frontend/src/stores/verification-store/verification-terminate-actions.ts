@@ -82,7 +82,7 @@ Please check back later.
       error?: undefined,
       isSkipVerifierReq: true,
     }),
-  ) {
+  ): Promise<void> {
     if (!VerificationStore.$terminateAsync.peek().isIdle) return;
     let redirectURLFromVerifier: string | undefined;
     if (!isSkipVerifierReq) {
