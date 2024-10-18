@@ -1,12 +1,12 @@
 import { Navigate, useRouterState } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
-import { Route as ProveRoute } from '@/routes/prove/route.tsx';
+import { ProveRoutePath } from '@/routes/prove/-constants.ts';
 
 
 export function NavigateToLogin(): ReactNode {
   const { location } = useRouterState();
 
-  const search = location.pathname === ProveRoute.fullPath
+  const search = location.pathname === ProveRoutePath
     ? location.search
     : { redirect: location.href };
 

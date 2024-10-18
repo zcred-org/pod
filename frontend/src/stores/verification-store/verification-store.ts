@@ -4,6 +4,7 @@ import type { ProvingResultUnsigned, ProvingResult, Proposal } from '@/service/e
 import type { CredentialMarked } from '@/service/external/zcred-store/types/credentials.types.ts';
 import type { O1JSCredentialFilter } from '@/service/o1js-credential-filter';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
+import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { isSubjectIdsEqual } from '@/util';
 import { signalAsync } from '@/util/signals/signal-async.ts';
@@ -48,27 +49,39 @@ export class VerificationStore {
   }, `${StoreName}.computed.isIssuanceRequired`);
   public static $holyCrapWhatsLoadingNow = computed(() => {
     return VerificationStore.$terminateAsync.value.isLoading
-      ? { text: 'Terminating the verification...', value: HolyCrapWhatsLoadingNow.Terminate } as const
+      ? { text: 'Terminating the verification...', stage: HolyCrapWhatsLoadingNowStageEnum.Terminate } as const
       : VerificationStore.$proofSendAsync.value.isLoading
-        ? { text: 'Sending the proof...', value: HolyCrapWhatsLoadingNow.ProofSend } as const
+        ? { text: 'Sending the proof...', stage: HolyCrapWhatsLoadingNowStageEnum.ProofSend } as const
         : VerificationStore.$proofCreateAsync.value.isLoading
-          ? { text: 'Creating a proof...', value: HolyCrapWhatsLoadingNow.ProofCreate } as const
+          ? { text: 'Creating a proof...', stage: HolyCrapWhatsLoadingNowStageEnum.ProofCreate } as const
           : VerificationStore.$credentialsAsync.value.isLoading
-            ? { text: 'Loading credentials...', value: HolyCrapWhatsLoadingNow.Credentials } as const
-            : VerificationStore.$proofCacheAsync.value.isLoading
-              ? { text: 'Searching for existing proofs...', value: HolyCrapWhatsLoadingNow.ProofCache } as const
+            ? { text: 'Loading credentials...', stage: HolyCrapWhatsLoadingNowStageEnum.Credentials } as const
+            : VerificationStore.$proofCacheAsync.value.isLoading && !VerificationStore.$isIssuanceRequired.value
+              ? { text: 'Searching for existing proofs...', stage: HolyCrapWhatsLoadingNowStageEnum.ProofCache } as const
               : null;
   }, `${StoreName}.computed.holyCrapWhatsLoadingNow`);
+  public static $isNavigateBlocked = computed<boolean>(() => {
+    const credentialIssueAsync = VerificationStore.$credentialIssueAsync.value;
+    const terminateAsync = VerificationStore.$terminateAsync.value;
+    const challenge = ZCredSessionStore.session.value?.challenge;
+
+    const isNotTerminated = terminateAsync.isIdle || terminateAsync.isLoading;
+    const isNoIssueRedirect = !(credentialIssueAsync.isLoading && !challenge);
+    return isNotTerminated && isNoIssueRedirect;
+  }, `${StoreName}.computed.isNavigateBlocked`);
 }
 
 export type VerificationStoreInitArgs = {
   proposalURL: string,
+  zcredSessionId?: string,
 }
 
 export function verificationStoreInitArgsFrom(
-  { proposalURL }: Partial<{ proposalURL: string }>,
+  args: Partial<VerificationStoreInitArgs>,
 ): VerificationStoreInitArgs | undefined {
-  return proposalURL ? { proposalURL: proposalURL } : undefined;
+  return args.proposalURL ?
+    { proposalURL: args.proposalURL, zcredSessionId: args.zcredSessionId }
+    : undefined;
 }
 
 export type VerificationInitData = {
@@ -83,7 +96,7 @@ export type VerificationInitData = {
   verifierHost: string,
 };
 
-export enum HolyCrapWhatsLoadingNow {
+export enum HolyCrapWhatsLoadingNowStageEnum {
   Terminate = 'Terminate',
   ProofSend = 'ProofSend',
   ProofCreate = 'ProofCreate',

@@ -8,7 +8,7 @@ import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts
 import { issuerInfoQuery } from '@/service/queries/issuer-info.query.ts';
 import { proposalQuery } from '@/service/queries/proposal.query.ts';
 import { zkpResultQuery } from '@/service/queries/zkp-result-cache.query.ts';
-import { SessionPersistedStore } from '@/stores/session-persisted.store.ts';
+import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { VerificationCredentialsActions } from '@/stores/verification-store/verification-credentials-actions.ts';
 import { VerificationIssueActions } from '@/stores/verification-store/verification-issue-actions.ts';
 import { type VerificationStoreInitArgs, VerificationStore } from '@/stores/verification-store/verification-store.ts';
@@ -79,13 +79,12 @@ export abstract class VerificationInitActions {
   }
 
   public static async postInitAfterLogin(): Promise<void> {
-    const session = SessionPersistedStore.session.peek();
+    const session = ZCredSessionStore.session.peek();
     if (session) {
-      // TODO: Make catch smarter (user-signature-rejection/issuer-can't-issue)
-      await VerificationIssueActions.finish(session.challenge).catch(() => null);
+      VerificationIssueActions.finish(session.challenge).then().catch(() => null);
     }
-    const status = VerificationStore.$proofCacheAsync.peek();
-    if (status.isLoading || status.isSuccess) return;
+    const proofCacheState = VerificationStore.$proofCacheAsync.peek();
+    if (proofCacheState.isLoading || proofCacheState.isSuccess) return;
     const initData = VerificationStore.$initDataAsync.peek().data;
     if (!initData) throw new Error('VerificationStore is not initialized');
     VerificationStore.$proofCacheAsync.loading();

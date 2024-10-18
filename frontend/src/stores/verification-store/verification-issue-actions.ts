@@ -1,18 +1,18 @@
 import { type Info, IEC, type Challenge } from '@zcredjs/core';
 import { toast } from 'sonner';
-import { IconStatusEnum } from '@/components/icons/IconStatus.tsx';
 import { CredentialValidIntervalModal } from '@/components/modals/CredentialValidIntervalModal.tsx';
 import { zCredStore } from '@/service/external/zcred-store';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
 import { DidStore } from '@/stores/did.store.ts';
-import { SessionPersistedStore } from '@/stores/session-persisted.store.ts';
 import { VerificationCredentialsActions } from '@/stores/verification-store/verification-credentials-actions.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
+import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { dateIntervalFieldsFrom, isDateIntervalMatched } from '@/types/date-interval.ts';
 import { verifyCredentialJWS } from '@/util';
 import { RejectedByUserError, DetailedError } from '@/util/errors.ts';
+import { VerificationErrorActions } from '@/stores/verification-store/verification-error-actions.tsx';
 
 
 export class VerificationIssueActions {
@@ -34,29 +34,27 @@ export class VerificationIssueActions {
       if (!didKey || !didPrivateKey) errors.push('DID is required');
       throw new Error(`Credential upsert failed: ${errors.join(', ')}`);
     }
-    const { issuerInfo, httpIssuer, initArgs: { proposalURL } } = initData;
+    const { issuerInfo, httpIssuer, initArgs } = initData;
     /** Perform logic **/
     VerificationStore.$credentialIssueAsync.loading();
     try {
       const validInterval = await VerificationIssueActions.#getValidInterval(issuerInfo);
       const zcredSessionId = window.crypto.randomUUID();
       if (!httpIssuer.browserIssue) throw new Error('Issuer does not support credential issuance');
-      const redirectURL = new URL(
-        appRouter.buildLocation({ to: '/', search: { zcredSessionId, proposalURL } }).href,
-        window.location.origin,
-      ).href;
-      console.log('Redirect URL:', redirectURL);
       const challenge = await httpIssuer.getChallenge({
         subject: { id: wallet.subjectId },
         validFrom: validInterval?.from?.toISOString(),
         validUntil: validInterval?.to?.toISOString(),
         options: {
           chainId: wallet.chainId,
-          redirectURL,
+          redirectURL: new URL(
+            appRouter.buildLocation({ to: '/', search: { ...initArgs, zcredSessionId } }).href,
+            window.location.origin,
+          ).href,
         },
       });
       if (challenge.verifyURL) {
-        SessionPersistedStore.set(zcredSessionId, { subjectId: wallet.subjectId, didPrivateKey, didKey, challenge });
+        ZCredSessionStore.set(zcredSessionId, { subjectId: wallet.subjectId, didPrivateKey, didKey, challenge });
         window.location.replace(challenge.verifyURL);
       } else {
         await VerificationIssueActions.finish(challenge);
@@ -98,31 +96,37 @@ export class VerificationIssueActions {
       if (!challenge) errors.push('Challenge is required');
       throw new Error(`Credential upsert failed: ${errors.join(', ')}`);
     }
-    const { issuerInfo, httpIssuer, credentialFilter } = initData;
+    const { issuerInfo, httpIssuer, credentialFilter, issuerHost } = initData;
     /** Perform logic **/
     VerificationStore.$credentialIssueAsync.loading();
     try {
-      const { canIssue } = await httpIssuer.canIssue({ sessionId: challenge.sessionId });
+      const { canIssue } = await httpIssuer.canIssue({ sessionId: challenge.sessionId }).catch(err=>{
+        VerificationErrorActions.credentialIssueCatch({ error: err, issuerHost });
+        throw err;
+      });
       if (!canIssue) {
+        ZCredSessionStore.cleanup();
         VerificationStore.$credentialIssueAsync.reject(new Error(`Issuer can't issue credential`));
         return void await VerificationTerminateActions.reject({
-          ui: {
-            status: IconStatusEnum.Error,
-            message: 'Verification not passed',
-          },
+          ui: { message: 'Verification not passed' },
           error: { code: IEC.ISSUE_DENIED },
         });
       }
       const signature = await wallet.adapter.sign({ message: challenge.message });
-      const credential = await httpIssuer.issue({ sessionId: challenge.sessionId, signature });
+      const credential = await httpIssuer.issue({ sessionId: challenge.sessionId, signature }).catch(err=>{
+        VerificationErrorActions.credentialIssueCatch({ error: err, issuerHost });
+        throw err;
+      });
       // Verify JWS
       await verifyCredentialJWS(credential, issuerInfo.protection.jws.kid).catch(error => {
         // TODO: Verification must be terminated?
+        ZCredSessionStore.cleanup();
         throw new DetailedError('Credential issuance failed', error);
       });
       // Store credential
       await zCredStore.credential.credentialUpsert(credential);
       VerificationStore.$credentialIssueAsync.resolve();
+      ZCredSessionStore.cleanup();
       // // @ts-expect-error In DEV, we can break the credential
       // credentialNew.attributes.subject.firstName = 'FirstName123';
       const isProvable = credentialFilter.execute(credential);
@@ -132,7 +136,6 @@ export class VerificationIssueActions {
         credentialsInfiniteQuery.invalidateROOT();
         VerificationCredentialsActions.$refetchNoWait();
       }
-      SessionPersistedStore.cleanup();
     } catch (err) {
       VerificationStore.$credentialIssueAsync.reject(err as Error);
       throw err;

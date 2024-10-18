@@ -1,9 +1,9 @@
 import { Button, type ButtonProps } from '@nextui-org/react';
 import type { ReactNode } from 'react';
-import { SessionPersistedStore } from '@/stores/session-persisted.store.ts';
+import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { VerificationIssueActions } from '@/stores/verification-store/verification-issue-actions.ts';
 import { VerificationProofActions } from '@/stores/verification-store/verification-proof-actions.ts';
-import { VerificationStore, HolyCrapWhatsLoadingNow } from '@/stores/verification-store/verification-store.ts';
+import { VerificationStore, HolyCrapWhatsLoadingNowStageEnum } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 
 
@@ -43,16 +43,16 @@ function MainButton(): ReactNode {
     $proofCacheAsync, $proofCreateAsync, $proofSignAsync, $proofSendAsync,
     $holyCrapWhatsLoadingNow,
   } = VerificationStore;
-  const challenge = SessionPersistedStore.session.value?.challenge;
+  const challenge = ZCredSessionStore.session.value?.challenge;
 
   const propsOnLoading: ButtonProps | undefined = ({
-    [HolyCrapWhatsLoadingNow.Terminate]: undefined,
-    [HolyCrapWhatsLoadingNow.ProofSend]: { isLoading: true, children: 'Sending...' },
-    [HolyCrapWhatsLoadingNow.ProofCreate]: { isLoading: true, children: 'Creating...' },
-    [HolyCrapWhatsLoadingNow.Credentials]: { isLoading: true, children: 'Searching...' },
-    [HolyCrapWhatsLoadingNow.ProofCache]: { isLoading: true, children: 'Searching...' },
+    [HolyCrapWhatsLoadingNowStageEnum.Terminate]: undefined,
+    [HolyCrapWhatsLoadingNowStageEnum.ProofSend]: { isLoading: true, children: 'Sending...' },
+    [HolyCrapWhatsLoadingNowStageEnum.ProofCreate]: { isLoading: true, children: 'Creating...' },
+    [HolyCrapWhatsLoadingNowStageEnum.Credentials]: { isLoading: true, children: 'Searching...' },
+    [HolyCrapWhatsLoadingNowStageEnum.ProofCache]: { isLoading: true, children: 'Searching...' },
     'default': undefined,
-  })[$holyCrapWhatsLoadingNow.value?.value ?? 'default'];
+  })[$holyCrapWhatsLoadingNow.value?.stage ?? 'default'];
 
   const props: ButtonProps = propsOnLoading || ($isIssuanceRequired.value ? {
     children: 'Get credential',

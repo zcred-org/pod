@@ -1,5 +1,5 @@
-import type { Signal } from '@preact/signals-react';
 import { type Challenge, type Identifier, isIdentifier, isChallenge } from '@zcredjs/core';
+import { omit } from 'lodash-es';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { config } from '@/config';
@@ -18,13 +18,15 @@ const schema = (zcredSessionId: string) => z.object({
   }),
 });
 
-export class SessionPersistedStore {
-  static readonly #localStorageKey = 'zCredSession';
-  public static session: Signal<SessionPersisted | null> = signal(null);
+export class ZCredSessionStore {
+  public static readonly searchQueryKey = 'zcredSessionId' as const;
+  static readonly #localStorageKey = 'zCredSession' as const;
+
+  public static session = signal<SessionPersisted | null>(null, `${ZCredSessionStore.name}.session`);
 
   static init(zcredSessionId: string): void {
     try {
-      const sessionStoreStr = localStorage.getItem(SessionPersistedStore.#localStorageKey);
+      const sessionStoreStr = localStorage.getItem(ZCredSessionStore.#localStorageKey);
       if (!sessionStoreStr) throw new Error('Session not found');
       const [sessionStore, sessionParseError] = JSONParse<unknown>(sessionStoreStr);
       if (sessionParseError) throw new Error(`Session parse error`);
@@ -33,20 +35,24 @@ export class SessionPersistedStore {
         config.isDev && console.error('Session validation error:', result.error);
         throw new Error('Session validation error');
       }
-      SessionPersistedStore.session.value = result.data[zcredSessionId];
+      ZCredSessionStore.session.value = result.data[zcredSessionId];
     } catch (e) {
       toast.error(`Failed to load session: ${(e as Error).message}`);
-    } finally {
-      localStorage.removeItem(SessionPersistedStore.#localStorageKey);
+      ZCredSessionStore.cleanup();
     }
   }
 
   static set(zcredSessionId: string, session: SessionPersisted) {
-    localStorage.setItem(SessionPersistedStore.#localStorageKey, JSON.stringify({ [zcredSessionId]: session }));
+    localStorage.setItem(ZCredSessionStore.#localStorageKey, JSON.stringify({ [zcredSessionId]: session }));
   }
 
   static cleanup() {
-    localStorage.removeItem(SessionPersistedStore.#localStorageKey);
-    SessionPersistedStore.session.value = null;
+    appRouter.navigate({
+      // @ts-expect-error - clean session id from search on current unknown untyped route
+      search: omit(appRouter.state.location.search, ZCredSessionStore.searchQueryKey),
+      ignoreBlocker: true
+    }).then();
+    localStorage.removeItem(ZCredSessionStore.#localStorageKey);
+    ZCredSessionStore.session.value = null;
   }
 }

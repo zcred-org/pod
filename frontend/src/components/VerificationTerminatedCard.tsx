@@ -76,7 +76,7 @@ class Redirector {
   readonly #$isRedirected = signal(false);
   readonly #$progressMs = signal(0);
   readonly #$isTicking = signal(false);
-  readonly #intervalMs = 1e3 / 30; // 30 FPS
+  readonly #intervalMs = 1e3 / 60; // 60 FPS
 
   get $progressMs(): ReadonlySignal<number> {
     return this.#$progressMs;

@@ -1,19 +1,19 @@
-import { batch, type ReadonlySignal } from '@preact/signals-react';
+import { batch, type ReadonlySignal, effect } from '@preact/signals-react';
 import { hash as sha256 } from '@stablelib/sha256';
 import { DID } from 'dids';
 import { Ed25519Provider } from 'key-did-provider-ed25519';
 import { getResolver } from 'key-did-resolver';
 import * as u8a from 'uint8arrays';
-import { SessionPersistedStore } from '@/stores/session-persisted.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
+import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { signal } from '@/util/signals/signals-dev-tools.ts';
 
 
-const _$addressOfOwner = signal<string | null>(null, 'DidStore.addressOfOwner');
+let _addressOfOwner: string | null = null;
 
 export class DidStore {
   static seed: string | null = null;
-  static #$did = signal<DID | null>(null, 'DidStore.did');
+  static #$did = signal<DID | null>(null, `${DidStore.name}.did`);
 
   static get $did(): ReadonlySignal<DID | null> {
     return DidStore.#$did;
@@ -27,7 +27,7 @@ export class DidStore {
     batch(() => {
       DidStore.seed = seed;
       DidStore.#$did.value = did;
-      _$addressOfOwner.value = addressOfOwner;
+      _addressOfOwner = addressOfOwner;
     });
   }
 
@@ -35,7 +35,7 @@ export class DidStore {
     batch(() => {
       DidStore.seed = null;
       DidStore.#$did.value = null;
-      _$addressOfOwner.value = null;
+      _addressOfOwner = null;
     });
   }
 
@@ -55,14 +55,14 @@ export class DidStore {
   }
 }
 
-WalletStore.$wallet.subscribe(wallet => {
-  const session = SessionPersistedStore.session.peek();
-  if (session && session.subjectId.key === wallet?.address) {
-    return void DidStore.authenticate(session.didPrivateKey, session.subjectId.key).then();
-  }
+effect(() => {
+  const wallet = WalletStore.$wallet.value;
+  const session = ZCredSessionStore.session.value;
+  const did = DidStore.$did.peek();
 
-  const addressOfOwner = _$addressOfOwner.peek();
-  if (addressOfOwner && addressOfOwner !== wallet?.address) {
+  if (!did && session && session.subjectId.key === wallet?.address) {
+    DidStore.authenticate(session.didPrivateKey, session.subjectId.key).then();
+  } else if (_addressOfOwner && _addressOfOwner !== wallet?.address) {
     DidStore.reset();
   }
 });

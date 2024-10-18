@@ -9,11 +9,11 @@ import { PageContainer } from '@/components/PageContainer.tsx';
 import { web3modal } from '@/config/wagmi-config.ts';
 import { useWagmiConnector } from '@/hooks/web3/ethereum/useWagmiConnector.ts';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
-import { SessionPersistedStore } from '@/stores/session-persisted.store.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
 import { VerificationStore, verificationStoreInitArgsFrom } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
+import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
 import { addressShort, isSubjectIdsEqual, subjectTypeToWalletEnum } from '@/util';
 
@@ -24,16 +24,16 @@ export const Route = createFileRoute('/')({
   validateSearch: z.object({
     redirect: z.string().catch('/').optional(),
     proposalURL: z.string().optional(),
-    zcredSessionId: z.string().optional(),
+    [ZCredSessionStore.searchQueryKey]: z.string().optional(),
   }),
   beforeLoad: () => ({ title: 'Sign In' }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps: { proposalURL, zcredSessionId } }) => {
-    const verificationInitArgs = verificationStoreInitArgsFrom({ proposalURL });
+    const verificationInitArgs = verificationStoreInitArgsFrom({ proposalURL, zcredSessionId });
     if (verificationInitArgs) {
       await VerificationInitActions.init(verificationInitArgs);
     }
-    if (zcredSessionId) SessionPersistedStore.init(zcredSessionId);
+    if (zcredSessionId) ZCredSessionStore.init(zcredSessionId);
     const { requiredId, verifierHost } = VerificationStore.$initDataAsync.peek().data || {};
     return {
       verifierHost,
@@ -109,7 +109,7 @@ function SignInComponent() {
     />
   );
 
-  if (search.zcredSessionId && !$isWalletAndDidConnected.value) return (
+  if (ZCredSessionStore.session.value && !$isWalletAndDidConnected.value) return (
     // Wait for DidStore autologin
     <PageContainer isCenter>
       <Spinner size="lg" className="w-40" />
