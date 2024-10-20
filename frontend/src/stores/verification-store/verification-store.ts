@@ -41,7 +41,8 @@ export class VerificationStore {
   ), `${StoreName}.computed.isSubjectMatch`);
   public static $isIssuanceRequired = computed(() => {
     const credentials = VerificationStore.$credentialsAsync.value;
-    return credentials.isSuccess && !credentials.data.at(0)?.isProvable;
+    const isChallenge = !!ZCredSessionStore.session.value?.challenge;
+    return credentials.isSuccess && !credentials.data.at(0)?.isProvable || isChallenge;
   }, `${StoreName}.computed.isIssuanceRequired`);
   public static $holyCrapWhatsLoadingNow = computed(() => {
     return VerificationStore.$terminateAsync.value.isLoading
