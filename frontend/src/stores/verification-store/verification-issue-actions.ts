@@ -1,6 +1,7 @@
 import { type Info, IEC, type Challenge } from '@zcredjs/core';
 import { toast } from 'sonner';
 import { CredentialValidIntervalModal } from '@/components/modals/CredentialValidIntervalModal.tsx';
+import { AppGlobal } from '@/config/app-global.ts';
 import { zCredStore } from '@/service/external/zcred-store';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
 import { DidStore } from '@/stores/did.store.ts';
@@ -12,7 +13,6 @@ import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { dateIntervalFieldsFrom, isDateIntervalMatched } from '@/types/date-interval.ts';
 import { verifyCredentialJWS } from '@/util';
 import { RejectedByUserError, DetailedError } from '@/util/errors.ts';
-import { VerificationErrorActions } from '@/stores/verification-store/verification-error-actions.tsx';
 
 
 export class VerificationIssueActions {
@@ -48,7 +48,7 @@ export class VerificationIssueActions {
         options: {
           chainId: wallet.chainId,
           redirectURL: new URL(
-            appRouter.buildLocation({ to: '/', search: { ...initArgs, zcredSessionId } }).href,
+            AppGlobal.router.buildLocation({ to: '/', search: { ...initArgs, zcredSessionId } }).href,
             window.location.origin,
           ).href,
         },
@@ -100,8 +100,8 @@ export class VerificationIssueActions {
     /** Perform logic **/
     VerificationStore.$credentialIssueAsync.loading();
     try {
-      const { canIssue } = await httpIssuer.canIssue({ sessionId: challenge.sessionId }).catch(err=>{
-        VerificationErrorActions.credentialIssueCatch({ error: err, issuerHost });
+      const { canIssue } = await httpIssuer.canIssue({ sessionId: challenge.sessionId }).catch(err => {
+        AppGlobal.VerificationErrorActions.credentialIssueCatch({ error: err, issuerHost });
         throw err;
       });
       if (!canIssue) {
@@ -113,14 +113,15 @@ export class VerificationIssueActions {
         });
       }
       const signature = await wallet.adapter.sign({ message: challenge.message });
-      const credential = await httpIssuer.issue({ sessionId: challenge.sessionId, signature }).catch(err=>{
-        VerificationErrorActions.credentialIssueCatch({ error: err, issuerHost });
+      const credential = await httpIssuer.issue({ sessionId: challenge.sessionId, signature }).catch(err => {
+        AppGlobal.VerificationErrorActions.credentialIssueCatch({ error: err, issuerHost });
         throw err;
       });
       // Verify JWS
       await verifyCredentialJWS(credential, issuerInfo.protection.jws.kid).catch(error => {
         // TODO: Verification must be terminated?
         ZCredSessionStore.cleanup();
+        console.error('Credential JWS verification failed', error);
         throw new DetailedError('Credential issuance failed', error);
       });
       // Store credential
@@ -129,8 +130,7 @@ export class VerificationIssueActions {
       ZCredSessionStore.cleanup();
       // // @ts-expect-error In DEV, we can break the credential
       // credentialNew.attributes.subject.firstName = 'FirstName123';
-      const isProvable = credentialFilter.execute(credential);
-      if (!isProvable) {
+      if (!credentialFilter.isCanProve(credential)) {
         await VerificationTerminateActions.rejectAttributesNotMatch();
       } else {
         credentialsInfiniteQuery.invalidateROOT();

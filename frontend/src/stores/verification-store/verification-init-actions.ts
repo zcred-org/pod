@@ -3,29 +3,56 @@ import { HttpIssuer, IssuerException, VerifierException } from '@zcredjs/core';
 import type { AxiosError } from 'axios';
 import { credentialsGetManySearchArgsFrom } from '@/service/external/zcred-store/types/credentials-api.types.ts';
 import { O1JSCredentialFilter } from '@/service/o1js-credential-filter';
-import { zCredProver } from '@/service/o1js-zcred-prover';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
 import { issuerInfoQuery } from '@/service/queries/issuer-info.query.ts';
 import { proposalQuery } from '@/service/queries/proposal.query.ts';
 import { zkpResultQuery } from '@/service/queries/zkp-result-cache.query.ts';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { VerificationCredentialsActions } from '@/stores/verification-store/verification-credentials-actions.ts';
 import { VerificationIssueActions } from '@/stores/verification-store/verification-issue-actions.ts';
+import { VerificationProofActions } from '@/stores/verification-store/verification-proof-actions.ts';
 import { type VerificationStoreInitArgs, VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
-import { go } from '@/util';
+import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { jalIdFrom } from '@/util/jal-id-from.ts';
 
 
 export abstract class VerificationInitActions {
   static #SUBs: {
-    credentialsInfiniteQueryEffect?: (() => void);
-    credentialsRefetchEffect?: (() => void);
+    credentialsInfiniteQueryEffect?: VoidFunction;
+    credentialsRefetchEffect?: VoidFunction;
+    credentialSignAfterKYCEffect?: VoidFunction;
+    proofCacheFetchEffect?: VoidFunction;
   } = {};
 
   static subscriptionsEnable(): void {
+    VerificationInitActions.#SUBs.proofCacheFetchEffect ??= effect(() => {
+      /** Subscriptions **/
+      const credentialsAsync = VerificationStore.$credentialsAsync.value;
+      /** Logic **/
+      const proofCache = VerificationStore.$proofCacheAsync.peek();
+      if (proofCache.isSuccess) {
+        VerificationInitActions.#SUBs.proofCacheFetchEffect?.();
+        delete VerificationInitActions.#SUBs.proofCacheFetchEffect;
+        return;
+      }
+      if (!proofCache.isLoading && credentialsAsync.isSuccess && credentialsAsync.data.at(0)?.isProvable) {
+        VerificationProofActions.proofCacheLoad().then();
+      }
+    });
+    VerificationInitActions.#SUBs.credentialSignAfterKYCEffect ??= effect(() => {
+      const challenge = ZCredSessionStore.session.value?.challenge;
+      const issueAsyncState = VerificationStore.$credentialIssueAsync.value;
+      if (challenge && issueAsyncState.isIdle) {
+        setTimeout(() => {
+          if (VerificationStore.$credentialIssueAsync.peek().isIdle)
+            VerificationIssueActions.finish(challenge).then();
+        }, 2_000);
+        VerificationInitActions.#SUBs.credentialSignAfterKYCEffect?.();
+        delete VerificationInitActions.#SUBs.credentialSignAfterKYCEffect;
+      }
+    });
     VerificationInitActions.#SUBs.credentialsRefetchEffect ??= effect(VerificationCredentialsActions.$refetchNoWait);
-    VerificationInitActions.#SUBs.credentialsInfiniteQueryEffect = effect(() => {
+    VerificationInitActions.#SUBs.credentialsInfiniteQueryEffect ??= effect(() => {
       const proposal = VerificationStore.$initDataAsync.value.data?.proposal;
       if (!proposal) return;
       return credentialsInfiniteQuery.signalSub(credentialsGetManySearchArgsFrom(proposal));
@@ -33,8 +60,7 @@ export abstract class VerificationInitActions {
   }
 
   static subscriptionsDisable() {
-    VerificationInitActions.#SUBs.credentialsRefetchEffect?.();
-    VerificationInitActions.#SUBs.credentialsInfiniteQueryEffect?.();
+    Object.values(VerificationInitActions.#SUBs).forEach((sub) => sub?.());
     VerificationInitActions.#SUBs = {};
   }
 
@@ -78,34 +104,6 @@ export abstract class VerificationInitActions {
     }
   }
 
-  public static async postInitAfterLogin(): Promise<void> {
-    const session = ZCredSessionStore.session.peek();
-    if (session) {
-      VerificationIssueActions.finish(session.challenge).then().catch(() => null);
-    }
-    const proofCacheState = VerificationStore.$proofCacheAsync.peek();
-    if (proofCacheState.isLoading || proofCacheState.isSuccess) return;
-    const initData = VerificationStore.$initDataAsync.peek().data;
-    if (!initData) throw new Error('VerificationStore is not initialized');
-    VerificationStore.$proofCacheAsync.loading();
-    const [zkpResult, error] = await go<Error>()(zkpResultQuery.fetch(initData.jalId));
-    if (!zkpResult) {
-      if (error) VerificationStore.$proofCacheAsync.reject(error);
-      else VerificationStore.$proofCacheAsync.reset();
-      return;
-    }
-    if (await zCredProver.verifyZkProof({ jalProgram: initData.proposal.program, zkpResult })) {
-      batch(() => {
-        VerificationStore.$proofCacheAsync.resolve();
-        VerificationStore.$proofCreateAsync.resolve(zkpResult);
-      });
-      console.log('ZkpResult used from cache');
-    } else {
-      VerificationStore.$proofCacheAsync.reset();
-      console.error('Cached ZkpResult is invalid');
-    }
-  }
-
   static async restart() {
     const initArgs = VerificationStore.$initDataAsync.peek().data?.initArgs;
     if (!initArgs) throw new Error('VerificationStore is not initialized');
@@ -127,6 +125,8 @@ export abstract class VerificationInitActions {
       credentialsInfiniteQuery.resetROOT(),
       zkpResultQuery.invalidateROOT(),
     ]);
+    VerificationInitActions.subscriptionsDisable();
     await VerificationInitActions.init(initArgs);
+    VerificationInitActions.subscriptionsEnable();
   }
 }

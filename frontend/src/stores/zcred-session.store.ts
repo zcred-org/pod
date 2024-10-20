@@ -3,6 +3,7 @@ import { omit } from 'lodash-es';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { config } from '@/config';
+import { AppGlobal } from '@/config/app-global.ts';
 import { JSONParse } from '@/util';
 import { signal } from '@/util/signals/signals-dev-tools.ts';
 
@@ -47,10 +48,11 @@ export class ZCredSessionStore {
   }
 
   static cleanup() {
-    appRouter.navigate({
+    const state = AppGlobal.router.state;
+    AppGlobal.router.navigate({
       // @ts-expect-error - clean session id from search on current unknown untyped route
-      search: omit(appRouter.state.location.search, ZCredSessionStore.searchQueryKey),
-      ignoreBlocker: true
+      search: omit(state.location.search, ZCredSessionStore.searchQueryKey),
+      ignoreBlocker: true,
     }).then();
     localStorage.removeItem(ZCredSessionStore.#localStorageKey);
     ZCredSessionStore.session.value = null;

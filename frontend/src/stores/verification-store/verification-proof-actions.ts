@@ -1,9 +1,11 @@
+import { batch } from '@preact/signals-react';
+import { AppGlobal } from '@/config/app-global.ts';
 import { WebhookCallError } from '@/service/external/verifier/errors.ts';
 import { zkpResultFrom } from '@/service/external/verifier/types.ts';
 import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
 import { zCredStore } from '@/service/external/zcred-store';
 import { zCredProver } from '@/service/o1js-zcred-prover';
-import { VerificationErrorActions } from '@/stores/verification-store/verification-error-actions.tsx';
+import { zkpResultQuery } from '@/service/queries/zkp-result-cache.query.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
@@ -33,7 +35,6 @@ export class VerificationProofActions {
     }));
     if (proof) {
       VerificationStore.$proofCreateAsync.resolve(proof);
-      VerificationProofActions.proofSign().then();
       zCredStore.zkpResultCache.save({
         zkpResult: zkpResultFrom(proof),
         jalId: initData.jalId,
@@ -41,6 +42,30 @@ export class VerificationProofActions {
     } else {
       VerificationStore.$proofCreateAsync.reject(error);
       throw error;
+    }
+  }
+
+  public static async proofCacheLoad(): Promise<void> {
+    const proofCacheState = VerificationStore.$proofCacheAsync.peek();
+    if (proofCacheState.isLoading || proofCacheState.isSuccess) return;
+    const initData = VerificationStore.$initDataAsync.peek().data;
+    if (!initData) throw new Error('VerificationStore is not initialized');
+    VerificationStore.$proofCacheAsync.loading();
+    const [zkpResult, error] = await go<Error>()(zkpResultQuery.fetch(initData.jalId));
+    if (!zkpResult) {
+      if (error) VerificationStore.$proofCacheAsync.reject(error);
+      else VerificationStore.$proofCacheAsync.reset();
+      return;
+    }
+    if (await zCredProver.verifyZkProof({ jalProgram: initData.proposal.program, zkpResult })) {
+      batch(() => {
+        VerificationStore.$proofCacheAsync.resolve();
+        VerificationStore.$proofCreateAsync.resolve(zkpResult);
+      });
+      console.log('ZkpResult used from cache');
+    } else {
+      VerificationStore.$proofCacheAsync.reset();
+      console.error('Cached ZkpResult is invalid');
     }
   }
 
@@ -89,7 +114,7 @@ export class VerificationProofActions {
       if (error instanceof WebhookCallError) {
         await VerificationTerminateActions.verificationFailed();
       } else {
-        await VerificationErrorActions.proofSendCatch({ error, verifierHost });
+        await AppGlobal.VerificationErrorActions.proofSendCatch({ error, verifierHost });
       }
       throw error;
     }

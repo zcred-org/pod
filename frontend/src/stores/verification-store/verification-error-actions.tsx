@@ -1,10 +1,12 @@
 import { isJsonIssuerException, isJsonVerifierException } from '@zcredjs/core';
 import { toast } from 'sonner';
 import { promptModal } from '@/components/modals/PromptModals.tsx';
+import { AppGlobal } from '@/config/app-global.ts';
 import { IssuerBrowserIssueException, VerifierProofSendException } from '@/stores/verification-store/other/exceptions-specification.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
+
 
 export class VerificationErrorActions {
   public static async credentialIssueCatch(args: { error: unknown, issuerHost: string }): Promise<void> {
@@ -85,3 +87,5 @@ export class VerificationErrorActions {
     toast.error('Unknown error occurred while sending the proof to the verifier');
   }
 }
+
+AppGlobal.VerificationErrorActions = VerificationErrorActions;

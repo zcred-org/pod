@@ -5,11 +5,13 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import { WagmiProvider } from 'wagmi';
+import { AppGlobal } from '@/config/app-global.ts';
 import { appName } from '@/config/constants.ts';
 import { queryClient } from './config/query-client.ts';
 import { wagmiConfig } from './config/wagmi-config.ts';
 import { routeTree } from './routeTree.gen.ts';
 import './index.css';
+
 
 declare module '@tanstack/react-router' {
   interface Register {
@@ -26,8 +28,7 @@ export const router = createRouter({
     title: appName,
   },
 });
-// @ts-expect-error - globalThis is not defined in the types
-globalThis.appRouter = router;
+AppGlobal.router = router;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

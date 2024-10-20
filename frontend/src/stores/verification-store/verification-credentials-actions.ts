@@ -4,23 +4,24 @@ import { peek } from 'deepsignal/react';
 import { zCredStore } from '@/service/external/zcred-store';
 import { credentialsGetManySearchArgsFrom } from '@/service/external/zcred-store/types/credentials-api.types.ts';
 import type { CredentialMarked } from '@/service/external/zcred-store/types/credentials.types.ts';
-import type { O1JSCredentialFilter } from '@/service/o1js-credential-filter';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
 import { VerificationStore, type VerificationInitData } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
+import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 
 
 export abstract class VerificationCredentialsActions {
   public static $refetchNoWait(offsetMin?: number) {
     /** Subscriptions **/
-    credentialsInfiniteQuery.$signal.$data!.value;
+    credentialsInfiniteQuery.$signal.$data?.value;
     /** Read state **/
+    const isChallenge = !!ZCredSessionStore.session.value?.challenge;
     const initData = VerificationStore.$initDataAsync.value.data;
     const isSubjectMatch = VerificationStore.$isSubjectMatch.value;
     const isWalletAndDidConnected = $isWalletAndDidConnected.value;
     /** Perform checks **/
-    if (!isSubjectMatch || !initData || !isWalletAndDidConnected) {
+    if (isChallenge || !isSubjectMatch || !initData || !isWalletAndDidConnected) {
       return batch(() => {
         VerificationStore.$credentialsAsync.reset();
         VerificationStore.$credential.value = null;
@@ -45,7 +46,6 @@ export abstract class VerificationCredentialsActions {
       const limit = $query.data!.pageParams.at(0)!.limit; // non-null because of prefetch
 
       const isCredentialUpdatable = VerificationCredentialsActions.#createUpdateChecker(initData.issuerInfo);
-      const isCredentialProvable = VerificationCredentialsActions.#createProvableChecker(initData.credentialFilter);
       const calcIsContinue = ({ pageIdx, offset }: Record<'offset' | 'pageIdx', number>): boolean => {
         const isFirstPage = pageIdx === 0;
         const hasNextPage = $query.hasNextPage;
@@ -70,7 +70,10 @@ export abstract class VerificationCredentialsActions {
             });
           }
           // Mark credential
-          const credentialMarked: CredentialMarked = { ...credential, isProvable: isCredentialProvable(credential.data) };
+          const credentialMarked: CredentialMarked = {
+            ...credential,
+            isProvable: initData.credentialFilter.isCanProve(credential.data),
+          };
           // Count if provable
           if (credentialMarked.isProvable) ++provableCount;
           // Return
@@ -114,10 +117,6 @@ export abstract class VerificationCredentialsActions {
     return (credential: HttpCredential): boolean => {
       return !!issuerInfo?.proofs.updatable && issuerInfo.proofs.updatedAt > credential.attributes.issuanceDate;
     };
-  }
-
-  static #createProvableChecker(credentialFilter: O1JSCredentialFilter) {
-    return (credential: HttpCredential): boolean => credentialFilter.execute(credential);
   }
 
   static #credentialSort(credentials: CredentialMarked[]) {

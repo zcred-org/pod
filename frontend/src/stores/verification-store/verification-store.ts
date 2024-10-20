@@ -3,9 +3,8 @@ import { type IconStatusEnum } from '@/components/icons/IconStatus.tsx';
 import type { ProvingResultUnsigned, ProvingResult, Proposal } from '@/service/external/verifier/types.ts';
 import type { CredentialMarked } from '@/service/external/zcred-store/types/credentials.types.ts';
 import type { O1JSCredentialFilter } from '@/service/o1js-credential-filter';
-import { $isWalletAndDidConnected } from '@/stores/other.ts';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
+import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { isSubjectIdsEqual } from '@/util';
 import { signalAsync } from '@/util/signals/signal-async.ts';
 import { signal, computed } from '@/util/signals/signals-dev-tools.ts';
@@ -41,11 +40,8 @@ export class VerificationStore {
     WalletStore.$wallet.value?.subjectId,
   ), `${StoreName}.computed.isSubjectMatch`);
   public static $isIssuanceRequired = computed(() => {
-    /** Subscriptions for computed(...) **/
-    const isWalledAndDidConnected = $isWalletAndDidConnected.value;
     const credentials = VerificationStore.$credentialsAsync.value;
-    /** Body **/
-    return isWalledAndDidConnected && credentials.isSuccess && !credentials.data.at(0)?.isProvable;
+    return credentials.isSuccess && !credentials.data.at(0)?.isProvable;
   }, `${StoreName}.computed.isIssuanceRequired`);
   public static $holyCrapWhatsLoadingNow = computed(() => {
     return VerificationStore.$terminateAsync.value.isLoading
@@ -56,7 +52,7 @@ export class VerificationStore {
           ? { text: 'Creating a proof...', stage: HolyCrapWhatsLoadingNowStageEnum.ProofCreate } as const
           : VerificationStore.$credentialsAsync.value.isLoading
             ? { text: 'Loading credentials...', stage: HolyCrapWhatsLoadingNowStageEnum.Credentials } as const
-            : VerificationStore.$proofCacheAsync.value.isLoading && !VerificationStore.$isIssuanceRequired.value
+            : VerificationStore.$proofCacheAsync.value.isLoading
               ? { text: 'Searching for existing proofs...', stage: HolyCrapWhatsLoadingNowStageEnum.ProofCache } as const
               : null;
   }, `${StoreName}.computed.holyCrapWhatsLoadingNow`);

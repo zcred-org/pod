@@ -29,7 +29,7 @@ export class O1JSCredentialFilter {
     return new O1JSCredentialFilter(jalProgram, program);
   }
 
-  execute(credential: ZkCredential): boolean {
+  isCanProve(credential: ZkCredential): boolean {
     const setup = jalSetupFrom(credential);
     const input = inputTransformer.transform(setup, this.jalProgram.inputSchema);
     return this.program.execute(input);

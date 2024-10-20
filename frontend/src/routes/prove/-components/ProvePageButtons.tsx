@@ -1,10 +1,10 @@
 import { Button, type ButtonProps } from '@nextui-org/react';
 import type { ReactNode } from 'react';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { VerificationIssueActions } from '@/stores/verification-store/verification-issue-actions.ts';
 import { VerificationProofActions } from '@/stores/verification-store/verification-proof-actions.ts';
 import { VerificationStore, HolyCrapWhatsLoadingNowStageEnum } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
+import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 
 
 export function ProvePageButtons(): ReactNode {
@@ -55,7 +55,7 @@ function MainButton(): ReactNode {
   })[$holyCrapWhatsLoadingNow.value?.stage ?? 'default'];
 
   const props: ButtonProps = propsOnLoading || ($isIssuanceRequired.value ? {
-    children: 'Get credential',
+    children: challenge ? 'Sign credential' : 'Get credential',
     onClick: challenge ? () => VerificationIssueActions.finish(challenge) : VerificationIssueActions.start,
     isLoading: $credentialIssueAsync.value.isLoading,
   } : !$proofCreateAsync.value.isSuccess ? {

@@ -2,6 +2,7 @@ import type { JsonZcredException } from '@zcredjs/core';
 import { SEC, IEC } from '@zcredjs/core';
 import type { SetOptional } from 'type-fest';
 import { IconStatusEnum } from '@/components/icons/IconStatus.tsx';
+import { AppGlobal } from '@/config/app-global.ts';
 import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
 import { VerificationStore, type VerificationTerminateErr } from '@/stores/verification-store/verification-store.ts';
 
@@ -15,7 +16,7 @@ export abstract class VerificationTerminateActions {
         redirectURL,
       },
     });
-    await appRouter.navigate({ to: '/terminate' });
+    await AppGlobal.router.navigate({ to: '/terminate' });
   }
 
   public static async rejectByUser() {
@@ -104,6 +105,6 @@ Please check back later.
         redirectURL: ui.redirectURL || redirectURLFromVerifier,
       },
     });
-    await appRouter.navigate({ to: '/terminate' });
+    await AppGlobal.router.navigate({ to: '/terminate' });
   }
 }

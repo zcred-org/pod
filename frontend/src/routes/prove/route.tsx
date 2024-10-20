@@ -33,10 +33,7 @@ export const Route = createFileRoute(ProveRoutePath)({
     return { title: `Verification` };
   },
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps }) => {
-    await VerificationInitActions.init(deps);
-    VerificationInitActions.postInitAfterLogin().then();
-  },
+  loader: async ({ deps }) => VerificationInitActions.init(deps),
   onEnter: VerificationInitActions.subscriptionsEnable,
   onLeave: VerificationInitActions.subscriptionsDisable,
 });
@@ -105,6 +102,7 @@ function ProveComponent() {
 }
 
 function PendingComponent() {
+  // TODO: Re-implement skeleton according to current layout
   return <PageContainer>
     <div className="flex items-center gap-1">
       <Skeleton className="w-20 h-5 rounded-md" />
@@ -124,16 +122,15 @@ function PendingComponent() {
       </CardBody>
     </Card>
     <div className="flex gap-3">
-      <Button className="grow" variant="light" color="danger" disabled>Reject</Button>
-      <Button className="grow" color="success" disabled>Create proof</Button>
+      <Button className="grow" variant="light" color="danger" isDisabled>Reject</Button>
+      <Button className="grow" color="success" isDisabled>Create proof</Button>
     </div>
   </PageContainer>;
 }
 
 function ErrorComponent({ error, reset }: Pick<ErrorComponentProps, 'error' | 'reset'>) {
   const _reset = async () => {
-    await VerificationInitActions.restart();
-    VerificationInitActions.postInitAfterLogin().then();
+    VerificationInitActions.restart().then();
     reset();
   };
 
