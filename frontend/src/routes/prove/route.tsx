@@ -1,35 +1,33 @@
-import { Button, Card, CardBody, CardHeader, Divider, Progress, Skeleton, Textarea } from '@nextui-org/react';
+import { Button, Card, CardBody, CardHeader, Divider, Skeleton, Textarea } from '@nextui-org/react';
 import { computed } from '@preact/signals-react';
-import { createFileRoute, redirect, useBlocker, type ErrorComponentProps, useRouter } from '@tanstack/react-router';
+import { type ErrorComponentProps, createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
-import { promptModal } from '@/components/modals/PromptModals.tsx';
 import { SwitchToRequiredIdModal } from '@/components/modals/SwitchToRequiredIdModal.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
+import { ErrorView } from '@/components/sub-pages/ErrorView.tsx';
+import { ApproximateSpin } from '@/components/ui/LoadingSpin/ApproximateSpin.tsx';
 import { ProveCredentialSelect } from '@/routes/prove/-components/ProveCredentialSelect.tsx';
 import { ProveDescription } from '@/routes/prove/-components/ProveDescription.tsx';
 import { ProvePageButtons } from '@/routes/prove/-components/ProvePageButtons.tsx';
 import { ProveRoutePath } from '@/routes/prove/-constants.ts';
-import { $isWalletAndDidConnected } from '@/stores/other.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
-import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
-import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
+import { VerificationStore, HolyCrapWhatsLoadingNowStageEnum } from '@/stores/verification-store/verification-store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
+import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
+import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
 
 
 export const Route = createFileRoute(ProveRoutePath)({
   component: () => <RequireWalletAndDidHoc><ProveComponent /></RequireWalletAndDidHoc>,
   validateSearch: z.object({
     proposalURL: z.string(),
-    [ZCredSessionStore.searchQueryKey]: z.string().optional(),
+    [ZCredIssueStore.searchQueryKey]: z.string().optional(),
   }),
-  pendingComponent: PendingComponent,
-  errorComponent: ErrorComponent,
-  beforeLoad: ({ search, cause }) => {
-    if (!$isWalletAndDidConnected.value && cause !== 'preload') {
-      throw redirect({ to: '/', search });
-    }
+  pendingComponent: VerificationPendingView,
+  errorComponent: VerificationErrorView,
+  beforeLoad: ({ cause, location }) => {
+    if (cause !== 'preload') routeRequireWalletAndDid(location);
     return { title: `Verification` };
   },
   loaderDeps: ({ search }) => search,
@@ -39,37 +37,33 @@ export const Route = createFileRoute(ProveRoutePath)({
 });
 
 function ProveComponent() {
-  const router = useRouter();
-  const $isNavigateBlocked = VerificationStore.$isNavigateBlocked;
   const holyCrapWhatsLoadingNow = VerificationStore.$holyCrapWhatsLoadingNow.value;
   const isSubjectMatch = VerificationStore.$isSubjectMatch.value;
   const initDataState = VerificationStore.$initDataAsync.value;
   const wallet = WalletStore.$wallet.value;
 
-  useBlocker({
-    condition: $isNavigateBlocked.value,
-    blockerFn: async () => {
-      if (!$isNavigateBlocked.peek()) return true;
-      const res = await promptModal({
-        title: 'Are you sure?',
-        text: 'Leaving this page will reject verification',
-        actions: [
-          { label: 'Reject verification', value: 'Reject', variant: 'light', color: 'danger' },
-          { label: 'Continue verification', value: 'Cancel', variant: 'shadow', color: 'success' },
-        ],
-      });
-      if (res === 'Reject') VerificationTerminateActions.rejectByUser().then();
-      return false;
-    },
-  });
+  // const $isNavigateBlocked = VerificationStore.$isNavigateBlocked;
+  // useBlocker({
+  //   condition: $isNavigateBlocked.value,
+  //   blockerFn: async () => {
+  //     if (!$isNavigateBlocked.peek()) return true;
+  //     const res = await promptModal({
+  //       title: 'Are you sure?',
+  //       text: 'Leaving this page will reject verification',
+  //       actions: [
+  //         { label: 'Reject verification', value: 'Reject', variant: 'light', color: 'danger' },
+  //         { label: 'Continue verification', value: 'Cancel', variant: 'shadow', color: 'success' },
+  //       ],
+  //     });
+  //     if (res === 'Reject') VerificationTerminateActions.rejectByUser().then();
+  //     return false;
+  //   },
+  // });
 
-  if (initDataState.isLoading) return <PendingComponent />;
-  if (initDataState.isError || !initDataState.isSuccess) return (
-    <ErrorComponent
-      error={initDataState.error || new Error('unknown error')}
-      reset={router.invalidate}
-    />
-  );
+  if (initDataState.isLoading) return <VerificationPendingView />;
+  if (initDataState.isError) throw initDataState.error;
+  if (!initDataState.isSuccess) throw new Error('Verification is not initialized');
+
   if (!isSubjectMatch) return (
     <SwitchToRequiredIdModal
       requiredId={initDataState.data.requiredId}
@@ -89,11 +83,14 @@ function ProveComponent() {
         minRows={1}
       /> : null}
       <ProveCredentialSelect />
-      <div className="grow">
-        {computed(() => holyCrapWhatsLoadingNow ? <Progress
-          isIndeterminate
+      <div className="grow flex justify-center">
+        {computed(() => holyCrapWhatsLoadingNow ? <ApproximateSpin
           label={holyCrapWhatsLoadingNow.text}
-          classNames={{ label: 'mx-auto' }}
+          isSlow={[
+            HolyCrapWhatsLoadingNowStageEnum.ProofCache,
+            HolyCrapWhatsLoadingNowStageEnum.ProofCreate,
+          ].includes(holyCrapWhatsLoadingNow.stage)}
+          isLabelRight
         /> : null)}
       </div>
       <ProvePageButtons />
@@ -101,7 +98,7 @@ function ProveComponent() {
   );
 }
 
-function PendingComponent() {
+function VerificationPendingView() {
   // TODO: Re-implement skeleton according to current layout
   return <PageContainer>
     <div className="flex items-center gap-1">
@@ -128,14 +125,11 @@ function PendingComponent() {
   </PageContainer>;
 }
 
-function ErrorComponent({ error, reset }: Pick<ErrorComponentProps, 'error' | 'reset'>) {
-  const _reset = async () => {
-    VerificationInitActions.restart().then();
+function VerificationErrorView({ error, reset }: Pick<ErrorComponentProps, 'error' | 'reset'>) {
+  const _reset = () => {
     reset();
+    VerificationInitActions.restart().then();
   };
 
-  return <PageContainer isCenter>
-    {error instanceof Error ? <p>Error: {error.message}</p> : <p>Unknown Error</p>}
-    <Button onPress={_reset}>Try to reload</Button>
-  </PageContainer>;
+  return <ErrorView error={error} reset={_reset} />;
 }

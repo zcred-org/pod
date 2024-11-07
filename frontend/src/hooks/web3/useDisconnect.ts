@@ -5,7 +5,8 @@ import { disconnect as wagmiDisconnect } from 'wagmi/actions';
 import { queryClient } from '@/config/query-client.ts';
 import { wagmiConfig } from '@/config/wagmi-config.ts';
 import { AuroStore } from '@/stores/auro.store';
-import { DidStore } from '@/stores/did.store.ts';
+import { DidStore } from '@/stores/did-store/did.store.ts';
+import { ZCredDidSessionStore } from '@/stores/did-store/zcred-did-session.store.ts';
 import { WalletStore } from '@/stores/wallet.store';
 
 
@@ -15,6 +16,7 @@ const signOutBase = async () => {
     WalletStore.reset();
     AuroStore.disconnect();
     DidStore.reset();
+    ZCredDidSessionStore.clear();
   });
 };
 

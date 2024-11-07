@@ -9,24 +9,26 @@ const tracking = config.isDev && window.__REDUX_DEVTOOLS_EXTENSION__
   : undefined;
 
 if (tracking) {
-  const connection = window.__REDUX_DEVTOOLS_EXTENSION__!.connect({});
-  const getState = () => {
-    const _tracking = tracking.value;
-    return Object.keys(_tracking).reduce<object>((acc, key) => {
-      const signal = _tracking[key];
-      if (typeof signal === 'object' && signal) {
-        if ('value' in signal) return set(acc, key, signal.value);
-      }
-      return set(acc, key, { ...(signal || {}) });
-    }, {});
-  };
-  connection.send({ type: 'init' }, getState());
   // To avoid changes of tracking signal at app entire code initialization,
   // use setTimeout to create effect in the next event loop macro task.
-  setTimeout(() => effect(() => connection.send(
-    { type: 'anonymous' },
-    getState(),
-  )), 100); // Macro task sometimes not helpful completely, then timeout is increased.
+  setTimeout(() => {
+    const connection = window.__REDUX_DEVTOOLS_EXTENSION__!.connect({});
+    const getState = () => {
+      const _tracking = tracking.value;
+      return Object.keys(_tracking).reduce<object>((acc, key) => {
+        const signal = _tracking[key];
+        if (typeof signal === 'object' && signal) {
+          if ('value' in signal) return set(acc, key, signal.value);
+        }
+        return set(acc, key, { ...(signal || {}) });
+      }, {});
+    };
+    let isInit = true;
+    effect(() => isInit
+      ? connection.init(getState())
+      : connection.send({ type: 'anonymous' }, getState()));
+    isInit = false;
+  });
 }
 
 function track<D, T extends Signal<D> | ReadonlySignal<D> | DeepSignal<D>>(signal: T, path?: string): T {

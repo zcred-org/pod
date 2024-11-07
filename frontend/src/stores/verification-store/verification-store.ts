@@ -1,13 +1,14 @@
 import type { HttpIssuer, Info, Identifier, IssuerException } from '@zcredjs/core';
-import { type IconStatusEnum } from '@/components/icons/IconStatus.tsx';
 import type { ProvingResultUnsigned, ProvingResult, Proposal } from '@/service/external/verifier/types.ts';
 import type { CredentialMarked } from '@/service/external/zcred-store/types/credentials.types.ts';
 import type { O1JSCredentialFilter } from '@/service/o1js-credential-filter';
+import type { O1JSZCredProver } from '@/service/o1js-zcred-prover';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
-import { isSubjectIdsEqual } from '@/util';
-import { signalAsync } from '@/util/signals/signal-async.ts';
-import { signal, computed } from '@/util/signals/signals-dev-tools.ts';
+import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
+import { type IconStatusEnum } from '@/types/icon-status.enum.ts';
+import { signalAsync } from '@/util/independent/signals/signal-async.ts';
+import { signal, computed } from '@/util/independent/signals/signals-dev-tools.ts';
+import { isSubjectIdsEqual } from '@/util/subject-id.ts';
 
 
 const StoreName = 'VerificationStore';
@@ -41,7 +42,7 @@ export class VerificationStore {
   ), `${StoreName}.computed.isSubjectMatch`);
   public static $isIssuanceRequired = computed(() => {
     const credentials = VerificationStore.$credentialsAsync.value;
-    const isChallenge = !!ZCredSessionStore.session.value?.challenge;
+    const isChallenge = !!ZCredIssueStore.session.value?.challenge;
     return credentials.isSuccess && !credentials.data.at(0)?.isProvable || isChallenge;
   }, `${StoreName}.computed.isIssuanceRequired`);
   public static $holyCrapWhatsLoadingNow = computed(() => {
@@ -60,7 +61,7 @@ export class VerificationStore {
   public static $isNavigateBlocked = computed<boolean>(() => {
     const credentialIssueAsync = VerificationStore.$credentialIssueAsync.value;
     const terminateAsync = VerificationStore.$terminateAsync.value;
-    const challenge = ZCredSessionStore.session.value?.challenge;
+    const challenge = ZCredIssueStore.session.value?.challenge;
 
     const isNotTerminated = terminateAsync.isIdle || terminateAsync.isLoading;
     const isNoIssueRedirect = !(credentialIssueAsync.isLoading && !challenge);
@@ -91,6 +92,7 @@ export type VerificationInitData = {
   requiredId: Identifier,
   issuerHost: string,
   verifierHost: string,
+  zCredProver: O1JSZCredProver,
 };
 
 export enum HolyCrapWhatsLoadingNowStageEnum {

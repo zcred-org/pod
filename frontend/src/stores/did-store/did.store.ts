@@ -1,25 +1,27 @@
 import { batch, type ReadonlySignal, effect } from '@preact/signals-react';
 import { hash as sha256 } from '@stablelib/sha256';
+import type { Identifier } from '@zcredjs/core';
 import { DID } from 'dids';
 import { Ed25519Provider } from 'key-did-provider-ed25519';
 import { getResolver } from 'key-did-resolver';
 import * as u8a from 'uint8arrays';
+import { ZCredDidSessionStore } from '@/stores/did-store/zcred-did-session.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
-import { signal } from '@/util/signals/signals-dev-tools.ts';
+import { signal, computed } from '@/util/independent/signals/signals-dev-tools.ts';
 
 
-let _addressOfOwner: string | null = null;
+let _subjectIdOfOwner: Identifier | null = null;
 
 export class DidStore {
   static seed: string | null = null;
-  static #$did = signal<DID | null>(null, `${DidStore.name}.did`);
+  static #$did = signal<DID | null>(null, `DidStore.did`);
+  static $isLoading = computed<boolean>(() => WalletStore.$isConnected.value && !DidStore.$did.value, `DidStore.isLoading`);
 
   static get $did(): ReadonlySignal<DID | null> {
     return DidStore.#$did;
   }
 
-  static async authenticate(seed: string, addressOfOwner: string) {
+  static async authenticate(seed: string, subjectId: Identifier) {
     const hash = sha256(u8a.fromString(seed));
     const provider = new Ed25519Provider(hash);
     const did = new DID({ provider, resolver: getResolver() });
@@ -27,7 +29,8 @@ export class DidStore {
     batch(() => {
       DidStore.seed = seed;
       DidStore.#$did.value = did;
-      _addressOfOwner = addressOfOwner;
+      _subjectIdOfOwner = subjectId;
+      ZCredDidSessionStore.save(subjectId, seed);
     });
   }
 
@@ -35,7 +38,7 @@ export class DidStore {
     batch(() => {
       DidStore.seed = null;
       DidStore.#$did.value = null;
-      _addressOfOwner = null;
+      _subjectIdOfOwner = null;
     });
   }
 
@@ -57,12 +60,14 @@ export class DidStore {
 
 effect(() => {
   const wallet = WalletStore.$wallet.value;
-  const session = ZCredSessionStore.session.value;
-  const did = DidStore.$did.peek();
+  const seed = wallet ? ZCredDidSessionStore.get(wallet.subjectId) : undefined;
 
-  if (!did && session && session.subjectId.key === wallet?.address) {
-    DidStore.authenticate(session.didPrivateKey, session.subjectId.key).then();
-  } else if (_addressOfOwner && _addressOfOwner !== wallet?.address) {
-    DidStore.reset();
-  }
+  batch(() => {
+    if (_subjectIdOfOwner && _subjectIdOfOwner.key !== wallet?.subjectId.key) {
+      DidStore.reset();
+    }
+    if (wallet && !DidStore.$did.peek() && seed) {
+      DidStore.authenticate(seed, wallet.subjectId).then();
+    }
+  });
 });

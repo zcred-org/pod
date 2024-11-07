@@ -18,11 +18,12 @@ import type {
 } from '@/service/external/zcred-store/types/credentials-api.types.ts';
 import type { CredentialsDecodedDto } from '@/service/external/zcred-store/types/credentials.types.ts';
 import { queryKey, type CredentialsQueryKey } from '@/service/queries/query-key.ts';
-import { deepSignal } from '@/util/signals/signals-dev-tools.ts';
+import { Ms } from '@/util/independent/ms.ts';
+import { deepSignal } from '@/util/independent/signals/signals-dev-tools.ts';
 
 
 async function queryFn(ctx: QueryFunctionContext<CredentialsQueryKey, CredentialsGetManyPaginationArgs>) {
-  const { signal, queryKey: { 1: search }, pageParam: pagination } = ctx;
+  const { signal, queryKey: { 2: search }, pageParam: pagination } = ctx;
   return await zCredStore.credential.credentials({ search, pagination, signal });
 }
 
@@ -39,20 +40,18 @@ export function credentialsInfiniteQuery(args?: CredentialsGetManySearchArgs) {
   return infiniteQueryOptions({
     queryKey: queryKey.credentials.get(args),
     queryFn,
-    staleTime: 10 * 60e3, // 10 minutes
+    staleTime: Ms.minute(10),
     initialPageParam: { offset: 0, limit: CREDENTIALS_GET_DEFAULT_LIMIT },
     getNextPageParam,
   });
 }
 
-credentialsInfiniteQuery.$signal = deepSignal<Partial<CredentialsInfiniteQueryObserverResult>>({}, `${credentialsInfiniteQuery.name}`);
+credentialsInfiniteQuery.$signal = deepSignal<Partial<CredentialsInfiniteQueryObserverResult>>({}, 'credentialsInfiniteQuery');
 
 credentialsInfiniteQuery.signalSub = function (...args: Parameters<typeof credentialsInfiniteQuery>): VoidFunction {
   const observer = new InfiniteQueryObserver(queryClient, credentialsInfiniteQuery(...args));
   return observer.subscribe(result => batch(() => Object.assign(credentialsInfiniteQuery.$signal, result)));
 };
-
-credentialsInfiniteQuery.default = credentialsInfiniteQuery();
 
 credentialsInfiniteQuery.invalidateROOT = async function () {
   await queryClient.invalidateQueries({ queryKey: queryKey.credentials.ROOT });

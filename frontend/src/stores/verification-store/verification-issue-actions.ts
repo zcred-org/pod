@@ -4,15 +4,16 @@ import { CredentialValidIntervalModal } from '@/components/modals/CredentialVali
 import { AppGlobal } from '@/config/app-global.ts';
 import { zCredStore } from '@/service/external/zcred-store';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
-import { DidStore } from '@/stores/did.store.ts';
+import { DidStore } from '@/stores/did-store/did.store.ts';
 import { VerificationCredentialsActions } from '@/stores/verification-store/verification-credentials-actions.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
+import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
 import { dateIntervalFieldsFrom, isDateIntervalMatched } from '@/types/date-interval.ts';
 import { verifyCredentialJWS } from '@/util';
 import { RejectedByUserError, DetailedError } from '@/util/errors.ts';
+import { randomUUID } from '@/util/independent/uuidv4.ts';
 
 
 export class VerificationIssueActions {
@@ -39,7 +40,7 @@ export class VerificationIssueActions {
     VerificationStore.$credentialIssueAsync.loading();
     try {
       const validInterval = await VerificationIssueActions.#getValidInterval(issuerInfo);
-      const zcredSessionId = window.crypto.randomUUID();
+      const zcredSessionId = randomUUID();
       if (!httpIssuer.browserIssue) throw new Error('Issuer does not support credential issuance');
       const challenge = await httpIssuer.getChallenge({
         subject: { id: wallet.subjectId },
@@ -54,7 +55,7 @@ export class VerificationIssueActions {
         },
       });
       if (challenge.verifyURL) {
-        ZCredSessionStore.set(zcredSessionId, { subjectId: wallet.subjectId, didPrivateKey, didKey, challenge });
+        ZCredIssueStore.set(zcredSessionId, { subjectId: wallet.subjectId, challenge });
         window.location.replace(challenge.verifyURL);
       } else {
         await VerificationIssueActions.finish(challenge);
@@ -105,7 +106,7 @@ export class VerificationIssueActions {
         throw err;
       });
       if (!canIssue) {
-        ZCredSessionStore.cleanup();
+        ZCredIssueStore.cleanup();
         VerificationStore.$credentialIssueAsync.reject(new Error(`Issuer can't issue credential`));
         return void await VerificationTerminateActions.reject({
           ui: { message: 'Verification not passed' },
@@ -120,14 +121,14 @@ export class VerificationIssueActions {
       // Verify JWS
       await verifyCredentialJWS(credential, issuerInfo.protection.jws.kid).catch(error => {
         // TODO: Verification must be terminated?
-        ZCredSessionStore.cleanup();
+        ZCredIssueStore.cleanup();
         console.error('Credential JWS verification failed', error);
         throw new DetailedError('Credential issuance failed', error);
       });
       // Store credential
       await zCredStore.credential.credentialUpsert(credential);
       VerificationStore.$credentialIssueAsync.resolve();
-      ZCredSessionStore.cleanup();
+      ZCredIssueStore.cleanup();
       // // @ts-expect-error In DEV, we can break the credential
       // credentialNew.attributes.subject.firstName = 'FirstName123';
       if (!credentialFilter.isCanProve(credential)) {

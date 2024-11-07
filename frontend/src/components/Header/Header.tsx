@@ -4,7 +4,8 @@ import { Moon, Sun } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { IconLogo } from '@/components/icons/icons.tsx';
-import { appName } from '@/config/constants.ts';
+import { config } from '@/config';
+import { useDevTools } from '@/hooks/useDevTools.ts';
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
 import { ThemeStore } from '@/stores/theme.store.ts';
 import { HeaderUserPanel } from './HeaderUserPanel.tsx';
@@ -12,6 +13,7 @@ import { HeaderUserPanel } from './HeaderUserPanel.tsx';
 
 export function Header(): ReactNode {
   const matches = useMatches();
+  const devToolsHook = useDevTools();
 
   // const breadcrumbs = matches.map((match) => {
   //   return {
@@ -25,16 +27,23 @@ export function Header(): ReactNode {
 
   return (<>
     <Helmet>
-      <title>{title ? `${title} | ${appName}` : appName}</title>
+      <title>{title ? `${title} | ${config.appName}` : config.appName}</title>
     </Helmet>
     <header className="sticky top-0 backdrop-blur bg-opacity-50 px-4 py-3 md:px-10 flex gap-2 items-center bg-default z-50">
       <Link to={'/'}><IconLogo className="w-6 h-6 sm:w-8 sm:h-8" /></Link>
-      <p className="text-2xl">{title || appName}</p>
+      <p className="text-2xl">{title || config.appName}</p>
       <div className="grow" />
       {$isWalletAndDidConnected.value ? (
         <HeaderUserPanel />
       ) : (
-        <Button onClick={ThemeStore.toggle} variant="light" radius="full" isIconOnly>{ThemeStore.$isDark.value ? <Sun /> : <Moon />}</Button>
+        <Button
+          onClick={ThemeStore.toggle}
+          variant="light"
+          radius="full"
+          isIconOnly
+          onPressStart={devToolsHook.onPressStart}
+          onPressEnd={devToolsHook.onPressEnd}
+        >{ThemeStore.$isDark.value ? <Sun /> : <Moon />}</Button>
       )}
     </header>
   </>);

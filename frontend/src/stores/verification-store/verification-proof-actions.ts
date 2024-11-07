@@ -4,12 +4,11 @@ import { WebhookCallError } from '@/service/external/verifier/errors.ts';
 import { zkpResultFrom } from '@/service/external/verifier/types.ts';
 import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
 import { zCredStore } from '@/service/external/zcred-store';
-import { zCredProver } from '@/service/o1js-zcred-prover';
 import { zkpResultQuery } from '@/service/queries/zkp-result-cache.query.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { go } from '@/util';
+import { go } from '@/util/independent/go.ts';
 
 
 export class VerificationProofActions {
@@ -29,7 +28,7 @@ export class VerificationProofActions {
     if (!credential.isProvable) throw new Error('Selected credential is not provable');
     /** Perform logic **/
     VerificationStore.$proofCreateAsync.loading();
-    const [proof, error] = await go<Error>()(zCredProver.createProof({
+    const [proof, error] = await go<Error>()(initData.zCredProver.createProof({
       credential: credential.data,
       jalProgram: initData.proposal.program,
     }));
@@ -57,7 +56,7 @@ export class VerificationProofActions {
       else VerificationStore.$proofCacheAsync.reset();
       return;
     }
-    if (await zCredProver.verifyZkProof({ jalProgram: initData.proposal.program, zkpResult })) {
+    if (await initData.zCredProver.verifyZkProof({ jalProgram: initData.proposal.program, zkpResult })) {
       batch(() => {
         VerificationStore.$proofCacheAsync.resolve();
         VerificationStore.$proofCreateAsync.resolve(zkpResult);

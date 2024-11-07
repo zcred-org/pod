@@ -1,30 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Link } from '@nextui-org/react';
-import { useRouter, type ToOptions, type RegisteredRouter, type RoutePaths, type AnyRouter } from '@tanstack/react-router';
+import { useRouter, type ToOptions, type RegisteredRouter, type RoutePaths } from '@tanstack/react-router';
+import { useRef } from 'react';
+
 
 export function useAsLinkBuilder() {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
-  return <
-    TRouter extends AnyRouter = RegisteredRouter,
+  const buildPropsFn = <
+    // Types copy from "router.buildLocation()"
+    TRouter extends RegisteredRouter,
+    TTo extends string | undefined,
     TFrom extends RoutePaths<TRouter['routeTree']> | string = string,
-    TTo extends string = '',
     TMaskFrom extends RoutePaths<TRouter['routeTree']> | string = TFrom,
     TMaskTo extends string = '',
-  >(opts: ToOptions<TRouter, TFrom, TTo, TMaskFrom, TMaskTo> & {
-    leaveParams?: boolean
-  }) => {
-    let isMouseOn = false;
+  >(opts: ToOptions<TRouter, TFrom, TTo, TMaskFrom, TMaskTo>) => {
     return {
       href: router.buildLocation(opts as any).href,
-      onMouseLeave: () => isMouseOn = false,
+      onMouseLeave: () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+      },
       async onMouseEnter() {
-        isMouseOn = true;
         const delay = router.options.defaultPreloadDelay;
-        if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
-        if (isMouseOn) router.preloadRoute(opts as any).then();
+        if (delay) await new Promise((resolve) => {
+          timeoutRef.current = setTimeout(resolve, delay);
+        });
+        if (timeoutRef.current) router.preloadRoute(opts as any).then();
       },
       as: Link,
     };
   };
+
+  return buildPropsFn;
 }

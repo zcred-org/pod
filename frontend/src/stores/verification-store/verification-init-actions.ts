@@ -3,16 +3,15 @@ import { HttpIssuer, IssuerException, VerifierException } from '@zcredjs/core';
 import type { AxiosError } from 'axios';
 import { credentialsGetManySearchArgsFrom } from '@/service/external/zcred-store/types/credentials-api.types.ts';
 import { O1JSCredentialFilter } from '@/service/o1js-credential-filter';
+import { O1JSZCredProver } from '@/service/o1js-zcred-prover';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
 import { issuerInfoQuery } from '@/service/queries/issuer-info.query.ts';
 import { proposalQuery } from '@/service/queries/proposal.query.ts';
 import { zkpResultQuery } from '@/service/queries/zkp-result-cache.query.ts';
 import { VerificationCredentialsActions } from '@/stores/verification-store/verification-credentials-actions.ts';
-import { VerificationIssueActions } from '@/stores/verification-store/verification-issue-actions.ts';
 import { VerificationProofActions } from '@/stores/verification-store/verification-proof-actions.ts';
 import { type VerificationStoreInitArgs, VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
 import { jalIdFrom } from '@/util/jal-id-from.ts';
 
 
@@ -20,7 +19,6 @@ export abstract class VerificationInitActions {
   static #SUBs: {
     credentialsInfiniteQueryEffect?: VoidFunction;
     credentialsRefetchEffect?: VoidFunction;
-    credentialSignAfterKYCEffect?: VoidFunction;
     proofCacheFetchEffect?: VoidFunction;
   } = {};
 
@@ -37,18 +35,6 @@ export abstract class VerificationInitActions {
       }
       if (!proofCache.isLoading && credentialsAsync.isSuccess && credentialsAsync.data.at(0)?.isProvable) {
         VerificationProofActions.proofCacheLoad().then();
-      }
-    });
-    VerificationInitActions.#SUBs.credentialSignAfterKYCEffect ??= effect(() => {
-      const challenge = ZCredSessionStore.session.value?.challenge;
-      const issueAsyncState = VerificationStore.$credentialIssueAsync.value;
-      if (challenge && issueAsyncState.isIdle) {
-        setTimeout(() => {
-          if (VerificationStore.$credentialIssueAsync.peek().isIdle)
-            VerificationIssueActions.finish(challenge).then();
-        }, 2_000);
-        VerificationInitActions.#SUBs.credentialSignAfterKYCEffect?.();
-        delete VerificationInitActions.#SUBs.credentialSignAfterKYCEffect;
       }
     });
     VerificationInitActions.#SUBs.credentialsRefetchEffect ??= effect(VerificationCredentialsActions.$refetchNoWait);
@@ -96,6 +82,7 @@ export abstract class VerificationInitActions {
         issuerHost: new URL(proposal.selector.meta.issuer.uri).host,
         verifierHost: new URL(proposal.verifierURL).host,
         requiredId: proposal.selector.attributes.subject.id,
+        zCredProver: O1JSZCredProver.instance,
       });
       VerificationStore.$issuerError.value = issuerInfo instanceof IssuerException ? issuerInfo : null;
     } catch (error) {

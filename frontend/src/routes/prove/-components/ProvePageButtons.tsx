@@ -1,10 +1,10 @@
-import { Button, type ButtonProps } from '@nextui-org/react';
 import type { ReactNode } from 'react';
+import { Button, type ButtonProps } from '@/components/ui/Button.tsx';
 import { VerificationIssueActions } from '@/stores/verification-store/verification-issue-actions.ts';
 import { VerificationProofActions } from '@/stores/verification-store/verification-proof-actions.ts';
 import { VerificationStore, HolyCrapWhatsLoadingNowStageEnum } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
+import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
 
 
 export function ProvePageButtons(): ReactNode {
@@ -43,7 +43,7 @@ function MainButton(): ReactNode {
     $proofCacheAsync, $proofCreateAsync, $proofSignAsync, $proofSendAsync,
     $holyCrapWhatsLoadingNow,
   } = VerificationStore;
-  const challenge = ZCredSessionStore.session.value?.challenge;
+  const challenge = ZCredIssueStore.session.value?.challenge;
 
   const propsOnLoading: ButtonProps | undefined = ({
     [HolyCrapWhatsLoadingNowStageEnum.Terminate]: undefined,
@@ -63,13 +63,16 @@ function MainButton(): ReactNode {
     isLoading: $proofCacheAsync.value.isLoading || $proofCreateAsync.value.isLoading,
     isDisabled: !$credential.value || $credentialsAsync.value.isLoading,
   } : !$proofSignAsync.value.isSuccess ? {
-    children: 'Send proof', onClick: VerificationProofActions.proofSign,
+    children: 'Prove', onClick: VerificationProofActions.proofSign,
     isLoading: $proofSignAsync.value.isLoading,
   } : /*$proofSignAsync.value.isSuccess ?*/ {
-    children: 'Send proof', onClick: VerificationProofActions.proofSend,
+    children: 'Prove', onClick: VerificationProofActions.proofSend,
     isLoading: $proofSendAsync.value.isLoading,
     isDisabled: $proofSendAsync.value.isSuccess,
   });
 
-  return <Button color="success" {...props} />;
+  return <Button
+    color={props.isLoading ? 'default' : 'success'}
+    {...props}
+  />;
 }

@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any,react-refresh/only-export-components */
 import { Button, type ButtonProps, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@nextui-org/react';
 import { signal } from '@preact/signals-react';
 import type { ReactNode } from 'react';
 import type { SetOptional } from 'type-fest';
-import { getId } from '@/util';
+import { getId } from '@/util/independent/id.ts';
 
 
 type TAction<Action extends string = string> = Action | {
@@ -78,7 +78,6 @@ export function PromptModals(): ReactNode {
               onClick={() => onClose(prompt, action.value)}
               variant={action.variant}
               color={action.color}
-              size="sm"
             >{action.label}</Button>;
           })}
         </ModalFooter>

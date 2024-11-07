@@ -1,30 +1,33 @@
-import { Button, Progress, Spinner } from '@nextui-org/react';
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { useWeb3ModalState } from '@web3modal/wagmi/react';
 import { z } from 'zod';
 import { IconByWalletType, IconEth } from '@/components/icons/icons.tsx';
-import { DidModal } from '@/components/modals/DidModal.tsx';
 import { SwitchToRequiredIdModal } from '@/components/modals/SwitchToRequiredIdModal.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
+import { ErrorView } from '@/components/sub-pages/ErrorView.tsx';
+import { PendingView } from '@/components/sub-pages/PendingView.tsx';
+import { Button } from '@/components/ui/Button.tsx';
 import { web3modal } from '@/config/wagmi-config.ts';
 import { useWagmiConnector } from '@/hooks/web3/ethereum/useWagmiConnector.ts';
-import { $isWalletAndDidConnected } from '@/stores/other.ts';
+import { DidStore } from '@/stores/did-store/did.store.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
 import { VerificationStore, verificationStoreInitArgsFrom } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
+import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
-import { addressShort, isSubjectIdsEqual, subjectTypeToWalletEnum } from '@/util';
+import { addressShort } from '@/util/independent/address-short.ts';
+import { isSubjectIdsEqual, subjectTypeToWalletEnum } from '@/util/subject-id.ts';
 
 
 export const Route = createFileRoute('/')({
-  component: SignInComponent,
-  pendingComponent: PendingComponent,
+  component: SignInView,
+  pendingComponent: SignInPendingView,
+  errorComponent: ErrorView,
   validateSearch: z.object({
     redirect: z.string().catch('/').optional(),
     proposalURL: z.string().optional(),
-    [ZCredSessionStore.searchQueryKey]: z.string().optional(),
+    [ZCredIssueStore.searchQueryKey]: z.string().optional(),
   }),
   beforeLoad: () => ({ title: 'Sign In' }),
   loaderDeps: ({ search }) => search,
@@ -33,7 +36,7 @@ export const Route = createFileRoute('/')({
     if (verificationInitArgs) {
       await VerificationInitActions.init(verificationInitArgs);
     }
-    if (zcredSessionId) ZCredSessionStore.init(zcredSessionId);
+    if (zcredSessionId) ZCredIssueStore.init(zcredSessionId);
     const { requiredId, verifierHost } = VerificationStore.$initDataAsync.peek().data || {};
     return {
       verifierHost,
@@ -44,7 +47,7 @@ export const Route = createFileRoute('/')({
   },
 });
 
-function SignInComponent() {
+function SignInView() {
   const search = Route.useSearch();
   const { requiredWallet, proveArgs, requiredId, verifierHost } = Route.useLoaderData();
   const { open: isWeb3ModalOpened } = useWeb3ModalState();
@@ -81,6 +84,7 @@ function SignInComponent() {
             isLoading={isEthLoading}
             onClick={() => web3modal.open()}
             size="lg"
+            loaderProps={{ className: 'text-white' }}
           ><IconEth className="w-7 h-7 fill-white" />Sign In With Ethereum</Button>}
           {/*{isMinaVisible && <Button*/}
           {/*  className="text-white shadow-xl shadow-indigo-500/30 bg-gradient-to-br from-indigo-400 to-indigo-600 dark:from-indigo-400 dark:to-indigo-700"*/}
@@ -109,33 +113,15 @@ function SignInComponent() {
     />
   );
 
-  if (ZCredSessionStore.session.value && !$isWalletAndDidConnected.value) return (
-    // Wait for DidStore autologin
-    <PageContainer isCenter>
-      <Spinner size="lg" className="w-40" />
-    </PageContainer>
-  );
-
-  if (!$isWalletAndDidConnected.value) return <DidModal />;
+  if (DidStore.$isLoading.value) return <PendingView />;
 
   if (proveArgs) return <Navigate to={'/prove'} search={proveArgs} />;
 
   return <Navigate to={search.redirect || '/credentials'} />;
 }
 
-
-function PendingComponent() {
+function SignInPendingView() {
   const isProposal = !!Route.useSearch().proposalURL;
 
-  return (
-    <PageContainer isCenter>
-      {isProposal ? (
-        <Progress
-          isIndeterminate
-          label="Loading proposal..."
-          classNames={{ label: 'mx-auto' }}
-        />
-      ) : <Spinner size="lg" className="w-40" />}
-    </PageContainer>
-  );
+  return <PendingView label={isProposal ? 'Loading proposal...' : undefined} />;
 }

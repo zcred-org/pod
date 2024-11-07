@@ -5,11 +5,11 @@ import { VerificationStore } from '@/stores/verification-store/verification-stor
 
 
 export const Route = createFileRoute('/terminate')({
-  component: ProveOverComponent,
+  component: VerificationTerminatedView,
   beforeLoad: () => ({ title: 'Verification' }),
 });
 
-function ProveOverComponent() {
+function VerificationTerminatedView() {
   const state = VerificationStore.$terminateAsync.value.data;
 
   if (!state) return <Navigate to={'/'} />;

@@ -7,7 +7,7 @@ import { CredentialCard } from '@/components/CredentialCard.tsx';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
 import { VerificationCredentialsActions } from '@/stores/verification-store/verification-credentials-actions.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
-import { tryToLocalDateTime } from '@/util';
+import { tryToLocalDateTime } from '@/util/independent/date.ts';
 
 
 const {

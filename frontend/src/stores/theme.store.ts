@@ -1,5 +1,6 @@
 import { web3modal } from '@/config/wagmi-config.ts';
-import { signal } from '@/util/signals/signals-dev-tools.ts';
+import { signal } from '@/util/independent/signals/signals-dev-tools.ts';
+
 
 export class ThemeStore {
   static $isDark = signal(

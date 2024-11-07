@@ -2,7 +2,7 @@
 import { type JalProgram } from '@jaljs/core';
 import { type ZkCredential } from '@zcredjs/core';
 import { bindAll } from 'lodash-es';
-import { config } from '@/config';
+import { toast } from 'sonner';
 import {
   isWorkerError,
   isWorkerInitResp,
@@ -25,6 +25,7 @@ type CreateProofInput = {
 }
 
 export class O1JSZCredProver {
+  static #instance: O1JSZCredProver;
   #nextReqId = 1;
   readonly #worker: Worker;
   readonly #initPromise: Promise<WorkerInitReq>;
@@ -33,22 +34,35 @@ export class O1JSZCredProver {
     reject: (err: any) => void
   }> = {};
 
-  constructor() {
+  static get instance() {
+    O1JSZCredProver.#instance ??= new O1JSZCredProver();
+    return O1JSZCredProver.#instance;
+  }
+
+  private constructor() {
     bindAll(this);
     this.#initPromise = new Promise<WorkerInitReq>((resolve, reject) => {
       this.#promises[0] = { resolve, reject };
     });
+    console.time('ProofWorker: Initialized');
     this.#worker = new Worker(new URL(`./worker.ts`, import.meta.url), { type: 'module' });
+    const description = 'Please, reload the page or try another browser or device or enable WebWorkers in your browser settings.';
+    const initTimeout = setTimeout(() => {
+      toast.error(`ProofWorker initialization timeout. Proof can't be created.`, { description, duration: Infinity });
+    }, 60_000);
     this.#worker.onmessage = ({ data }: MessageEvent<WorkerResp>) => {
       if (isWorkerResp(data)) {
-        if (isWorkerInitResp(data) && config.isDev) {
-          console.log('ZCredProverWorker: Initialized');
+        if (isWorkerInitResp(data)) {
+          clearTimeout(initTimeout);
+          console.timeEnd('ProofWorker: Initialized');
         }
         if (isWorkerError(data)) this.#promises[data.id].reject(new Error(data.message));
         else this.#promises[data.id].resolve(data);
         delete this.#promises[data.id];
       } else {
-        console.error('ZCredProverWorker: Unhandled message from worker', data);
+        const msg = 'ProofWorker sent unknown message type.';
+        console.error(msg, data);
+        toast.error(msg, { description, duration: Infinity });
       }
     };
   }
@@ -89,6 +103,3 @@ export class O1JSZCredProver {
     throw new Error(`Invalid worker response`);
   }
 }
-
-
-export const zCredProver = new O1JSZCredProver();

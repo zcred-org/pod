@@ -1,10 +1,10 @@
 import type { JsonZcredException } from '@zcredjs/core';
 import { SEC, IEC } from '@zcredjs/core';
 import type { SetOptional } from 'type-fest';
-import { IconStatusEnum } from '@/components/icons/IconStatus.tsx';
 import { AppGlobal } from '@/config/app-global.ts';
 import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
 import { VerificationStore, type VerificationTerminateErr } from '@/stores/verification-store/verification-store.ts';
+import { IconStatusEnum } from '@/types/icon-status.enum.ts';
 
 
 // TODO: abort all background actions on rejectByUser etc.

@@ -13,7 +13,6 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as TerminateImport } from './routes/terminate'
 import { Route as CredentialsImport } from './routes/credentials'
-import { Route as CredentialIssueImport } from './routes/credential-issue'
 import { Route as ProveRouteImport } from './routes/prove/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as CredentialIdImport } from './routes/credential.$id'
@@ -27,11 +26,6 @@ const TerminateRoute = TerminateImport.update({
 
 const CredentialsRoute = CredentialsImport.update({
   path: '/credentials',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const CredentialIssueRoute = CredentialIssueImport.update({
-  path: '/credential-issue',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -68,13 +62,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProveRouteImport
       parentRoute: typeof rootRoute
     }
-    '/credential-issue': {
-      id: '/credential-issue'
-      path: '/credential-issue'
-      fullPath: '/credential-issue'
-      preLoaderRoute: typeof CredentialIssueImport
-      parentRoute: typeof rootRoute
-    }
     '/credentials': {
       id: '/credentials'
       path: '/credentials'
@@ -104,7 +91,6 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/prove': typeof ProveRouteRoute
-  '/credential-issue': typeof CredentialIssueRoute
   '/credentials': typeof CredentialsRoute
   '/terminate': typeof TerminateRoute
   '/credential/$id': typeof CredentialIdRoute
@@ -113,7 +99,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/prove': typeof ProveRouteRoute
-  '/credential-issue': typeof CredentialIssueRoute
   '/credentials': typeof CredentialsRoute
   '/terminate': typeof TerminateRoute
   '/credential/$id': typeof CredentialIdRoute
@@ -123,7 +108,6 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/prove': typeof ProveRouteRoute
-  '/credential-issue': typeof CredentialIssueRoute
   '/credentials': typeof CredentialsRoute
   '/terminate': typeof TerminateRoute
   '/credential/$id': typeof CredentialIdRoute
@@ -131,26 +115,13 @@ export interface FileRoutesById {
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/prove'
-    | '/credential-issue'
-    | '/credentials'
-    | '/terminate'
-    | '/credential/$id'
+  fullPaths: '/' | '/prove' | '/credentials' | '/terminate' | '/credential/$id'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/prove'
-    | '/credential-issue'
-    | '/credentials'
-    | '/terminate'
-    | '/credential/$id'
+  to: '/' | '/prove' | '/credentials' | '/terminate' | '/credential/$id'
   id:
     | '__root__'
     | '/'
     | '/prove'
-    | '/credential-issue'
     | '/credentials'
     | '/terminate'
     | '/credential/$id'
@@ -160,7 +131,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ProveRouteRoute: typeof ProveRouteRoute
-  CredentialIssueRoute: typeof CredentialIssueRoute
   CredentialsRoute: typeof CredentialsRoute
   TerminateRoute: typeof TerminateRoute
   CredentialIdRoute: typeof CredentialIdRoute
@@ -169,7 +139,6 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProveRouteRoute: ProveRouteRoute,
-  CredentialIssueRoute: CredentialIssueRoute,
   CredentialsRoute: CredentialsRoute,
   TerminateRoute: TerminateRoute,
   CredentialIdRoute: CredentialIdRoute,
@@ -189,7 +158,6 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/prove",
-        "/credential-issue",
         "/credentials",
         "/terminate",
         "/credential/$id"
@@ -200,9 +168,6 @@ export const routeTree = rootRoute
     },
     "/prove": {
       "filePath": "prove/route.tsx"
-    },
-    "/credential-issue": {
-      "filePath": "credential-issue.tsx"
     },
     "/credentials": {
       "filePath": "credentials.tsx"

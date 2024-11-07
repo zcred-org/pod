@@ -8,7 +8,7 @@ import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts
 import { $isWalletAndDidConnected } from '@/stores/other.ts';
 import { VerificationStore, type VerificationInitData } from '@/stores/verification-store/verification-store.ts';
 import { VerificationTerminateActions } from '@/stores/verification-store/verification-terminate-actions.ts';
-import { ZCredSessionStore } from '@/stores/zcred-session.store.ts';
+import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
 
 
 export abstract class VerificationCredentialsActions {
@@ -16,7 +16,7 @@ export abstract class VerificationCredentialsActions {
     /** Subscriptions **/
     credentialsInfiniteQuery.$signal.$data?.value;
     /** Read state **/
-    const isChallenge = !!ZCredSessionStore.session.value?.challenge;
+    const isChallenge = !!ZCredIssueStore.session.value?.challenge;
     const initData = VerificationStore.$initDataAsync.value.data;
     const isSubjectMatch = VerificationStore.$isSubjectMatch.value;
     const isWalletAndDidConnected = $isWalletAndDidConnected.value;
@@ -100,7 +100,7 @@ export abstract class VerificationCredentialsActions {
       ) // Terminate if no provable credentials and no issuer
         await VerificationTerminateActions.rejectNoCredsAndNoIssuer(initData.issuerHost);
     } catch (error) {
-      console.error(`${VerificationCredentialsActions.#refetchAsync.name} error:`, {
+      console.error(`VerificationCredentialsActions.#refetchAsync() error:`, {
         error,
         type: typeof error,
         constructor: error!.constructor.name,

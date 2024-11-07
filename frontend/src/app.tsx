@@ -1,15 +1,16 @@
 import { NextUIProvider } from '@nextui-org/react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { createRouter, RouterProvider } from '@tanstack/react-router';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import { WagmiProvider } from 'wagmi';
+import { config } from '@/config';
 import { AppGlobal } from '@/config/app-global.ts';
-import { appName } from '@/config/constants.ts';
-import { queryClient } from './config/query-client.ts';
-import { wagmiConfig } from './config/wagmi-config.ts';
-import { routeTree } from './routeTree.gen.ts';
+import { queryClient } from '@/config/query-client.ts';
+import { wagmiConfig } from '@/config/wagmi-config.ts';
+import { routeTree } from '@/routeTree.gen.ts';
+import { VerificationErrorActions } from '@/stores/verification-store/verification-error-actions.tsx';
 import './index.css';
 
 
@@ -19,16 +20,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
-const navigate = (path: string) => void router.navigate({ to: path });
-
-export const router = createRouter({
+export type router = typeof router;
+const router = createRouter({
   routeTree,
-  defaultPreload: 'intent',
+  defaultPreload: 'viewport',
   context: {
-    title: appName,
+    title: config.appName,
   },
 });
+const navigate = (path: string) => void router.navigate({ to: path });
+
+
 AppGlobal.router = router;
+AppGlobal.VerificationErrorActions = VerificationErrorActions;
+
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -43,3 +48,4 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+

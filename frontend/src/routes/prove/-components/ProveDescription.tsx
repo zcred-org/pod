@@ -25,7 +25,7 @@ const $credentialFriendlyJal = computed<ReactNode | undefined>(() => {
   const friendlyJal = program && definitions
     && new FriendlyZCredTranslator(program, definitions).translate();
 
-  return friendlyJal?.replace(/(?<=you will prove:)\s+/i, '\n')
+  return friendlyJal?.replace(/(you will prove:)\s+/i, (_, p1) => `${p1}\n`)
     ?.split('\n')
     .map((line, i) => line ? <p key={i}>{line}</p> : <p key={i}>&nbsp;</p>);
 });

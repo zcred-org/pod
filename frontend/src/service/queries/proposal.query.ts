@@ -3,6 +3,7 @@ import { queryClient } from '@/config/query-client.ts';
 import { VerifierApi } from '@/service/external/verifier/verifier-api.ts';
 import { queryKey, type ProposalQueryKey } from '@/service/queries/query-key.ts';
 import type { VerificationStoreInitArgs } from '@/stores/verification-store/verification-store.ts';
+import { Ms } from '@/util/independent/ms.ts';
 
 
 async function queryFn(ctx: QueryFunctionContext<ProposalQueryKey>) {
@@ -17,7 +18,7 @@ export function proposalQuery(args: VerificationStoreInitArgs) {
   return queryOptions({
     queryKey: queryKey.proposal.get(args),
     queryFn,
-    staleTime: 5 * 60e3, // 5 minutes. TODO: when verification session will expire?
+    staleTime: Ms.minute(5), // TODO: when verification session will expire?
     gcTime: Infinity,
     retry: 2, // 3 fetches total
     refetchOnMount: false,

@@ -12,7 +12,7 @@ type SiwxMessageArgs = {
 
 /**
  * @source https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-122.md
- * @warn Incompatible because chainId is optional instead of mandatory
+ * @source https://eips.ethereum.org/EIPS/eip-4361
  */
 export class SiwxMessage {
   readonly #args: SiwxMessageArgs;
@@ -53,6 +53,9 @@ ${this.#args.statement}
 
 URI: ${(this.#args.uri)}
 Version: ${(this.#args.version)}
+Chain ID: 0
+Nonce: 00000000
+Issued At: 1970-01-01T00:00:00Z
     `.trim();
   }
 }

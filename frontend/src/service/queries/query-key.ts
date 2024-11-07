@@ -1,22 +1,23 @@
 import type { CredentialsGetManySearchArgs } from '@/service/external/zcred-store/types/credentials-api.types.ts';
+import { DidStore } from '@/stores/did-store/did.store.ts';
 import type { VerificationStoreInitArgs } from '@/stores/verification-store/verification-store.ts';
 
 
 export const queryKey = {
-  // _private: () => [DidStore.$did.peek()!.id] as const,
+  get PRIVATE() { return [DidStore.$did.value?.id] as const; },
 
   credential: {
-    ROOT: ['credential'] as const,
+    get ROOT() { return ['credential', ...queryKey.PRIVATE] as const; },
     get: (credentialId: string) => [...queryKey.credential.ROOT, credentialId] as const,
   },
 
   credentials: {
-    ROOT: ['credentials'] as const,
+    get ROOT() { return ['credentials', ...queryKey.PRIVATE] as const; },
     get: (args?: CredentialsGetManySearchArgs) => [...queryKey.credentials.ROOT, args] as const,
   },
 
   zkpResult: {
-    ROOT: ['zkpResult'] as const,
+    get ROOT() { return ['zkpResult', ...queryKey.PRIVATE] as const; },
     get: (jalId: string) => [...queryKey.zkpResult.ROOT, jalId] as const,
   },
 

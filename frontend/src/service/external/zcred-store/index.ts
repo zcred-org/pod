@@ -4,7 +4,7 @@ import { config } from '@/config';
 import type { ZCredStore } from '@/service/external/zcred-store/api-specification.ts';
 import { AuthApi } from '@/service/external/zcred-store/modules/auth.api.ts';
 import { ZkpResultCacheApi } from '@/service/external/zcred-store/modules/zkp-result-cache.api.ts';
-import { DidStore } from '@/stores/did.store.ts';
+import { DidStore } from '@/stores/did-store/did.store.ts';
 import { CredentialsApi } from './modules/credentials.api.ts';
 
 

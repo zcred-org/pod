@@ -2,12 +2,8 @@ import type { SVGProps } from 'react';
 import IconErrorSvg from '@/assets/error.svg?react';
 import IconOkSvg from '@/assets/ok.svg?react';
 import IconWarnSvg from '@/assets/warn.svg?react';
+import { IconStatusEnum } from '@/types/icon-status.enum.ts';
 
-export enum IconStatusEnum {
-  Ok = 'Ok',
-  Error = 'Error',
-  Warn = 'Warn',
-}
 
 type Props = SVGProps<SVGSVGElement> & {
   status: IconStatusEnum;

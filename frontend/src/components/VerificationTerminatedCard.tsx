@@ -1,8 +1,10 @@
 import { Divider, Progress, CardBody, Card, CardHeader, CardFooter, Button, cn } from '@nextui-org/react';
 import { type ReadonlySignal, batch } from '@preact/signals-react';
 import { useEffect, useMemo } from 'react';
-import { IconStatusEnum, IconStatus } from '@/components/icons/IconStatus.tsx';
-import { computed, signal } from '@/util/signals/signals-dev-tools.ts';
+import { IconStatus } from '@/components/icons/IconStatus.tsx';
+import { config } from '@/config';
+import { IconStatusEnum } from '@/types/icon-status.enum.ts';
+import { computed, signal } from '@/util/independent/signals/signals-dev-tools.ts';
 
 
 type Props = {
@@ -76,7 +78,6 @@ class Redirector {
   readonly #$isRedirected = signal(false);
   readonly #$progressMs = signal(0);
   readonly #$isTicking = signal(false);
-  readonly #intervalMs = 1e3 / 60; // 60 FPS
 
   get $progressMs(): ReadonlySignal<number> {
     return this.#$progressMs;
@@ -109,7 +110,7 @@ class Redirector {
       if (this.#$progressMs.peek() >= this.totalDelayMs) {
         this.redirect();
       }
-    }, this.#intervalMs);
+    }, config.frameTime);
   }
 
   clear() {

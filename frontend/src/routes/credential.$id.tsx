@@ -1,21 +1,6 @@
-import {
-  Progress,
-  TableHeader,
-  TableBody,
-  Table,
-  TableColumn,
-  TableRow,
-  TableCell,
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Divider,
-  Link,
-  cn,
-} from '@nextui-org/react';
+import { TableHeader, TableBody, Table, TableColumn, TableRow, TableCell, Card, CardBody, CardHeader, Divider, Link, cn } from '@nextui-org/react';
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, type ErrorComponentProps, useRouter } from '@tanstack/react-router';
+import { createFileRoute, useRouter, type ErrorComponentProps } from '@tanstack/react-router';
 import Avvvatar from 'avvvatars-react';
 import { AxiosError } from 'axios';
 import { get } from 'lodash-es';
@@ -24,32 +9,40 @@ import { useMemo, useReducer } from 'react';
 import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
 import { IconVisibility } from '@/components/icons/IconVisibility.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
+import { ErrorView } from '@/components/sub-pages/ErrorView.tsx';
+import { PendingView } from '@/components/sub-pages/PendingView.tsx';
+import { useAsLinkBuilder } from '@/hooks/useAsLinkBuilder.ts';
 import { credentialQuery } from '@/service/queries/credential.query.ts';
-import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
-import { flattenObject, tryToLocalDateTime } from '@/util';
+import { tryToLocalDateTime } from '@/util/independent/date.ts';
+import { objectFlat } from '@/util/independent/object.ts';
 import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
 
 
 export const Route = createFileRoute('/credential/$id')({
-  component: () => <RequireWalletAndDidHoc><CredentialComponent /></RequireWalletAndDidHoc>,
-  pendingComponent: PendingComponent,
-  errorComponent: ErrorComponent,
+  component: () => <RequireWalletAndDidHoc><CredentialView /></RequireWalletAndDidHoc>,
+  pendingComponent: CredentialPendingView,
+  errorComponent: CredentialErrorView,
 
   beforeLoad: ({ location }) => {
     routeRequireWalletAndDid(location);
-    return ({ title: 'Credential' });
+    return ({
+      title: 'Credential',
+      isCanBack: 'isCanBack' in location.state || false,
+    });
   },
   loader: ({ params }) => credentialQuery.prefetch(params.id),
 });
 
-function CredentialComponent() {
+function CredentialView() {
   const router = useRouter();
+  const isCanBack = Route.useRouteContext({ select: (state) => state.isCanBack });
+  const link = useAsLinkBuilder();
   const credentialId = Route.useParams().id;
   const { data: zCred, error, isPending, isError } = useQuery(credentialQuery(credentialId));
-  const attributesList = useMemo(() => zCred ? Object.entries(flattenObject(zCred.data.attributes)) : null, [zCred]);
+  const attributesList = useMemo(() => zCred ? Object.entries(objectFlat(zCred.data.attributes)) : null, [zCred]);
 
-  if (isPending) return <PendingComponent />;
-  if (isError) return <ErrorComponent error={error} reset={router.invalidate} />;
+  if (isPending) return <CredentialPendingView />;
+  if (isError) throw error;
 
   const type = zCred.data.attributes.type;
   const attributesDefinitions = zCred.data.meta.definitions.attributes;
@@ -57,7 +50,7 @@ function CredentialComponent() {
 
   const attributeRow = (args: { key: string, value: string }) => {
     const description: string = get(attributesDefinitions, args.key).toString();
-    const isPrivate = description.includes('private');
+    const isPrivate = /warning|private/i.test(description);
     const valueMapped = tryToLocalDateTime(args.value);
     return (
       <TableRow key={args.key}>
@@ -68,6 +61,7 @@ function CredentialComponent() {
       </TableRow>
     );
   };
+
 
   return (
     <PageContainer className="gap-5 px-0 pb-10">
@@ -90,7 +84,14 @@ function CredentialComponent() {
         </CardBody>
       </Card>
       <div className="flex justify-center">
-        <Link className="flex items-center cursor-pointer" onClick={() => router.history.back()}>
+        <Link
+          {...link({ to: '/credentials' })}
+          className="flex items-center cursor-pointer"
+          onClick={isCanBack ? (e) => {
+            e.preventDefault();
+            router.history.back();
+          } : undefined}
+        >
           <ChevronLeft />
           <span className="inline leading-[13px] -mt-[1px] align-sub">{' Go back'}</span>
         </Link>
@@ -107,26 +108,18 @@ function PrivateField({ value }: { value: string }) {
   </div>);
 }
 
-function PendingComponent() {
-  return (
-    <PageContainer>
-      <p>Loading credential...</p>
-      <Progress isIndeterminate />
-    </PageContainer>
-  );
+function CredentialPendingView() {
+  return <PendingView label="Loading credential..." />;
 }
 
-function ErrorComponent({ error, reset }: Pick<ErrorComponentProps, 'error' | 'reset'>) {
-  const _reset = async () => Promise.all([
-    credentialsInfiniteQuery.invalidateROOT(),
-    credentialQuery.invalidateROOT(),
-  ]).finally(() => reset());
-
-  return <PageContainer isCenter>{
-    error instanceof AxiosError && error.response?.status === 404 ? <p>Credential not found</p>
-      : error instanceof Error ? <p>Error: {error.message}</p>
-        : <p>Unknown Error</p>
-  }
-    <Button onPress={_reset}>Try to reload</Button>
-  </PageContainer>;
+function CredentialErrorView({ error, reset }: ErrorComponentProps) {
+  const is404 = error instanceof AxiosError && error.response?.status === 404;
+  return (
+    <ErrorView
+      error={error}
+      reset={reset}
+      title={is404 ? <>Credential not&nbsp;found</> : undefined}
+      message={is404 ? 'The credential you are looking for does not exist' : undefined}
+    />
+  );
 }

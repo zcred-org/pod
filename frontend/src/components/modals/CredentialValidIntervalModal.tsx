@@ -29,20 +29,31 @@ const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
 };
 
 const onSubmit = () => {
-  const fromParsed = request.value?.enabledFields.from ? dayjs(from.value) : undefined;
-  const toParsed = request.value?.enabledFields.to ? dayjs(to.value) : undefined;
-  if (fromParsed?.isValid() === false || toParsed?.isValid() === false) {
-    fromParsed?.isValid() === false && (fromError.value = 'Invalid date');
-    toParsed?.isValid() === false && (toError.value = 'Invalid date');
-    return;
+  const isFromRequired = request.peek()?.enabledFields.from;
+  const fromParsed = isFromRequired ? dayjs(from.peek()) : undefined;
+  if (fromParsed?.isValid() === false) fromError.value = 'Invalid date';
+
+  const isToRequired = request.peek()?.enabledFields.to;
+  const toParsed = isToRequired ? dayjs(to.peek()) : undefined;
+  if (toParsed?.isValid() === false) toError.value = 'Invalid date';
+
+  if (fromError.peek() || toError.peek()) return;
+
+  if (isFromRequired && isToRequired
+    && (fromParsed!.isAfter(toParsed!) || fromParsed!.isSame(toParsed!))) {
+    fromError.value = `Must be before "To date"`;
+    toError.value = 'Must be after "From date"';
   }
-  request.value!.resolve({
+
+  if (fromError.peek() || toError.peek()) return;
+
+  request.peek()!.resolve({
     from: fromParsed?.toDate(),
     to: toParsed?.toDate(),
   });
 };
 
-const onCancel = () => request.value!.reject(new RejectedByUserError());
+const onCancel = () => request.peek()!.reject(new RejectedByUserError());
 
 export function CredentialValidIntervalModal(): ReactNode {
   const { enabledFields, title } = request.value || {};

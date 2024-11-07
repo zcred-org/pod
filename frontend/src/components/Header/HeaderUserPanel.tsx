@@ -1,21 +1,23 @@
 import { Dropdown, DropdownItem, DropdownMenu, DropdownSection, DropdownTrigger, Switch, User } from '@nextui-org/react';
 import BoringAvatar from 'boring-avatars';
 import { compact } from 'lodash-es';
-import { Box, CirclePlus, LogOut, Moon, Sun } from 'lucide-react';
+import { Box, LogOut, Moon, Sun } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { IconByWalletType } from '@/components/icons/icons.tsx';
 import { config } from '@/config';
 import { useAsLinkBuilder } from '@/hooks/useAsLinkBuilder.ts';
+import { useDevTools } from '@/hooks/useDevTools.ts';
 import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
-import { DidStore } from '@/stores/did.store.ts';
+import { DidStore } from '@/stores/did-store/did.store.ts';
 import { ThemeStore } from '@/stores/theme.store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
-import { addressShort } from '@/util';
+import { addressShort } from '@/util/independent/address-short.ts';
 
 
 export function HeaderUserPanel(): ReactNode {
   const { signOut } = useDisconnect();
   const linkBuilder = useAsLinkBuilder();
+  const devToolsHook = useDevTools();
 
   const userIcon = (
     <div className="relative w-10 h-10">
@@ -45,24 +47,20 @@ export function HeaderUserPanel(): ReactNode {
         />
       </DropdownTrigger>
       <DropdownMenu>
-        <DropdownSection showDivider children={compact([
+        <DropdownSection showDivider>
           <DropdownItem
             {...linkBuilder({ to: '/credentials' })}
             className={'text-foreground'}
             endContent={<Box size={14} />}
-            key="1"
-          >Credentials</DropdownItem>,
-          config.isDev ? <DropdownItem
-            {...linkBuilder({ to: '/credential-issue' })}
-            className={'text-foreground'}
-            endContent={<CirclePlus size={14} />}
-            key="2"
-          >Credential issue</DropdownItem> : null,
-        ])} />
-        <DropdownSection showDivider>
+          >Credentials</DropdownItem>
+        </DropdownSection>
+        <DropdownSection showDivider children={compact([
           <DropdownItem
+            key="1"
             closeOnSelect={false}
             onClick={ThemeStore.toggle}
+            onPressStart={devToolsHook.onPressStart}
+            onPressEnd={devToolsHook.onPressEnd}
             endContent={<Switch
               isSelected={ThemeStore.$isDark.value}
               size="sm"
@@ -72,8 +70,20 @@ export function HeaderUserPanel(): ReactNode {
               onValueChange={ThemeStore.toggle}
               classNames={{ wrapper: 'm-0' }}
             />}
-          >Dark mode</DropdownItem>
-        </DropdownSection>
+          >Dark mode</DropdownItem>,
+          config.isDev && <DropdownItem
+            key="2"
+            closeOnSelect={false}
+            onClick={devToolsHook.devtoolsToggle}
+            endContent={<Switch
+              isSelected={config.isDev}
+              size="sm"
+              color="default"
+              onValueChange={devToolsHook.devtoolsToggle}
+              classNames={{ wrapper: 'm-0' }}
+            />}
+          >Dev mode</DropdownItem>,
+        ])} />
         <DropdownItem
           onClick={signOut}
           color="danger"
