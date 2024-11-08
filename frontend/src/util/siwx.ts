@@ -1,6 +1,3 @@
-import { config } from '@/config';
-
-
 type SiwxMessageArgs = {
   domain: string,
   blockchain: string,
@@ -19,7 +16,7 @@ export class SiwxMessage {
   readonly #warning: string;
 
   constructor(args: Pick<SiwxMessageArgs, 'blockchain' | 'accountAddress'>) {
-    const domain = config.domain; // TODO: location.hostname ???;
+    const domain = location.hostname; // config.domain;
     this.#warning = [
       `Warning: Ensure you sign this message only on the ${domain} domain,`,
       'as signing it elsewhere may result in the loss of control over your digital credentials.',
