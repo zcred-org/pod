@@ -32,10 +32,11 @@ export async function testAppStart() {
 }
 
 export async function testJwtCreate({ app, did }: { app: App, did: string }): Promise<string> {
-  return app.context.resolve("httpServer").fastify.jwt.sign({
+  const jwt = app.context.resolve("httpServer").fastify.jwt.sign({
     nonce: crypto.randomUUID(),
     did,
   } satisfies JwtPayloadCrete);
+  return `Bearer ${jwt}`;
 }
 
 export function bodyJson<T extends Awaited<ReturnType<FastifyInstance["inject"]>>>(res: T): Omit<T, "body"> & {

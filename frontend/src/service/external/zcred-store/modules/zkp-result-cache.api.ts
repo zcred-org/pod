@@ -16,7 +16,7 @@ export class ZkpResultCacheApi {
   }
 
   public async save(args: { jalId: string, zkpResult: ZkpResult, signal?: AbortSignal }): Promise<void> {
-    const body: ZCredStore['ZkpResultCacheCreateDto'] = {
+    const body: ZCredStore['ZkpResultCacheUpsertDto'] = {
       jalId: args.jalId,
       data: base64UrlEncode(await this.context.didStore.encrypt(args.zkpResult)),
     };

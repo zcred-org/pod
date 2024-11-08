@@ -102,7 +102,7 @@ export class HttpServer implements Disposable {
     this.fastify.addSchema(JwtPayloadDto);
     this.fastify.addSchema(SecretDataDto);
     this.fastify.addSchema(ZkpResultCacheDto);
-    this.fastify.addSchema(ZkpResultCacheCreateDto);
+    this.fastify.addSchema(ZkpResultCacheUpsertDto);
   }
 
   async listen(): Promise<void> {

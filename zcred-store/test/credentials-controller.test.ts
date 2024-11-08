@@ -40,7 +40,7 @@ describe('CredentialsController', async () => {
 
   beforeAll(async () => {
     [user1Auth, user2Auth] = await Promise.all(
-      [did1, did2].map(async ({ id }) => `Bearer ${await testJwtCreate({ app, did: id })}`),
+      [did1, did2].map(async ({ id }) => await testJwtCreate({ app, did: id })),
     ) as [string, string];
   });
 

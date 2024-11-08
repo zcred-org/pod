@@ -1012,7 +1012,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Create a new ZkpResultCache */
+        /** @description Create or update a ZkpResultCache */
         post: {
             parameters: {
                 query?: never;
@@ -1022,7 +1022,7 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["ZkpResultCacheCreateDto"];
+                    "application/json": components["schemas"]["ZkpResultCacheUpsertDto"];
                 };
             };
             responses: {
@@ -1347,8 +1347,8 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
-        /** @description ZkpResultCache create object */
-        ZkpResultCacheCreateDto: {
+        /** @description ZkpResultCache upsert object */
+        ZkpResultCacheUpsertDto: {
             jalId: string;
             data: string;
         };

@@ -1,10 +1,9 @@
-import { Injector } from 'typed-inject';
-import type { AppContext } from '../../app.js';
 import { Type } from '@sinclair/typebox';
 import * as HTTP from 'http-errors-enhanced';
-import { ZkpResultCacheDtoRef } from './dtos/zkp-result-cache.dto.js';
-import { ZkpResultCacheCreateDtoRef } from './dtos/zkp-result-cache-create.dto.js';
-import { recursiveDateToISOString } from '../../util/recursive-date-to-iso-string.js';
+import { Injector } from 'typed-inject';
+import type { AppContext } from '../../app.js';
+import { ZkpResultCacheUpsertDtoRef } from './dtos/zkp-result-cache-upsert.dto.js';
+import { zkpResultCacheDtoFrom, ZkpResultCacheDtoRef } from './dtos/zkp-result-cache.dto.js';
 
 
 export function ZkpResultCacheController(context: Injector<AppContext>) {
@@ -16,8 +15,8 @@ export function ZkpResultCacheController(context: Injector<AppContext>) {
     method: 'POST',
     url: '/api/v1/zkp-result-cache',
     schema: {
-      description: 'Create a new ZkpResultCache',
-      body: ZkpResultCacheCreateDtoRef,
+      description: 'Create or update a ZkpResultCache',
+      body: ZkpResultCacheUpsertDtoRef,
       response: {
         [HTTP.OK]: Type.Never(),
         [HTTP.UNAUTHORIZED]: HTTP.unauthorizedSchema,
@@ -25,7 +24,11 @@ export function ZkpResultCacheController(context: Injector<AppContext>) {
       },
     },
     handler: async (req, reply) => {
-      await zkpResultCacheStore.createOne(req.body);
+      await zkpResultCacheStore.upsertOne({
+        controlledBy: req.user.did,
+        jalId: req.body.jalId,
+        data: req.body.data,
+      });
       return reply.status(HTTP.OK).send();
     },
   });
@@ -45,11 +48,14 @@ export function ZkpResultCacheController(context: Injector<AppContext>) {
       },
     },
     handler: async (req, reply) => {
-      const entity = await zkpResultCacheStore.searchOne(req.params.jalId);
+      const entity = await zkpResultCacheStore.findOne({
+        controlledBy: req.user.did,
+        jalId: req.params.jalId,
+      });
       if (!entity) {
         throw new HTTP.NotFoundError('ZkpResultCache not found');
       }
-      return reply.status(HTTP.OK).send(recursiveDateToISOString(entity));
+      return reply.status(HTTP.OK).send(zkpResultCacheDtoFrom(entity));
     },
   });
 }

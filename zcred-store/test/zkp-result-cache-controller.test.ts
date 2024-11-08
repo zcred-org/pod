@@ -1,16 +1,15 @@
-import { describe, beforeEach, afterAll, assert } from 'vitest';
-import { testAppStart, testJwtCreate, bodyJson } from './utils.js';
-import { didFromSeed } from '../src/util/index.js';
-import { sql, count } from 'drizzle-orm';
-import { ZkpResultCacheEntity } from '../src/models/entities/zkp-result-cache.entity.js';
-import sortKeys from 'sort-keys';
-import crypto from 'node:crypto';
 import type { DID } from 'dids';
-import type { App } from '../src/app.js';
+import { sql } from 'drizzle-orm';
 import * as HTTP from 'http-errors-enhanced';
-import { type ZkpResultCacheCreateDto } from '../src/controllers/zkp-result-cache/dtos/zkp-result-cache-create.dto.js';
-import { recursiveDateToISOString } from '../src/util/recursive-date-to-iso-string.js';
-import type { ZkpResultCacheDto } from '../src/controllers/zkp-result-cache/dtos/zkp-result-cache.dto.js';
+import crypto from 'node:crypto';
+import sortKeys from 'sort-keys';
+import { afterAll, beforeEach, describe } from 'vitest';
+import type { App } from '../src/app.js';
+import { type ZkpResultCacheUpsertDto } from '../src/controllers/zkp-result-cache/dtos/zkp-result-cache-upsert.dto.js';
+import { zkpResultCacheDtoFrom } from '../src/controllers/zkp-result-cache/dtos/zkp-result-cache.dto.js';
+import { ZkpResultCacheEntity } from '../src/models/entities/zkp-result-cache.entity.js';
+import { didFromSeed } from '../src/util/index.js';
+import { bodyJson, testAppStart, testJwtCreate } from './utils.js';
 
 
 describe('ZkpResultCacheController', async () => {
@@ -18,15 +17,11 @@ describe('ZkpResultCacheController', async () => {
   const fastify = app.context.resolve('httpServer').fastify;
   const db = app.context.resolve('dbClient').db;
   const origin = app.context.resolve('config').frontendURLs[0]!.origin;
-  const {
-    Authorization, did,
-    zkpResult1, zkpResultCache1,
-    /*zkpResult2,*/ zkpResultCache2,
-  } = await makeMocks(app);
+  const { user1, user2 } = await makeMocks(app);
 
   beforeEach(async () => {
     await db.execute(sql`TRUNCATE TABLE ${ZkpResultCacheEntity}`);
-    await db.insert(ZkpResultCacheEntity).values([zkpResultCache1]).execute();
+    await db.insert(ZkpResultCacheEntity).values([user1.prog1.zkpResultCache]).execute();
   });
 
   afterAll(async () => {
@@ -37,32 +32,62 @@ describe('ZkpResultCacheController', async () => {
   describe('Save', async (test) => {
     const method = 'POST', url = '/api/v1/zkp-result-cache';
 
-    test('normal', async ({ expect }) => {
-      expect(await db.select({ count: count() }).from(ZkpResultCacheEntity).execute()).toMatchObject([{ count: 1 }]);
-      expect(await fastify.inject({
-        method, url, headers: { origin, Authorization }, payload: {
-          jalId: zkpResultCache2.jalId,
-          data: zkpResultCache2.data,
-        } satisfies ZkpResultCacheCreateDto,
-      })).toMatchObject({
-        statusCode: HTTP.OK,
-        body: '',
-      });
-      expect(await db.select({ count: count() }).from(ZkpResultCacheEntity).execute()).toMatchObject([{ count: 2 }]);
+    test('creates new', async ({ expect }) => {
+      await expect(db.select().from(ZkpResultCacheEntity).execute()).resolves.toEqual([user1.prog1.zkpResultCache]);
+      const payload = {
+        jalId: user1.prog2.zkpResultCache.jalId,
+        data: user1.prog2.zkpResultCache.data,
+      } satisfies ZkpResultCacheUpsertDto;
+      await expect(fastify.inject({
+        method, url, headers: { origin, Authorization: user1.auth }, payload,
+      })).resolves.toMatchObject({ statusCode: HTTP.OK, body: '' });
+      await expect(db.select().from(ZkpResultCacheEntity).execute()).resolves.toEqual([user1.prog1.zkpResultCache, expect.objectContaining(payload)]);
+      expect.assertions(3);
+    });
+    test('updates existing', async ({ expect }) => {
+      await expect(db.select().from(ZkpResultCacheEntity).execute()).resolves.toEqual([user1.prog1.zkpResultCache]);
+      await expect(fastify.inject({
+        method, url, headers: { origin, Authorization: user1.auth }, payload: {
+          jalId: user1.prog1.zkpResultCache.jalId,
+          data: user1.prog2.zkpResultCache.data,
+        } satisfies ZkpResultCacheUpsertDto,
+      })).resolves.toMatchObject({ statusCode: HTTP.OK, body: '' });
+      await expect(db.select().from(ZkpResultCacheEntity).execute()).resolves.toEqual([{
+        ...user1.prog1.zkpResultCache,
+        data: user1.prog2.zkpResultCache.data,
+        updatedAt: expect.any(Date),
+      }]);
+      expect.assertions(3);
+    });
+    test('does not conflict on 2 users with same jalId', async ({ expect }) => {
+      await expect(db.select().from(ZkpResultCacheEntity).execute()).resolves.toEqual([
+        user1.prog1.zkpResultCache,
+      ]);
+      const payload = {
+        jalId: user1.prog1.zkpResultCache.jalId,
+        data: user1.prog2.zkpResultCache.data,
+      } satisfies ZkpResultCacheUpsertDto;
+      await expect(fastify.inject({
+        method, url, headers: { origin, Authorization: user2.auth }, payload,
+      })).resolves.toMatchObject({ statusCode: HTTP.OK, body: '' });
+      await expect(db.select().from(ZkpResultCacheEntity).execute()).resolves.toEqual([
+        user1.prog1.zkpResultCache,
+        expect.objectContaining(payload),
+      ]);
       expect.assertions(3);
     });
     test('throws unauthorized', async ({ expect }) => {
-      expect(await db.select({ count: count() }).from(ZkpResultCacheEntity).execute()).toMatchObject([{ count: 1 }]);
-      expect(await fastify.inject({
+      await expect(db.select().from(ZkpResultCacheEntity).execute()).resolves.toEqual([user1.prog1.zkpResultCache]);
+      await expect(fastify.inject({
         method, url, headers: { origin }, payload: {
-          jalId: zkpResultCache2.jalId,
-          data: zkpResultCache2.data,
-        } satisfies ZkpResultCacheCreateDto,
-      }).then(bodyJson)).toMatchObject({
+          jalId: user1.prog2.zkpResultCache.jalId,
+          data: user1.prog2.zkpResultCache.data,
+        } satisfies ZkpResultCacheUpsertDto,
+      }).then(bodyJson)).resolves.toMatchObject({
         statusCode: HTTP.UNAUTHORIZED,
         body: new HTTP.UnauthorizedError('No Authorization was found in request.headers').serialize(),
       });
-      expect(await db.select({ count: count() }).from(ZkpResultCacheEntity).execute()).toMatchObject([{ count: 1 }]);
+      await expect(db.select().from(ZkpResultCacheEntity).execute()).resolves.toEqual([user1.prog1.zkpResultCache]);
       expect.assertions(3);
     });
   });
@@ -71,87 +96,122 @@ describe('ZkpResultCacheController', async () => {
     const method = 'GET', urlByJalId = (jalId: string) => `/api/v1/zkp-result-cache/${jalId}`;
 
     test('normal', async ({ expect }) => {
-      expect(await fastify.inject({
-        method, url: urlByJalId(zkpResultCache1.jalId),
-        headers: { origin, Authorization },
-      }).then(bodyJson)).toMatchObject({
+      await expect(fastify.inject({
+        method, url: urlByJalId(user1.prog1.zkpResultCache.jalId),
+        headers: { origin, Authorization: user1.auth },
+      }).then(bodyJson)).resolves.toMatchObject({
         statusCode: HTTP.OK,
-        body: recursiveDateToISOString(zkpResultCache1),
-      });
-    });
-    test('returns by createdAt desc', async ({ expect }) => {
-      const [zkpResultCacheNew] = await db.insert(ZkpResultCacheEntity).values([{
-        jalId: zkpResultCache1.jalId,
-        data: await encryptEncodeZkpResult(did, { proof: 'new' }),
-      }]).returning().execute();
-      assert(zkpResultCacheNew);
-      await expect(decryptDecodeZkpResult(did, zkpResultCacheNew.data)).resolves.toMatchObject({ proof: 'new' });
-      expect(await fastify.inject({
-        method, url: urlByJalId(zkpResultCache1.jalId),
-        headers: { origin, Authorization },
-      }).then(bodyJson)).toMatchObject({
-        statusCode: HTTP.OK,
-        body: recursiveDateToISOString(zkpResultCacheNew),
+        body: zkpResultCacheDtoFrom(user1.prog1.zkpResultCache),
       });
     });
     test('throws unauthorized', async ({ expect }) => {
-      expect(await fastify.inject({
-        method, url: urlByJalId(zkpResultCache1.jalId),
+      await expect(fastify.inject({
+        method, url: urlByJalId(user1.prog1.zkpResultCache.jalId),
         headers: { origin },
-      }).then(bodyJson)).toMatchObject({
+      }).then(bodyJson)).resolves.toMatchObject({
         statusCode: HTTP.UNAUTHORIZED,
         body: new HTTP.UnauthorizedError('No Authorization was found in request.headers').serialize(),
       });
     });
     test('throws not found', async ({ expect }) => {
-      expect(await fastify.inject({
+      await expect(fastify.inject({
         method, url: urlByJalId(jalIdFrom({ notFound: 'not-found' })),
-        headers: { origin, Authorization },
-      }).then(bodyJson)).toMatchObject({
+        headers: { origin, Authorization: user1.auth },
+      }).then(bodyJson)).resolves.toMatchObject({
         statusCode: HTTP.NOT_FOUND,
         body: new HTTP.NotFoundError('ZkpResultCache not found').serialize(),
       });
     });
-    test('other user can\'t use someone else\'s ZkpResult', async ({ expect }) => {
-      const didSecond = await didFromSeed('user2');
-      const AuthorizationSecond = `Bearer ${await testJwtCreate({ app, did: didSecond.id })}`;
-      const res = await fastify.inject({
-        method, url: urlByJalId(zkpResultCache1.jalId),
-        headers: { origin, Authorization: AuthorizationSecond },
-      }).then(bodyJson);
-      expect(res).toMatchObject({
-        statusCode: HTTP.OK,
-        body: recursiveDateToISOString(zkpResultCache1),
+    test(`other user can't use someone else's ZkpResult`, async ({ expect }) => {
+      await expect(fastify.inject({
+        method, url: urlByJalId(user1.prog1.zkpResultCache.jalId),
+        headers: { origin, Authorization: user2.auth },
+      }).then(bodyJson)).resolves.toMatchObject({
+        statusCode: HTTP.NOT_FOUND,
+        body: new HTTP.NotFoundError('ZkpResultCache not found').serialize(),
       });
-      const body = res.body as ZkpResultCacheDto;
-      await expect(decryptDecodeZkpResult(did, body.data)).resolves.toMatchObject(zkpResult1);
-      await expect(decryptDecodeZkpResult(didSecond, body.data)).rejects.toThrow(/Failed to decrypt/i);
+      await expect(decryptDecodeZkpResult(user1.did, user1.prog1.zkpResultCache.data)).resolves.toEqual(user1.prog1.zkpResult);
+      await expect(decryptDecodeZkpResult(user2.did, user1.prog1.zkpResultCache.data)).rejects.toThrow(/Failed to decrypt/i);
+      expect.assertions(3);
+    });
+    test(`throws not found when user2 getting user1's cache`, async ({ expect }) => {
+      await expect(db.select().from(ZkpResultCacheEntity).execute()).resolves.toEqual([user1.prog1.zkpResultCache]);
+      await expect(fastify.inject({
+        method, url: urlByJalId(user1.prog1.zkpResultCache.jalId),
+        headers: { origin, Authorization: user1.auth },
+      }).then(bodyJson)).resolves.toMatchObject({
+        statusCode: HTTP.OK,
+        body: zkpResultCacheDtoFrom(user1.prog1.zkpResultCache),
+      });
+      await expect(fastify.inject({
+        method, url: urlByJalId(user1.prog1.zkpResultCache.jalId),
+        headers: { origin, Authorization: user2.auth },
+      }).then(bodyJson)).resolves.toMatchObject({
+        statusCode: HTTP.NOT_FOUND,
+        body: new HTTP.NotFoundError('ZkpResultCache not found').serialize(),
+      });
       expect.assertions(3);
     });
   });
 });
 
 async function makeMocks(app: App) {
-  const did = await didFromSeed('user1');
-  const Authorization = `Bearer ${await testJwtCreate({ app, did: did.id })}`;
+  const user1_did = await didFromSeed('user1');
+  const user1_jalProgram1 = { program1: '1' };
+  const user1_zkpResult1 = { proof: 'data1' };
+  const user1_jalProgram2 = { program2: '2' };
+  const user1_zkpResult2 = { proof: 'data2' };
 
-  const zkpResult1 = { proof: 'value1' };
-  const zkpResultCache1: ZkpResultCacheEntity = {
-    id: 'bfa9c7b8-50ac-42e0-be67-b163d35dc1e1',
-    data: await encryptEncodeZkpResult(did, zkpResult1),
-    createdAt: new Date(2000, 8, 21),
-    jalId: jalIdFrom(zkpResult1),
-  };
+  const user2_did = await didFromSeed('user2');
+  const user2_jalProgram1 = { program1: '1' };
+  const user2_zkpResult1 = { proof: 'data1' };
 
-  const zkpResult2 = { proof: 'data2' };
-  const zkpResultCache2: ZkpResultCacheEntity = {
-    id: 'c6b62ff3-f9f7-4ddc-8ae4-bfbd5ec726e8',
-    data: await encryptEncodeZkpResult(did, zkpResult2),
-    createdAt: new Date(2024, 6, 19),
-    jalId: jalIdFrom(zkpResult2),
-  };
-
-  return { did, Authorization, zkpResult1, zkpResult2, zkpResultCache1, zkpResultCache2 };
+  return {
+    user1: {
+      did: user1_did,
+      auth: await testJwtCreate({ app, did: user1_did.id }),
+      prog1: {
+        jalProgram: user1_jalProgram1,
+        zkpResult: user1_zkpResult1,
+        zkpResultCache: {
+          id: 'bfa9c7b8-50ac-42e0-be67-b163d35dc1e1',
+          controlledBy: user1_did.id,
+          jalId: jalIdFrom(user1_jalProgram1),
+          data: await encryptEncodeZkpResult(user1_did, user1_zkpResult1),
+          updatedAt: new Date(2000, 7, 21),
+          createdAt: new Date(2000, 7, 21),
+        } satisfies ZkpResultCacheEntity as ZkpResultCacheEntity,
+      },
+      prog2: {
+        jalProgram: { program2: '2' },
+        zkpResult: { proof: 'value2' },
+        zkpResultCache: {
+          id: 'c6b62ff3-f9f7-4ddc-8ae4-bfbd5ec726e8',
+          controlledBy: user1_did.id,
+          jalId: jalIdFrom(user1_jalProgram2),
+          data: await encryptEncodeZkpResult(user1_did, user1_zkpResult2),
+          updatedAt: new Date(2024, 6, 19),
+          createdAt: new Date(2024, 6, 19),
+        } satisfies ZkpResultCacheEntity as ZkpResultCacheEntity,
+      },
+    },
+    user2: {
+      did: user2_did,
+      auth: await testJwtCreate({ app, did: user2_did.id }),
+      prog1: {
+        jalProgram: user2_jalProgram1,
+        zkpResult: user2_zkpResult1,
+        zkpResultCache: {
+          id: 'bfa9c7b8-50ac-42e0-be67-b163d35dc1e1',
+          controlledBy: user2_did.id,
+          jalId: jalIdFrom(user2_jalProgram1),
+          data: await encryptEncodeZkpResult(user2_did, user2_zkpResult1),
+          updatedAt: new Date(2000, 11, 8),
+          createdAt: new Date(2000, 11, 8),
+        } satisfies ZkpResultCacheEntity as ZkpResultCacheEntity,
+      },
+    },
+  } as const;
 }
 
 function jalIdFrom(jalProgram: object): string {
