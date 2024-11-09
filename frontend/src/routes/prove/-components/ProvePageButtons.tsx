@@ -59,14 +59,14 @@ function MainButton(): ReactNode {
     onClick: challenge ? () => VerificationIssueActions.finish(challenge) : VerificationIssueActions.start,
     isLoading: $credentialIssueAsync.value.isLoading,
   } : !$proofCreateAsync.value.isSuccess ? {
-    children: 'Prove', onClick: VerificationProofActions.proofCreate,
+    children: 'Create proof', onClick: VerificationProofActions.proofCreate,
     isLoading: $proofCacheAsync.value.isLoading || $proofCreateAsync.value.isLoading,
     isDisabled: !$credential.value || $credentialsAsync.value.isLoading,
   } : !$proofSignAsync.value.isSuccess ? {
-    children: 'Prove', onClick: VerificationProofActions.proofSign,
+    children: 'Send proof', onClick: VerificationProofActions.proofSign,
     isLoading: $proofSignAsync.value.isLoading,
   } : /*$proofSignAsync.value.isSuccess ?*/ {
-    children: 'Prove', onClick: VerificationProofActions.proofSend,
+    children: 'Send proof', onClick: VerificationProofActions.proofSend,
     isLoading: $proofSendAsync.value.isLoading,
     isDisabled: $proofSendAsync.value.isSuccess,
   });
