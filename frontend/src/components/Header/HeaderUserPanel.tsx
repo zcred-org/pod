@@ -3,9 +3,9 @@ import BoringAvatar from 'boring-avatars';
 import { compact } from 'lodash-es';
 import { Box, LogOut, Moon, Sun } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { link } from '@/components/factories/link.tsx';
 import { IconByWalletType } from '@/components/icons/icons.tsx';
 import { config } from '@/config';
-import { useAsLinkBuilder } from '@/hooks/useAsLinkBuilder.ts';
 import { useDevTools } from '@/hooks/useDevTools.ts';
 import { useDisconnect } from '@/hooks/web3/useDisconnect.ts';
 import { DidStore } from '@/stores/did-store/did.store.ts';
@@ -16,8 +16,8 @@ import { addressShort } from '@/util/independent/address-short.ts';
 
 export function HeaderUserPanel(): ReactNode {
   const { signOut } = useDisconnect();
-  const linkBuilder = useAsLinkBuilder();
   const devToolsHook = useDevTools();
+  // const linkBuilder = useAsLinkBuilder();
 
   const userIcon = (
     <div className="relative w-10 h-10">
@@ -49,7 +49,8 @@ export function HeaderUserPanel(): ReactNode {
       <DropdownMenu>
         <DropdownSection showDivider>
           <DropdownItem
-            {...linkBuilder({ to: '/credentials' })}
+            // {...linkBuilder({ to: '/credentials' })}
+            as={link({ to: '/credentials' })}
             className={'text-foreground'}
             endContent={<Box size={14} />}
           >Credentials</DropdownItem>

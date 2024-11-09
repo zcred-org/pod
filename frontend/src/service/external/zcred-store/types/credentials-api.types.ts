@@ -2,19 +2,14 @@ import type { Proposal } from '@/service/external/verifier/types.ts';
 import type { ZCredStore } from '@/service/external/zcred-store/api-specification.ts';
 
 
+export type CredentialsGetManySearchArgs = Pick<ZCredStore['CredentialsSearchParamsDto'], 'issuer.type' | 'issuer.uri' | 'subject.id.type' | 'subject.id.key'>
 export type CredentialsGetManyPaginationArgs = Pick<ZCredStore['CredentialsSearchParamsDto'], 'offset' | 'limit'>;
-export type CredentialsGetManySearchArgs = Pick<
-  ZCredStore['CredentialsSearchParamsDto'],
-  | 'issuer.type' | 'issuer.uri'
-  | 'subject.id.type' | 'subject.id.key'
->
+export type CredentialsGetManyPaginationRequiredArgs = Required<CredentialsGetManyPaginationArgs>;
 
-export type CredentialsApiGetManyArgs = {
+export type CredentialsGetManyArgs = {
   search?: CredentialsGetManySearchArgs,
   pagination?: CredentialsGetManyPaginationArgs,
 };
-
-export type CredentialsApiGetManyPaginationRequiredArgs = Required<CredentialsGetManyPaginationArgs>;
 
 export function credentialsGetManySearchArgsFrom(input: Proposal): CredentialsGetManySearchArgs {
   return {

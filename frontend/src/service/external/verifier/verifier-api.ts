@@ -22,6 +22,7 @@ export class VerifierApi {
       .catch(VerifierApi.#catchVerifierException);
     if (!isProposal(res.data)) throw new VerifierException(VEC.PROPOSAL_BAD_RESP);
     if (!checkProposalValidity(res.data)) throw new VerifierException(VEC.PROPOSAL_BAD_RESP);
+    res.data.program.target = res.data.program.target.replace(/\.cjs$/, ".mjs");
     return res.data;
   }
 
@@ -42,6 +43,7 @@ export class VerifierApi {
       .catch(VerifierApi.#catchVerifierException);
     if (res.webhookURL) {
       await queryClient.fetchQuery({
+        gcTime: 0,
         queryKey: ['webhook', res.webhookURL],
         queryFn: () => axios.post(res.webhookURL!, res.sendBody, {
           headers: { Authorization: `Bearer ${res.jws}` },

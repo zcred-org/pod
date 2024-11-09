@@ -1,33 +1,35 @@
 import type { CredentialsGetManySearchArgs } from '@/service/external/zcred-store/types/credentials-api.types.ts';
 import { DidStore } from '@/stores/did-store/did.store.ts';
-import type { VerificationStoreInitArgs } from '@/stores/verification-store/verification-store.ts';
 
 
 export const queryKey = {
   get PRIVATE() { return [DidStore.$did.value?.id] as const; },
 
   credential: {
-    get ROOT() { return ['credential', ...queryKey.PRIVATE] as const; },
-    get: (credentialId: string) => [...queryKey.credential.ROOT, credentialId] as const,
+    ROOT: ['credential'] as const,
+    get PRIVATE() { return [...queryKey.credential.ROOT, ...queryKey.PRIVATE] as const; },
+    get: (credentialId: string) => [...queryKey.credential.PRIVATE, { credentialId }] as const,
   },
 
   credentials: {
-    get ROOT() { return ['credentials', ...queryKey.PRIVATE] as const; },
-    get: (args?: CredentialsGetManySearchArgs) => [...queryKey.credentials.ROOT, args] as const,
+    ROOT: ['credentials'] as const,
+    get PRIVATE() { return [...queryKey.credentials.ROOT, ...queryKey.PRIVATE] as const; },
+    get: (args?: CredentialsGetManySearchArgs) => [...queryKey.credentials.PRIVATE, args] as const,
   },
 
   zkpResult: {
-    get ROOT() { return ['zkpResult', ...queryKey.PRIVATE] as const; },
-    get: (jalId: string) => [...queryKey.zkpResult.ROOT, jalId] as const,
+    ROOT: ['zkpResult'] as const,
+    get PRIVATE() { return [...queryKey.zkpResult.ROOT, ...queryKey.PRIVATE] as const; },
+    get: (jalId: string) => [...queryKey.zkpResult.PRIVATE, { jalId }] as const,
   },
 
   proposal: {
     ROOT: ['proposal'] as const,
-    get: (args: VerificationStoreInitArgs) => [...queryKey.proposal.ROOT, args] as const,
+    get: (proposalURL: string) => [...queryKey.proposal.ROOT, { proposalURL }] as const,
   },
 
   issuer: {
-    ROOT: ['issuerInfo'] as const,
+    ROOT: ['httpIssuer'] as const,
     CURRENT: (httpIssuerHref: string) => [...queryKey.issuer.ROOT, httpIssuerHref] as const,
     info: (httpIssuerHref: string) => [...queryKey.issuer.CURRENT(httpIssuerHref), 'info'] as const,
   },

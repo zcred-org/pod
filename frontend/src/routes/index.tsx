@@ -7,6 +7,7 @@ import { PageContainer } from '@/components/PageContainer.tsx';
 import { ErrorView } from '@/components/sub-pages/ErrorView.tsx';
 import { PendingView } from '@/components/sub-pages/PendingView.tsx';
 import { Button } from '@/components/ui/Button.tsx';
+import { AppGlobal } from '@/config/app-global.ts';
 import { web3modal } from '@/config/wagmi-config.ts';
 import { useWagmiConnector } from '@/hooks/web3/ethereum/useWagmiConnector.ts';
 import { DidStore } from '@/stores/did-store/did.store.ts';
@@ -31,12 +32,13 @@ export const Route = createFileRoute('/')({
   }),
   beforeLoad: () => ({ title: 'Sign In' }),
   loaderDeps: ({ search }) => search,
-  loader: async ({ deps: { proposalURL, zcredSessionId } }) => {
-    const verificationInitArgs = verificationStoreInitArgsFrom({ proposalURL, zcredSessionId });
+  loader: async ({ deps }) => {
+    const verificationInitArgs = verificationStoreInitArgsFrom(deps);
     if (verificationInitArgs) {
+      if (deps.zcredSessionId) ZCredIssueStore.init(deps.zcredSessionId);
+      AppGlobal.router.preloadRoute({ to: '/prove', search: verificationInitArgs }).then();
       await VerificationInitActions.init(verificationInitArgs);
     }
-    if (zcredSessionId) ZCredIssueStore.init(zcredSessionId);
     const { requiredId, verifierHost } = VerificationStore.$initDataAsync.peek().data || {};
     return {
       verifierHost,

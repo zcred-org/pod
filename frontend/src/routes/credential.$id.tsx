@@ -1,6 +1,6 @@
-import { TableHeader, TableBody, Table, TableColumn, TableRow, TableCell, Card, CardBody, CardHeader, Divider, Link, cn } from '@nextui-org/react';
+import { TableHeader, TableBody, Table, TableColumn, TableRow, TableCell, Card, CardBody, CardHeader, Divider, cn } from '@nextui-org/react';
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, useRouter, type ErrorComponentProps } from '@tanstack/react-router';
+import { createFileRoute, useRouter, type ErrorComponentProps, Link } from '@tanstack/react-router';
 import Avvvatar from 'avvvatars-react';
 import { AxiosError } from 'axios';
 import { get } from 'lodash-es';
@@ -11,7 +11,6 @@ import { IconVisibility } from '@/components/icons/IconVisibility.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
 import { ErrorView } from '@/components/sub-pages/ErrorView.tsx';
 import { PendingView } from '@/components/sub-pages/PendingView.tsx';
-import { useAsLinkBuilder } from '@/hooks/useAsLinkBuilder.ts';
 import { credentialQuery } from '@/service/queries/credential.query.ts';
 import { tryToLocalDateTime } from '@/util/independent/date.ts';
 import { objectFlat } from '@/util/independent/object.ts';
@@ -36,7 +35,7 @@ export const Route = createFileRoute('/credential/$id')({
 function CredentialView() {
   const router = useRouter();
   const isCanBack = Route.useRouteContext({ select: (state) => state.isCanBack });
-  const link = useAsLinkBuilder();
+  // const link = useAsLinkBuilder();
   const credentialId = Route.useParams().id;
   const { data: zCred, error, isPending, isError } = useQuery(credentialQuery(credentialId));
   const attributesList = useMemo(() => zCred ? Object.entries(objectFlat(zCred.data.attributes)) : null, [zCred]);
@@ -85,8 +84,9 @@ function CredentialView() {
       </Card>
       <div className="flex justify-center">
         <Link
-          {...link({ to: '/credentials' })}
-          className="flex items-center cursor-pointer"
+          // {...link({ to: '/credentials' })}
+          to="/credentials"
+          className="flex items-center cursor-pointer text-primary"
           onClick={isCanBack ? (e) => {
             e.preventDefault();
             router.history.back();

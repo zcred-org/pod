@@ -1,5 +1,5 @@
 import type { HttpCredential } from '@zcredjs/core';
-import type { CredentialsApiGetManyArgs } from '@/service/external/zcred-store/types/credentials-api.types.ts';
+import type { CredentialsGetManyArgs } from '@/service/external/zcred-store/types/credentials-api.types.ts';
 import type { CredentialDecoded, CredentialsDecodedDto } from '@/service/external/zcred-store/types/credentials.types.ts';
 import { type ZCredStore, ZCredStoreCredentialByIdRoute, ZCredStoreCredentialsRoute, ZCredStoreCredentialUpsertRoute } from '../api-specification.ts';
 import type { ZCredStoreApi } from '../index.ts';
@@ -25,7 +25,7 @@ export class CredentialsApi {
   }
 
   public async credentials(
-    args?: CredentialsApiGetManyArgs & {
+    args?: CredentialsGetManyArgs & {
       signal?: AbortSignal,
     },
   ): Promise<CredentialsDecodedDto> {

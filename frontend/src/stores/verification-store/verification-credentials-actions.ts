@@ -13,6 +13,7 @@ import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
 
 export abstract class VerificationCredentialsActions {
   public static $refetchNoWait(offsetMin?: number) {
+    // noinspection BadExpressionStatementJS: because of signal-proxy subscription
     /** Subscriptions **/
     credentialsInfiniteQuery.$signal.$data?.value;
     /** Read state **/
@@ -43,7 +44,8 @@ export abstract class VerificationCredentialsActions {
       await credentialsInfiniteQuery.prefetch(credentialsGetManySearchArgsFrom(initData.proposal));
       const $query = credentialsInfiniteQuery.$signal;
       if ($query.isError) throw $query.error;
-      const limit = $query.data!.pageParams.at(0)!.limit; // non-null because of prefetch
+      const limit = $query.data?.pageParams[0]?.limit;
+      if (!$query.data || !limit) throw new Error('CredentialsActions.refetch: Query is not ready');
 
       const isCredentialUpdatable = VerificationCredentialsActions.#createUpdateChecker(initData.issuerInfo);
       const calcIsContinue = ({ pageIdx, offset }: Record<'offset' | 'pageIdx', number>): boolean => {
@@ -103,7 +105,7 @@ export abstract class VerificationCredentialsActions {
       console.error(`VerificationCredentialsActions.#refetchAsync() error:`, {
         error,
         type: typeof error,
-        constructor: error!.constructor.name,
+        constructor: error?.constructor.name,
         message: error instanceof Error ? error.message : undefined,
       });
       batch(() => {

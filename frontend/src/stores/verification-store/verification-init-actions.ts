@@ -23,6 +23,12 @@ export abstract class VerificationInitActions {
   } = {};
 
   static subscriptionsEnable(): void {
+    VerificationInitActions.#SUBs.credentialsInfiniteQueryEffect ??= effect(() => {
+      const proposal = VerificationStore.$initDataAsync.value.data?.proposal;
+      if (!proposal) return;
+      return credentialsInfiniteQuery.signalSub(credentialsGetManySearchArgsFrom(proposal));
+    });
+    VerificationInitActions.#SUBs.credentialsRefetchEffect ??= effect(VerificationCredentialsActions.$refetchNoWait);
     VerificationInitActions.#SUBs.proofCacheFetchEffect ??= effect(() => {
       /** Subscriptions **/
       const credentialsAsync = VerificationStore.$credentialsAsync.value;
@@ -37,12 +43,6 @@ export abstract class VerificationInitActions {
         VerificationProofActions.proofCacheLoad().then();
       }
     });
-    VerificationInitActions.#SUBs.credentialsRefetchEffect ??= effect(VerificationCredentialsActions.$refetchNoWait);
-    VerificationInitActions.#SUBs.credentialsInfiniteQueryEffect ??= effect(() => {
-      const proposal = VerificationStore.$initDataAsync.value.data?.proposal;
-      if (!proposal) return;
-      return credentialsInfiniteQuery.signalSub(credentialsGetManySearchArgsFrom(proposal));
-    });
   }
 
   static subscriptionsDisable() {
@@ -55,7 +55,7 @@ export abstract class VerificationInitActions {
     if (status.isLoading || status.isSuccess) return;
     try {
       VerificationStore.$initDataAsync.loading();
-      const proposal = await proposalQuery.fetch(initArgs).catch(async (error: VerifierException | AxiosError) => {
+      const proposal = await proposalQuery.fetch(initArgs.proposalURL).catch(async (error: VerifierException | AxiosError) => {
         if (error instanceof VerifierException) await VerificationTerminateActions.reject({
           ui: { message: `Verifier (${new URL(initArgs.proposalURL).host}) is not working` },
           isSkipVerifierReq: true,
@@ -113,7 +113,7 @@ export abstract class VerificationInitActions {
       zkpResultQuery.invalidateROOT(),
     ]);
     VerificationInitActions.subscriptionsDisable();
-    await VerificationInitActions.init(initArgs);
+    await VerificationInitActions.init({ proposalURL: initArgs.proposalURL });
     VerificationInitActions.subscriptionsEnable();
   }
 }

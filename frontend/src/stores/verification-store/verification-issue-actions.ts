@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { CredentialValidIntervalModal } from '@/components/modals/CredentialValidIntervalModal.tsx';
 import { AppGlobal } from '@/config/app-global.ts';
 import { zCredStore } from '@/service/external/zcred-store';
+import { credentialQuery } from '@/service/queries/credential.query.ts';
 import { credentialsInfiniteQuery } from '@/service/queries/credentials.query.ts';
 import { DidStore } from '@/stores/did-store/did.store.ts';
 import { VerificationCredentialsActions } from '@/stores/verification-store/verification-credentials-actions.ts';
@@ -134,6 +135,7 @@ export class VerificationIssueActions {
       if (!credentialFilter.isCanProve(credential)) {
         await VerificationTerminateActions.rejectAttributesNotMatch();
       } else {
+        credentialQuery.invalidateROOT();
         credentialsInfiniteQuery.invalidateROOT();
         VerificationCredentialsActions.$refetchNoWait();
       }

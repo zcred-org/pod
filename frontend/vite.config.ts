@@ -9,54 +9,61 @@ import topLevelAwait from 'vite-plugin-top-level-await';
 import packageJson from './package.json';
 
 
-const lintCommand = packageJson.scripts.lint;
-const target = browserslistToEsbuild(packageJson.browserslist);
-const corejs = packageJson.dependencies['core-js'].match(/\d+(\.\d+(\.\d+)?)?/)[0];
-
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    topLevelAwait(),
-    TanStackRouterVite({
-      routeFileIgnorePrefix: '-',
-      autoCodeSplitting: true,
-    }),
-    react({
-      babel: {
-        plugins: ['module:@preact/signals-react-transform'],
-        presets: [
-          [
-            // https://babeljs.io/docs/babel-preset-env
-            '@babel/preset-env',
-            {
-              debug: false,
-              bugfixes: true,
-              modules: false,
-              useBuiltIns: 'usage',
-              corejs,
-            },
+export default defineConfig(() => {
+  const lintCommand = packageJson.scripts.lint;
+  const target = browserslistToEsbuild(packageJson.browserslist);
+  const corejs = packageJson.dependencies['core-js'].match(/\d+(\.\d+(\.\d+)?)?/)[0];
+
+  const VITE_BUILD_ID = Date.now().toString(36);
+
+  return {
+    plugins: [
+      topLevelAwait(),
+      TanStackRouterVite({
+        routeFileIgnorePrefix: '-',
+        autoCodeSplitting: true,
+      }),
+      react({
+        babel: {
+          plugins: ['module:@preact/signals-react-transform'],
+          presets: [
+            [
+              // https://babeljs.io/docs/babel-preset-env
+              '@babel/preset-env',
+              {
+                debug: false,
+                bugfixes: true,
+                modules: false,
+                useBuiltIns: 'usage',
+                corejs,
+              },
+            ],
           ],
-        ],
-      },
-    }),
-    checker({
-      overlay: { initialIsOpen: false, position: 'br' },
-      typescript: true,
-      eslint: {
-        lintCommand,
-        useFlatConfig: false,
-      },
-    }),
-    svgr(),
-  ],
-  build: { target },
-  esbuild: { target },
-  server: {
-    host: true,
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
+        },
+      }),
+      checker({
+        overlay: { initialIsOpen: false, position: 'br' },
+        typescript: true,
+        eslint: {
+          lintCommand,
+          useFlatConfig: false,
+        },
+      }),
+      svgr(),
+    ],
+    build: { target },
+    esbuild: { target },
+    define: {
+      'import.meta.env.VITE_BUILD_ID': JSON.stringify(VITE_BUILD_ID),
     },
-  },
-  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
+    server: {
+      host: true,
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'require-corp',
+      },
+    },
+    resolve: { alias: { '@': path.resolve(__dirname, './src') } },
+  };
 });

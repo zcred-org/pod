@@ -6,26 +6,22 @@ import { Ms } from '@/util/independent/ms.ts';
 
 
 function queryFn(ctx: QueryFunctionContext<ZkpResultQueryKey>) {
-  const { signal, queryKey: { 2: jalId } } = ctx;
+  const { signal, queryKey: { 2: { jalId } } } = ctx;
   return zCredStore.zkpResultCache.get({ jalId, signal });
 }
+
+queryClient.setQueryDefaults(queryKey.zkpResult.ROOT, {
+  gcTime: Ms.minute(5),
+  staleTime: Ms.minute(5),
+});
 
 export function zkpResultQuery(jalId: string) {
   return queryOptions({
     queryKey: queryKey.zkpResult.get(jalId),
     queryFn,
-    staleTime: Ms.minute(10),
   });
 }
 
-zkpResultQuery.fetch = function (...args: Parameters<typeof zkpResultQuery>) {
-  return queryClient.fetchQuery(zkpResultQuery(...args));
-};
-
-zkpResultQuery.prefetch = function (...args: Parameters<typeof zkpResultQuery>) {
-  return queryClient.prefetchQuery(zkpResultQuery(...args));
-};
-
-zkpResultQuery.invalidateROOT = function () {
-  return queryClient.invalidateQueries({ queryKey: queryKey.zkpResult.ROOT });
-};
+zkpResultQuery.fetch = (...args: Parameters<typeof zkpResultQuery>) => queryClient.fetchQuery(zkpResultQuery(...args));
+zkpResultQuery.prefetch = (...args: Parameters<typeof zkpResultQuery>) => queryClient.prefetchQuery(zkpResultQuery(...args));
+zkpResultQuery.invalidateROOT = () => queryClient.invalidateQueries({ queryKey: queryKey.zkpResult.ROOT });
