@@ -22,7 +22,7 @@ import { originToHostnames } from '../util/index.js';
 import { CredentialsDto } from '../controllers/credential/dtos/credentials.dto.js';
 import { CredentialsSearchParamsDto } from '../controllers/credential/dtos/credentials-search-params.dto.js';
 import { ZkpResultCacheDto } from '../controllers/zkp-result-cache/dtos/zkp-result-cache.dto.js';
-import { ZkpResultCacheCreateDto } from '../controllers/zkp-result-cache/dtos/zkp-result-cache-create.dto.js';
+import { ZkpResultCacheUpsertDto } from '../controllers/zkp-result-cache/dtos/zkp-result-cache-upsert.dto.js';
 
 
 export class HttpServer implements Disposable {
