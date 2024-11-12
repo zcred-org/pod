@@ -1,6 +1,6 @@
 import { cn } from '@nextui-org/react';
 import type { ReactNode, SVGProps } from 'react';
-import IconEthereum from '@/assets/icons8_ethereum.svg?react';
+import IconEthereum from '@/assets/ethereum.svg?react';
 import IconLogoSvg from '@/assets/logo.svg?react';
 import IconMinaWord from '@/assets/mina-word.svg?react';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';

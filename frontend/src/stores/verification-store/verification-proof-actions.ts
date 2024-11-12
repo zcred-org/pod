@@ -104,8 +104,10 @@ export class VerificationProofActions {
     if (!proof) throw new Error('Proof is not signed');
     /** Perform logic **/
     VerificationStore.$proofSendAsync.loading();
+    const preloadRoute = AppGlobal.router.preloadRoute({ to: '/terminate' }).then();
     const [res, error] = await go<Error>()(VerifierApi.proofSend({ verifierURL, proof }));
     if (!error) {
+      await preloadRoute;
       await VerificationTerminateActions.resolve(res?.redirectURL);
       VerificationStore.$proofSendAsync.resolve();
     } else {

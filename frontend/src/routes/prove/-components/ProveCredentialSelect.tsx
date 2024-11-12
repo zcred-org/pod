@@ -15,6 +15,7 @@ const {
   $credential,
   $proofCreateAsync,
   $terminateAsync,
+  $proofCacheAsync,
 } = VerificationStore;
 
 const $credentialsNotProvableIds = computed<string[]>(() => {
@@ -41,7 +42,7 @@ export const ProveCredentialSelect: FC = () => {
 
 
   return (<>
-    {$credentialsAsync.value.data.length > 1 ? <Select
+    {$credentialsAsync.value.data.length > 1 && !($proofCacheAsync.value.isLoading || $proofCacheAsync.value.isSuccess) ? <Select
       className="shadow-amber-500"
       items={$credentialsAsync.value.data}
       isRequired={!$credential.value}
@@ -53,7 +54,7 @@ export const ProveCredentialSelect: FC = () => {
       disabledKeys={$credentialsNotProvableIds.value}
       placeholder="Please select one from the list"
       isLoading={$credentialsAsync.value.isLoading}
-      isDisabled={$proofCreateAsync.value.isLoading || $proofCreateAsync.value.isSuccess || !$terminateAsync.value.isIdle}
+      isDisabled={$proofCreateAsync.value.isLoading || $proofCreateAsync.value.isSuccess || !$terminateAsync.value.isIdle || $proofCacheAsync.value.isLoading}
       description={!$credential.value && $credentialsAsync.value.data.at(0)?.isProvable && $credentialsAsync.value.data.at(1)?.isProvable
         ? 'You have more than one suitable credential, please specify which one you would like to use'
         : $credential.value

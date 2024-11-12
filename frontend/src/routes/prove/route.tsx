@@ -1,18 +1,17 @@
 import { Button, Card, CardBody, CardHeader, Divider, Skeleton, Textarea } from '@nextui-org/react';
-import { computed } from '@preact/signals-react';
 import { type ErrorComponentProps, createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
 import { SwitchToRequiredIdModal } from '@/components/modals/SwitchToRequiredIdModal.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
 import { ErrorView } from '@/components/sub-pages/ErrorView.tsx';
-import { ApproximateSpin } from '@/components/ui/LoadingSpin/ApproximateSpin.tsx';
 import { ProveCredentialSelect } from '@/routes/prove/-components/ProveCredentialSelect.tsx';
 import { ProveDescription } from '@/routes/prove/-components/ProveDescription.tsx';
 import { ProvePageButtons } from '@/routes/prove/-components/ProvePageButtons.tsx';
+import { ProveStepper } from '@/routes/prove/-components/ProveStepper.tsx';
 import { ProveRoutePath } from '@/routes/prove/-constants.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
-import { VerificationStore, HolyCrapWhatsLoadingNowStageEnum } from '@/stores/verification-store/verification-store.ts';
+import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
 import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
@@ -37,7 +36,6 @@ export const Route = createFileRoute(ProveRoutePath)({
 });
 
 function ProveComponent() {
-  const holyCrapWhatsLoadingNow = VerificationStore.$holyCrapWhatsLoadingNow.value;
   const isSubjectMatch = VerificationStore.$isSubjectMatch.value;
   const initDataState = VerificationStore.$initDataAsync.value;
   const wallet = WalletStore.$wallet.value;
@@ -62,6 +60,7 @@ function ProveComponent() {
 
   if (initDataState.isLoading) return <VerificationPendingView />;
   if (initDataState.isError) throw initDataState.error;
+  if (initDataState.isIdle) return null; // Wait for restart
   if (!initDataState.isSuccess) throw new Error('Verification is not initialized');
 
   if (!isSubjectMatch) return (
@@ -83,17 +82,21 @@ function ProveComponent() {
         minRows={1}
       /> : null}
       <ProveCredentialSelect />
-      <div className="grow flex justify-center">
-        {computed(() => holyCrapWhatsLoadingNow ? <ApproximateSpin
-          label={holyCrapWhatsLoadingNow.text}
-          isSlow={[
-            HolyCrapWhatsLoadingNowStageEnum.ProofCache,
-            HolyCrapWhatsLoadingNowStageEnum.ProofCreate,
-          ].includes(holyCrapWhatsLoadingNow.stage)}
-          isLabelRight
-        /> : null)}
-      </div>
+      {/*<div className="grow flex justify-center">*/}
+      {/*  {computed(() => holyCrapWhatsLoadingNow ? <ApproximateSpin*/}
+      {/*    label={holyCrapWhatsLoadingNow.text}*/}
+      {/*    isSlow={[*/}
+      {/*      HolyCrapWhatsLoadingNowStageEnum.ProofCache,*/}
+      {/*      HolyCrapWhatsLoadingNowStageEnum.ProofCreate,*/}
+      {/*    ].includes(holyCrapWhatsLoadingNow.stage)}*/}
+      {/*    isLabelRight*/}
+      {/*  /> : null)}*/}
+      {/*</div>*/}
+      <div />
+      <ProveStepper />
+      <div />
       <ProvePageButtons />
+      <div />
     </PageContainer>
   );
 }

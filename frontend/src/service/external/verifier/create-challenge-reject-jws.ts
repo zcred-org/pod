@@ -1,13 +1,11 @@
 import { CompactSign } from 'jose';
 import sortKeys from 'sort-keys';
+import type { Proposal } from '@/service/external/verifier/types.ts';
 
 
 const EXCEPTION_DIFFICULTY_DEFAULT = 5;
 
-export async function createChallengeRejectJWS(args: {
-  message: string;
-  exceptionDifficulty?: number;
-}): Promise<string> {
+export async function createChallengeRejectJWS(args: Proposal['challenge']): Promise<string> {
   const secret = Buffer.from(await crypto.subtle.digest('SHA-256', Buffer.from(args.message)));
   const challenge = { messageHash: secret.toString('hex'), nonce: 0 };
   for (; ; ++challenge.nonce) {

@@ -38,9 +38,9 @@ export class VerificationIssueActions {
     }
     const { issuerInfo, httpIssuer, initArgs } = initData;
     /** Perform logic **/
-    VerificationStore.$credentialIssueAsync.loading();
     try {
       const validInterval = await VerificationIssueActions.#getValidInterval(issuerInfo);
+      VerificationStore.$credentialIssueAsync.loading();
       const zcredSessionId = randomUUID();
       if (!httpIssuer.browserIssue) throw new Error('Issuer does not support credential issuance');
       const challenge = await httpIssuer.getChallenge({

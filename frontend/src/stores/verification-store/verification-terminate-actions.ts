@@ -86,6 +86,7 @@ Please check back later.
   ): Promise<void> {
     if (!VerificationStore.$terminateAsync.peek().isIdle) return;
     let redirectURLFromVerifier: string | undefined;
+    const preloadRoute = AppGlobal.router.preloadRoute({ to: '/terminate' }).then();
     if (!isSkipVerifierReq) {
       VerificationStore.$terminateAsync.loading();
       try {
@@ -98,6 +99,7 @@ Please check back later.
       }
     }
     console.debug('Verification rejected', { ui, error, redirectURLFromVerifier });
+    await preloadRoute;
     VerificationStore.$terminateAsync.resolve({
       ui: {
         status: ui.status ?? IconStatusEnum.Error,

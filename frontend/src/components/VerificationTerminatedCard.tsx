@@ -27,7 +27,7 @@ export function VerificationTerminatedCard(props: Props) {
       onMouseLeave={redirector?.restart}
     >
       <CardHeader className="flex flex-col justify-center">
-        <IconStatus status={props.status} className="w-24 h-24 mx-auto" />
+        <IconStatus status={props.status} className="p-3 w-24 h-24 mx-auto" />
         <p className="text-xl font-bold">{'Verification '}{props.status === IconStatusEnum.Ok ? 'successful' : 'NOT passed'}</p>
       </CardHeader>
       {props.message && (<>

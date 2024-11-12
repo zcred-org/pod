@@ -95,7 +95,7 @@ export abstract class VerificationInitActions {
     const initArgs = VerificationStore.$initDataAsync.peek().data?.initArgs;
     if (!initArgs) throw new Error('VerificationStore is not initialized');
     batch(() => {
-      VerificationStore.$initDataAsync.loading();
+      VerificationStore.$initDataAsync.reset();
       VerificationStore.$credentialsAsync.reset();
       VerificationStore.$credential.value = null;
       VerificationStore.$credentialIssueAsync.reset();

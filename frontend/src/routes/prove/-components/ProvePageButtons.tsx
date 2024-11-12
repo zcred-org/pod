@@ -63,7 +63,7 @@ function MainButton(): ReactNode {
     isLoading: $proofCacheAsync.value.isLoading || $proofCreateAsync.value.isLoading,
     isDisabled: !$credential.value || $credentialsAsync.value.isLoading,
   } : !$proofSignAsync.value.isSuccess ? {
-    children: 'Send proof', onClick: VerificationProofActions.proofSign,
+    children: 'Sign & send proof', onClick: VerificationProofActions.proofSign,
     isLoading: $proofSignAsync.value.isLoading,
   } : /*$proofSignAsync.value.isSuccess ?*/ {
     children: 'Send proof', onClick: VerificationProofActions.proofSend,
