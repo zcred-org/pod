@@ -6,6 +6,7 @@ import { Ed25519Provider } from 'key-did-provider-ed25519';
 import { getResolver } from 'key-did-resolver';
 import * as u8a from 'uint8arrays';
 import { ZCredDidSessionStore } from '@/stores/did-store/zcred-did-session.store.ts';
+import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { signal, computed } from '@/util/independent/signals/signals-dev-tools.ts';
 
@@ -15,7 +16,10 @@ let _subjectIdOfOwner: Identifier | null = null;
 export class DidStore {
   static seed: string | null = null;
   static #$did = signal<DID | null>(null, `DidStore.did`);
-  static $isLoading = computed<boolean>(() => WalletStore.$isConnected.value && !DidStore.$did.value, `DidStore.isLoading`);
+  static $isConnecting = computed<boolean>(() => {
+    return WalletStore.$isConnected.value && !DidStore.$did.value
+      && !VerificationStore.$isSubjectSwitchRequired.value;
+  }, `DidStore.isConnecting`);
 
   static get $did(): ReadonlySignal<DID | null> {
     return DidStore.#$did;
@@ -60,13 +64,13 @@ export class DidStore {
 
 effect(() => {
   const wallet = WalletStore.$wallet.value;
-  const seed = wallet ? ZCredDidSessionStore.get(wallet.subjectId) : undefined;
+  const seed = wallet && ZCredDidSessionStore.get(wallet.subjectId);
 
   batch(() => {
     if (_subjectIdOfOwner && _subjectIdOfOwner.key !== wallet?.subjectId.key) {
       DidStore.reset();
     }
-    if (wallet && !DidStore.$did.peek() && seed) {
+    if (DidStore.$isConnecting.value && seed) {
       DidStore.authenticate(seed, wallet.subjectId).then();
     }
   });

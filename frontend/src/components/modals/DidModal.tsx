@@ -41,7 +41,7 @@ export function DidModal(): ReactNode {
 
   return (
     <Modal
-      isOpen={DidStore.$isLoading.value}
+      isOpen={DidStore.$isConnecting.value}
       backdrop="blur"
       placement="center"
       hideCloseButton

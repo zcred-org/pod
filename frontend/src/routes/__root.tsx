@@ -33,7 +33,7 @@ function RootLayout() {
       <Header />
       <Outlet />
 
-      <DidModal/>
+      <DidModal />
       <CredentialValidIntervalModal />
       <PromptModals />
 

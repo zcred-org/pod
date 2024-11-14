@@ -2,7 +2,6 @@ import { Button, Card, CardBody, CardHeader, Divider, Skeleton, Textarea } from 
 import { type ErrorComponentProps, createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import { RequireWalletAndDidHoc } from '@/components/HOC/RequireWalletAndDidHoc.tsx';
-import { SwitchToRequiredIdModal } from '@/components/modals/SwitchToRequiredIdModal.tsx';
 import { PageContainer } from '@/components/PageContainer.tsx';
 import { ErrorView } from '@/components/sub-pages/ErrorView.tsx';
 import { ProveCredentialSelect } from '@/routes/prove/-components/ProveCredentialSelect.tsx';
@@ -12,7 +11,6 @@ import { ProveStepper } from '@/routes/prove/-components/ProveStepper.tsx';
 import { ProveRoutePath } from '@/routes/prove/-constants.ts';
 import { VerificationInitActions } from '@/stores/verification-store/verification-init-actions.ts';
 import { VerificationStore } from '@/stores/verification-store/verification-store.ts';
-import { WalletStore } from '@/stores/wallet.store.ts';
 import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
 import { routeRequireWalletAndDid } from '@/util/route-require-wallet-and-did.ts';
 
@@ -36,9 +34,7 @@ export const Route = createFileRoute(ProveRoutePath)({
 });
 
 function ProveComponent() {
-  const isSubjectMatch = VerificationStore.$isSubjectMatch.value;
   const initDataState = VerificationStore.$initDataAsync.value;
-  const wallet = WalletStore.$wallet.value;
 
   // const $isNavigateBlocked = VerificationStore.$isNavigateBlocked;
   // useBlocker({
@@ -60,15 +56,7 @@ function ProveComponent() {
 
   if (initDataState.isLoading) return <VerificationPendingView />;
   if (initDataState.isError) throw initDataState.error;
-  if (initDataState.isIdle) return null; // Wait for restart
   if (!initDataState.isSuccess) throw new Error('Verification is not initialized');
-
-  if (!isSubjectMatch) return (
-    <SwitchToRequiredIdModal
-      requiredId={initDataState.data.requiredId}
-      subjectId={wallet!.subjectId}
-    />
-  );
 
   return (
     <PageContainer className="sm:max-w-xl">

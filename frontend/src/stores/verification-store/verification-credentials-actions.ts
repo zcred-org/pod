@@ -12,17 +12,16 @@ import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
 
 
 export abstract class VerificationCredentialsActions {
-  public static $refetchNoWait(offsetMin?: number) {
+  public static $refetchNoWait(offsetMin?: number): void {
     // noinspection BadExpressionStatementJS: because of signal-proxy subscription
     /** Subscriptions **/
     credentialsInfiniteQuery.$signal.$data?.value;
     /** Read state **/
     const isChallenge = !!ZCredIssueStore.session.value?.challenge;
     const initData = VerificationStore.$initDataAsync.value.data;
-    const isSubjectMatch = VerificationStore.$isSubjectMatch.value;
     const isWalletAndDidConnected = $isWalletAndDidConnected.value;
     /** Perform checks **/
-    if (isChallenge || !isSubjectMatch || !initData || !isWalletAndDidConnected) {
+    if (isChallenge || !initData || !isWalletAndDidConnected) {
       return batch(() => {
         VerificationStore.$credentialsAsync.reset();
         VerificationStore.$credential.value = null;

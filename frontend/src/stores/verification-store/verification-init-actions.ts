@@ -50,9 +50,9 @@ export abstract class VerificationInitActions {
     VerificationInitActions.#SUBs = {};
   }
 
-  public static async init(initArgs: VerificationStoreInitArgs): Promise<void> {
+  public static async init(initArgs: VerificationStoreInitArgs, isForce = false): Promise<void> {
     const status = VerificationStore.$initDataAsync.peek();
-    if (status.isLoading || status.isSuccess) return;
+    if (!isForce && (status.isLoading || status.isSuccess)) return;
     try {
       VerificationStore.$initDataAsync.loading();
       const proposal = await proposalQuery.fetch(initArgs.proposalURL).catch(async (error: VerifierException | AxiosError) => {
@@ -95,7 +95,7 @@ export abstract class VerificationInitActions {
     const initArgs = VerificationStore.$initDataAsync.peek().data?.initArgs;
     if (!initArgs) throw new Error('VerificationStore is not initialized');
     batch(() => {
-      VerificationStore.$initDataAsync.reset();
+      VerificationStore.$initDataAsync.loading();
       VerificationStore.$credentialsAsync.reset();
       VerificationStore.$credential.value = null;
       VerificationStore.$credentialIssueAsync.reset();
@@ -113,7 +113,7 @@ export abstract class VerificationInitActions {
       zkpResultQuery.invalidateROOT(),
     ]);
     VerificationInitActions.subscriptionsDisable();
-    await VerificationInitActions.init({ proposalURL: initArgs.proposalURL });
+    await VerificationInitActions.init({ proposalURL: initArgs.proposalURL }, true);
     VerificationInitActions.subscriptionsEnable();
   }
 }

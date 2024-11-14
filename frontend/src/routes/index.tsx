@@ -18,7 +18,7 @@ import { WalletStore } from '@/stores/wallet.store.ts';
 import { ZCredIssueStore } from '@/stores/z-cred-issue.store.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
 import { addressShort } from '@/util/independent/address-short.ts';
-import { isSubjectIdsEqual, subjectTypeToWalletEnum } from '@/util/subject-id.ts';
+import { subjectTypeToWalletEnum } from '@/util/subject-id.ts';
 
 
 export const Route = createFileRoute('/')({
@@ -39,25 +39,19 @@ export const Route = createFileRoute('/')({
       AppGlobal.router.preloadRoute({ to: '/prove', search: verificationInitArgs }).then();
       await VerificationInitActions.init(verificationInitArgs);
     }
-    const { requiredId, verifierHost } = VerificationStore.$initDataAsync.peek().data || {};
-    return {
-      verifierHost,
-      requiredId,
-      requiredWallet: requiredId ? subjectTypeToWalletEnum(requiredId.type) : undefined,
-      proveArgs: verificationInitArgs,
-    };
   },
 });
 
 function SignInView() {
-  const search = Route.useSearch();
-  const { requiredWallet, proveArgs, requiredId, verifierHost } = Route.useLoaderData();
+  const { redirect } = Route.useSearch();
   const { open: isWeb3ModalOpened } = useWeb3ModalState();
-  const { connector: wagmiConnector, account: wagmiAccount } = useWagmiConnector();
-  const wallet = WalletStore.$wallet.value;
+  const wagmi = useWagmiConnector();
+
+  const verification = VerificationStore.$initDataAsync.peek().data;
+  const requiredWallet = verification && subjectTypeToWalletEnum(verification.requiredId.type);
 
   if (!WalletStore.$isConnected.value) {
-    const isEthLoading = isWeb3ModalOpened || wagmiConnector.isFetching || !!wagmiAccount.address;
+    const isEthLoading = isWeb3ModalOpened || wagmi.connector.isFetching || !!wagmi.account.address;
     // const isMinaLoading = AuroStore.$isConnecting.value;
 
     const isEthDisabled = VerificationStore.$terminateAsync.value.isLoading /*|| isMinaLoading */;
@@ -68,15 +62,15 @@ function SignInView() {
 
     return (
       <PageContainer isCenter>
-        {requiredId ? (<>
+        {verification ? (<>
           <p>
             {'To create a proof for '}
-            <span className="underline">{verifierHost}</span>
+            <span className="underline">{verification.verifierHost}</span>
           </p>
           <p>you need to be logged in with:</p>
           <p className="flex items-center gap-2">
             <IconByWalletType walletType={requiredWallet} className="w-7 h-7 inline" />
-            {' '}{addressShort(requiredId.key)}
+            {' '}{addressShort(verification.requiredId.key)}
           </p>
         </>) : null}
         <div className="max-w-[300px] mx-auto flex flex-col justify-center gap-5">
@@ -95,31 +89,28 @@ function SignInView() {
           {/*  onClick={AuroStore.connect}*/}
           {/*  size="lg"*/}
           {/*><IconMina className="w-7 h-7 fill-white stroke-white" />Sign In With Mina</Button>}*/}
-          {requiredId && <div className="h-3" />}
-          {requiredId && <Button
-            onClick={VerificationTerminateActions.rejectByUser}
-            size="sm"
-            isLoading={VerificationStore.$terminateAsync.value.isLoading}
-            variant="light"
-            color="danger"
-          >Reject</Button>}
+          {verification ? (<>
+            <div className="h-3" />
+            <Button
+              onClick={VerificationTerminateActions.rejectByUser}
+              size="sm"
+              isLoading={VerificationStore.$terminateAsync.value.isLoading}
+              variant="light"
+              color="danger"
+            >Reject</Button>
+          </>) : null}
         </div>
       </PageContainer>
     );
   }
 
-  if (requiredId && wallet && !isSubjectIdsEqual(wallet.subjectId, requiredId)) return (
-    <SwitchToRequiredIdModal
-      requiredId={requiredId}
-      subjectId={wallet.subjectId}
-    />
-  );
+  if (VerificationStore.$isSubjectSwitchRequired.value) return <SwitchToRequiredIdModal />;
 
-  if (DidStore.$isLoading.value) return <PendingView />;
+  if (DidStore.$isConnecting.value) return <PendingView />;
 
-  if (proveArgs) return <Navigate to={'/prove'} search={proveArgs} />;
+  if (verification) return <Navigate to={'/prove'} search={verification.initArgs} />;
 
-  return <Navigate to={search.redirect || '/credentials'} />;
+  return <Navigate to={redirect || '/credentials'} />;
 }
 
 function SignInPendingView() {

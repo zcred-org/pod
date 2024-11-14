@@ -36,10 +36,11 @@ export class VerificationStore {
   public static $issuerError = signal<IssuerException | null>(null, `${StoreName}.state.issuerError`);
   public static $terminateAsync = signalAsync<null | VerificationTerminateOk | VerificationTerminateErr>()({ name: `${StoreName}.async.terminate` });
 
-  public static $isSubjectMatch = computed<boolean>(() => isSubjectIdsEqual(
-    VerificationStore.$initDataAsync.value?.data?.requiredId,
-    WalletStore.$wallet.value?.subjectId,
-  ), `${StoreName}.computed.isSubjectMatch`);
+  public static $isSubjectSwitchRequired = computed<boolean>(() => {
+    const subjectId = WalletStore.$wallet.value?.subjectId;
+    const requiredId = VerificationStore.$initDataAsync.value.data?.requiredId;
+    return subjectId && requiredId ? !isSubjectIdsEqual(requiredId, subjectId) : false;
+  }, `${StoreName}.computed.isSubjectMatch`);
   public static $isIssuanceRequired = computed(() => {
     const credentials = VerificationStore.$credentialsAsync.value;
     const isChallenge = !!ZCredIssueStore.session.value?.challenge;
