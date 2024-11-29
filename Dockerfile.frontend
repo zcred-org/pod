@@ -6,17 +6,23 @@ ARG VITE_WALLET_CONNECT_PROJECT_ID
 
 WORKDIR /app
 
-COPY . .
-
-RUN rm -r ./zcred-store
-RUN rm -r ./zkapp-hub
 RUN npm install -g pnpm
+COPY ./*.json ./*.yaml .npmrc ./
+COPY ./frontend/package.json ./frontend/
 RUN pnpm install --frozen-lockfile
-RUN export NODE_OPTIONS="--max-old-space-size=8192"
+COPY ./frontend ./frontend/
+ENV NODE_OPTIONS="--max-old-space-size=8192"
 RUN pnpm run build
-RUN rm -r ./frontend/src
 
-FROM nginx:alpine-slim
+
+FROM alpine:3.20 as production
+
+RUN apk update && apk add nginx brotli nginx-mod-http-brotli
 
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
-COPY /frontend/deployment/default.conf.template /etc/nginx/templates/default.conf.template
+COPY /frontend/deployment/nginx.conf /etc/nginx/http.d/default.conf
+
+CMD ["/bin/sh", "-c", "\
+  sed -i \"s#\\$PORT#${PORT:-80}#g\" /etc/nginx/http.d/default.conf \
+  && nginx -g 'daemon off;' \
+"]

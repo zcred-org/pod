@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 import browserslistToEsbuild from 'browserslist-to-esbuild';
 import { defineConfig } from 'vite';
 import { checker } from 'vite-plugin-checker';
+import { compression } from 'vite-plugin-compression2';
 import svgr from 'vite-plugin-svgr';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import packageJson from './package.json';
@@ -51,6 +52,8 @@ export default defineConfig(() => {
         },
       }),
       svgr(),
+      compression({ algorithm: 'gzip' }),
+      compression({ algorithm: 'brotliCompress' }),
     ],
     build: { target },
     esbuild: { target },
