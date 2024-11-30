@@ -17,12 +17,15 @@ RUN pnpm run build
 
 FROM alpine:3.20 as production
 
-RUN apk update && apk add nginx brotli nginx-mod-http-brotli
+ENV PORT=${PORT:-80}
 
+RUN apk add --no-cache nginx~1.26 nginx-mod-http-brotli~1.26 \
+    && ln -sf /dev/stdout /var/log/nginx/access.log \
+    && ln -sf /dev/stderr /var/log/nginx/error.log
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 COPY /frontend/deployment/nginx.conf /etc/nginx/http.d/default.conf
 
 CMD ["/bin/sh", "-c", "\
-  sed -i \"s#\\$PORT#${PORT:-80}#g\" /etc/nginx/http.d/default.conf \
+  sed -i \"s#\\$PORT#$PORT#g\" /etc/nginx/http.d/default.conf \
   && nginx -g 'daemon off;' \
 "]
