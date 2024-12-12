@@ -1,6 +1,6 @@
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Divider, cn } from '@nextui-org/react';
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, cn, Divider } from '@nextui-org/react';
 import { useMutation } from '@tanstack/react-query';
-import { type ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { toast } from 'sonner';
 import { IconByWalletType } from '@/components/icons/icons.tsx';
 import { Button } from '@/components/ui/Button.tsx';
@@ -10,31 +10,29 @@ import { $isWalletAndDidConnected } from '@/stores/other.ts';
 import { WalletStore } from '@/stores/wallet.store.ts';
 import { AuroErrorCodeEnum } from '@/types/auro-error-code.enum.ts';
 import { addressShort } from '@/util/independent/address-short.ts';
-import { SiwxMessage } from '@/util/siwx.ts';
 
 
 export function DidModal(): ReactNode {
   const wallet = WalletStore.$wallet.value;
+  const message = useMemo(() => wallet ? messageCreate({ address: wallet.address, blockchain: wallet.type }) : null, [wallet]);
 
-  const siwxMessage = wallet ? new SiwxMessage({
-    blockchain: wallet.type,
-    accountAddress: wallet.address,
-  }) : null;
-
-  const onConfirm = () => signMessage({ message: siwxMessage!.toString() });
+  const onConfirm = () => signMessage();
   const onCancel = () => useDisconnect.signOutBase();
 
   const { mutate: signMessage, isPending } = useMutation({
-    mutationFn: wallet?.adapter.sign || (() => Promise.reject(new Error('No wallet connected'))),
-    onSuccess: signature => DidStore.authenticate(signature, wallet!.subjectId),
+    mutationFn: async () => {
+      if (!wallet) throw new Error('Please connect wallet first');
+      if (!message) throw new Error('Message is not ready');
+      const signature = await wallet.adapter.sign({ message: message.asString });
+      await DidStore.authenticate(signature, wallet!.subjectId);
+    },
     onError: async (error) => {
       const isUserRejected = error.name === 'UserRejectedRequestError'
         || 'code' in error && error.code === AuroErrorCodeEnum.UserRejectedRequest;
-      if (isUserRejected) {
-        toast.warning('Sign in canceled. You need to sign the message to continue.');
-      } else {
-        toast.error(`Unexpected error "${error}": ${error instanceof Error ? error.message : error}`);
-      }
+
+      if (isUserRejected) toast.warning('Sign in canceled. You need to sign the message to continue.');
+      else toast.error(`Unexpected error: ${error.message}`);
+
       await onCancel();
     },
   });
@@ -52,17 +50,18 @@ export function DidModal(): ReactNode {
           <p>Sign In</p>
           <div className="grow" />
           <span className="flex items-center gap-2 text-medium font-medium">
-              <IconByWalletType walletType={wallet?.type || null} className="w-7 h-7" />
-            {` `}
+            <IconByWalletType walletType={wallet?.type || null} className="w-7 h-7" />
             {wallet?.address ? addressShort(wallet?.address) : ''}
-            </span>
+          </span>
         </ModalHeader>
         <ModalBody>
-          <p>Sign the message to log in to your account:</p>
+          <p>Please sign this message to log in to zCred:</p>
           <Divider />
           <p className="text-wrap text-justify whitespace-pre-wrap">
-            {siwxMessage?.splitByWarning().map((line, i) => (
-              <span key={i} className={cn('break-words', { 'font-bold text-orange-500 dark:text-warning': i == 1 })}>{line}</span>
+            {message?.asSplitByWarning.map((line, i) => (
+              <span key={i} className={cn('break-words', { 'font-semibold text-orange-500 dark:text-warning': i == 1 })}>
+                {line}
+              </span>
             ))}
           </p>
           <Divider />
@@ -85,4 +84,23 @@ export function DidModal(): ReactNode {
       </ModalContent>
     </Modal>
   );
+}
+
+
+function messageCreate(args: { address: string, blockchain: string }) {
+  const domain = location.hostname;
+
+  const warning = `Warning: Ensure you sign this message only on the ${domain} domain, as signing it elsewhere may result in the loss of control over your digital credentials.`;
+
+  const asString = `
+${domain} wants you to sign in with your ${args.blockchain} account:
+${args.address}
+
+${warning}
+  `.trim();
+
+  const [begin, end] = asString.split(warning);
+  const asSplitByWarning = [begin, warning, end];
+
+  return { asString, asSplitByWarning };
 }

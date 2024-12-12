@@ -1,6 +1,5 @@
 export const config = {
   appName: 'ZCred App',
-  domain: 'zcred.me',
   frameTime: 1_000 / 60,
 
   buildId: import.meta.env.VITE_BUILD_ID as string,

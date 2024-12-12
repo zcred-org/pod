@@ -8,7 +8,7 @@ import { WagmiProvider } from 'wagmi';
 import { config } from '@/config';
 import { AppGlobal } from '@/config/app-global.ts';
 import { queryClient } from '@/config/query-client.ts';
-import { wagmiConfig } from '@/config/wagmi-config.ts';
+import { appWagmi } from '@/config/wagmi-config.ts';
 import { routeTree } from '@/routeTree.gen.ts';
 import { VerificationErrorActions } from '@/stores/verification-store/verification-error-actions.tsx';
 import './index.css';
@@ -38,7 +38,7 @@ AppGlobal.VerificationErrorActions = VerificationErrorActions;
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={wagmiConfig}>
+      <WagmiProvider config={appWagmi.config}>
         <NextUIProvider className="flex flex-col min-h-screen" navigate={navigate}>
           <HelmetProvider>
             <RouterProvider router={router} />

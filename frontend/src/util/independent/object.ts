@@ -11,3 +11,9 @@ export function objectFlat(obj: object, parentKey = '', result = {}): object {
     }
   }, result);
 }
+
+export async function objectPromiseAll<T extends { [key: string]: Promise<unknown> }>(obj: T): Promise<{ [K in keyof T]: Awaited<T[K]> }> {
+  const keyValueList = Object.entries(obj).map(([key, promise]) => promise.then(value => [key, value]));
+  const awaitedList = await Promise.all(keyValueList);
+  return Object.fromEntries(awaitedList);
+}

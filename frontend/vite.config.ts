@@ -14,7 +14,7 @@ import packageJson from './package.json';
 export default defineConfig(() => {
   const lintCommand = packageJson.scripts.lint;
   const target = browserslistToEsbuild(packageJson.browserslist);
-  const corejs = packageJson.dependencies['core-js'].match(/\d+(\.\d+(\.\d+)?)?/)[0];
+  const corejs = packageJson.dependencies['core-js'].match(/\d+(\.\d+)*/)[0];
 
   const VITE_BUILD_ID = Date.now().toString(36);
 

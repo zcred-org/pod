@@ -1,4 +1,4 @@
-import { getConnectorClient as _getConnectorClient } from '@wagmi/core';
+import { getConnectorClient as wagmiGetConnectorClient, signMessage as wagmiSignMessage, disconnect as wagmiDisconnect } from '@wagmi/core';
 import { createWeb3Modal } from '@web3modal/wagmi/react';
 import { defaultWagmiConfig } from '@web3modal/wagmi/react/config';
 import * as chains from 'wagmi/chains';
@@ -20,7 +20,7 @@ const allChains = Object.values(chains).filter((chain: unknown): chain is chains
   return config.isDev || !isTestnet;
 }) as unknown as [chains.Chain, ...chains.Chain[]];
 
-export const wagmiConfig = defaultWagmiConfig({
+const wagmiConfig = defaultWagmiConfig({
   metadata, projectId: config.walletConnectProjectId,
   chains: allChains,
   auth: {
@@ -37,4 +37,9 @@ export const web3modal = createWeb3Modal({
   allowUnsupportedChain: true,
 });
 
-export const getConnectorClient = _getConnectorClient.bind(undefined, wagmiConfig);
+export const appWagmi = {
+  config: wagmiConfig,
+  disconnect: wagmiDisconnect.bind(undefined, wagmiConfig),
+  getConnectorClient: wagmiGetConnectorClient.bind(undefined, wagmiConfig),
+  signMessage: wagmiSignMessage.bind(undefined, wagmiConfig),
+};

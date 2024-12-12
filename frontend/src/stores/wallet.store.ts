@@ -2,9 +2,12 @@ import { type ReadonlySignal } from '@preact/signals-react';
 import type { Identifier, IWalletAdapter } from '@zcredjs/core';
 import { EIP1193Adapter } from '@zcredjs/ethereum';
 import { AuroWalletAdapter } from '@zcredjs/mina';
-import { getConnectorClient } from '@/config/wagmi-config.ts';
+import { appWagmi } from '@/config/wagmi-config.ts';
 import { WalletTypeEnum } from '@/types/wallet-type.enum.ts';
+import { Base58Btc } from '@/util/independent/base64.ts';
+import { objectPromiseAll } from '@/util/independent/object.ts';
 import { signal, computed } from '@/util/independent/signals/signals-dev-tools.ts';
+
 
 export type WalletStoreState = {
   adapter: IWalletAdapter,
@@ -45,17 +48,23 @@ export class WalletStore {
       const adapter: IWalletAdapter | null =
         shouldUpsert
           ? maybeWalletType === WalletTypeEnum.Auro ? new AuroWalletAdapter(window.mina!)
-            : maybeWalletType === WalletTypeEnum.Ethereum ? new EIP1193Adapter(await getConnectorClient())
+            : maybeWalletType === WalletTypeEnum.Ethereum ? new EIP1193Adapter(await appWagmi.getConnectorClient())
               : null
           : shouldClean ? null
             : null;
 
+      // FIXME: EIP1193Adapter.sign works somewhere, but in TrustWallet and Chrome-Zerion displays HEX instead of human readable message, then breaking signature
+      if (adapter && maybeWalletType === WalletTypeEnum.Ethereum)
+        adapter.sign = async (...args) => Base58Btc.encode(await appWagmi.signMessage(...args));
+
       WalletStore.#nextWallet = maybeWalletType && adapter ? {
         adapter,
         type: maybeWalletType,
-        subjectId: await adapter.getSubjectId(),
-        address: await adapter.getAddress(),
-        chainId: await adapter.getChainId(),
+        ...await objectPromiseAll({
+          subjectId: adapter.getSubjectId(),
+          address: adapter.getAddress(),
+          chainId: adapter.getChainId(),
+        }),
       } : null;
     }
   }
